@@ -140,7 +140,7 @@ export const level3: LevelDef = {
           expected: 'childcare',
           feedback: {
             commute: 'He kept that one. He said it first, in fact.',
-            focus: 'He kept that one too. Read his version again and count.',
+            focus: 'He named that one. Two of your three came back; the third did not.',
             childcare:
               'Childcare. The one he cannot answer cheaply, and the only one missing.',
           },

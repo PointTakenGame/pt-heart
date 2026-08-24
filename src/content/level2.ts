@@ -179,7 +179,7 @@ export const level2: LevelDef = {
           feedback: {
             neither: 'Neither half. Bare claim, and "Period" is the tell.',
             owned: 'No owner in there. "Period" is the opposite of owning it.',
-            reason: 'No reason either. Nothing after the claim but volume.',
+            reason: 'No reason in there. Nothing after the claim but volume.',
             both: 'Neither half is present. This is the bare claim.',
           },
         },

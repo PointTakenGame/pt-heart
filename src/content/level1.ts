@@ -20,7 +20,10 @@ export const level1: LevelDef = {
   boss: 'Verdict Vikram',
   beats: [
     {
-      name: 'The word "You"',
+      // Not the level title again. The header prints the title and the beat
+      // name side by side, so reusing the title there is one label doing
+      // nothing twice. The sibling levels name this beat with a verb.
+      name: 'Spot it',
       steps: [
         // Cold open. The boss is named and on screen before the drill starts, so
         // the level reads as training for a fight you can already see coming.
