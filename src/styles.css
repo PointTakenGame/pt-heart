@@ -157,6 +157,13 @@ p  { margin: 0 0 0.75rem; }
   gap: 0.7rem;
 }
 
+/* Bottom-anchor the thread, the way every messaging app does: the newest line
+   sits just above the composer instead of the first line sitting alone at the
+   top of an empty screen. auto on the first child rather than
+   justify-content: flex-end, which clips the overflowing top of a scroll
+   container and makes the earliest messages unreachable. */
+.thread > .msg:first-child { margin-top: auto; }
+
 .msg { max-width: 84%; }
 .msg-body {
   padding: 0.6rem 0.85rem;
@@ -243,5 +250,10 @@ p  { margin: 0 0 0.75rem; }
   border: 1px solid var(--rule);
   background: var(--white);
   color: inherit;
+  /* min is the two rows the markup asks for; max leaves the thread its share of
+     a phone screen. The height between the two is set from content in JS. */
+  min-height: 4.45rem;
+  max-height: 32vh;
+  overflow-y: auto;
 }
 .composer-row textarea:focus { outline: 2px solid var(--teal); outline-offset: -1px; }

@@ -7,7 +7,7 @@
 // Consecutive identical snapshots are dropped, so an idle field records nothing.
 // Expect three to six snapshots on a pre-filled item.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ComposerState, Revision } from '../types.ts';
 
 const PAUSE_MS = 900;
@@ -84,6 +84,20 @@ function TextComposer({
       if (pauseTimer.current) clearTimeout(pauseTimer.current);
     };
   }, []);
+
+  // Grow to fit. The whole interaction is composing one careful sentence, so a
+  // fixed two-row window that hides the top of it while the player is still
+  // working on the end is the wrong shape. CSS caps the growth so the thread
+  // above never gets squeezed out; past the cap the textarea scrolls.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    // scrollHeight is content plus padding; the box is border-box, so add the
+    // borders back or the field sits two pixels short and grows a scrollbar.
+    const border = el.offsetHeight - el.clientHeight;
+    el.style.height = `${el.scrollHeight + border}px`;
+  }, [text]);
 
   const onChange = (value: string) => {
     setText(value);
