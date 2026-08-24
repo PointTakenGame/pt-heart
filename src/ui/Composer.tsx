@@ -35,18 +35,54 @@ export function Composer({ state, onSubmit }: Props) {
   }
 
   if (state.kind === 'buttons') {
-    return (
-      <div className="composer composer-buttons">
+    return <ButtonComposer key={key} state={state} onSubmit={onSubmit} />;
+  }
+
+  return <TextComposer key={key} state={state} onSubmit={onSubmit} />;
+}
+
+// The buttons state, plus the optional reference card. The reference is closed by
+// default and stays closed until asked for: a player who remembers the three cards
+// should never have to look past a row of four buttons to answer.
+function ButtonComposer({
+  state,
+  onSubmit,
+}: {
+  state: Extract<ComposerState, { kind: 'buttons' }>;
+  onSubmit: (value: string, revisions: Revision[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const help = state.help;
+
+  return (
+    <div className="composer composer-buttons">
+      {help && (
+        <div className="composer-help-row">
+          <button
+            className="chip"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {help.label}
+          </button>
+          {open && (
+            <ul className="help">
+              {help.lines.map((l) => (
+                <li key={l}>{l}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      <div className="composer-btn-row">
         {state.options.map((o) => (
           <button key={o.value} className="btn" onClick={() => onSubmit(o.value, [])}>
             {o.label}
           </button>
         ))}
       </div>
-    );
-  }
-
-  return <TextComposer key={key} state={state} onSubmit={onSubmit} />;
+    </div>
+  );
 }
 
 function composerKey(state: ComposerState): string {

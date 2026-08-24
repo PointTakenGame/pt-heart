@@ -26,6 +26,7 @@ import { markCleared, recordItem } from './storage.ts';
 import {
   COACH,
   OPENING,
+  RULE_GLOSS,
   RULE_LABEL,
   SHOWDOWN_SLUG,
   START_TOKENS,
@@ -43,6 +44,19 @@ const CALL_OPTIONS = [
   { value: 'fake_listening', label: RULE_LABEL.fake_listening },
   { value: 'stand', label: 'Let it stand' },
 ];
+
+/**
+ * The three cards, on demand, at the moment the player has to name one. Closed
+ * until asked for. Levels 1 to 3 teach one card each, but a player can walk
+ * straight into the showdown, and losing two tokens because you could not
+ * remember which name goes with which tell teaches nothing.
+ */
+const CALL_HELP = {
+  label: 'What are the three cards?',
+  lines: (['judging', 'opinion_as_fact', 'fake_listening'] as FoulType[]).map(
+    (f) => `${RULE_LABEL[f]}, worth ${foulCost(f)}: ${RULE_GLOSS[f]}.`,
+  ),
+};
 
 /** Prefill for the player's summarizing turns. They never type the scaffolding. */
 const SUMMARY_PREFILL = 'So what I am hearing is: it bugs you that ';
@@ -275,7 +289,7 @@ export function useShowdown(): Match {
           lastSofia = out.text;
           await say({ lane: 'opponent', speaker: SOFIA, text: out.text, isSpecimen: true });
 
-          const call = await ask({ kind: 'buttons', options: CALL_OPTIONS });
+          const call = await ask({ kind: 'buttons', options: CALL_OPTIONS, help: CALL_HELP });
           const called = call.value;
           push({
             lane: 'player',

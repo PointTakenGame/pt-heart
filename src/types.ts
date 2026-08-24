@@ -20,7 +20,15 @@ export interface Message {
 /** What the composer offers while a step waits on the player. */
 export type ComposerState =
   | { kind: 'locked' }
-  | { kind: 'buttons'; options: { value: string; label: string }[] }
+  | {
+      kind: 'buttons';
+      options: { value: string; label: string }[];
+      /** An optional reference the player can open beside the buttons. For a choice
+       *  they are meant to make from memory but may not be able to yet: naming the
+       *  right card in live play is the whole skill, and a player who has forgotten
+       *  which one is which should lose the round on judgement, not on recall. */
+      help?: { label: string; lines: string[] };
+    }
   | { kind: 'prefilled'; prefill: string; chips: string[] }
   | { kind: 'free'; placeholder: string; chips: string[] }
   | { kind: 'continue'; label: string };

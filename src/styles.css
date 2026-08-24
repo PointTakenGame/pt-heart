@@ -217,7 +217,22 @@ p  { margin: 0 0 0.75rem; }
    below their longest word, so a single row pushed "Let it stand" off the right
    edge and the player could not decline to call a foul. The 8rem basis puts two
    per row on a phone and all four on one row at full page width. */
-.composer-buttons { flex-direction: row; flex-wrap: wrap; gap: 0.6rem; }
+.composer-btn-row { display: flex; flex-direction: row; flex-wrap: wrap; gap: 0.6rem; }
+
+/* The reference card, closed by default. It sits above the buttons rather than
+   in the header so it costs nothing on the screens that do not offer it. */
+.composer-help-row { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+.help {
+  list-style: none;
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius);
+  background: var(--white);
+  font-size: 0.85rem;
+  color: #6d6355;
+}
+.help li + li { margin-top: 0.35rem; }
 
 .btn {
   flex: 0 0 auto;
@@ -230,7 +245,7 @@ p  { margin: 0 0 0.75rem; }
 .btn:hover { background: var(--cream-dark); }
 .btn:disabled { opacity: 0.35; cursor: default; }
 .btn-wide { width: 100%; }
-.composer-buttons .btn { flex: 1 1 8rem; }
+.composer-btn-row .btn { flex: 1 1 8rem; }
 .btn-send { flex: 0 0 auto; align-self: flex-end; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
