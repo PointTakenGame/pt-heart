@@ -102,9 +102,12 @@ function hasBecause(norm: string): boolean {
 }
 
 // Opinions-as-Facts phrase check.
-// A message is a candidate foul when it asserts (has an assertion marker OR is a
-// bare declarative claim on the topic) without owning it AND without a reason.
-// We also flag the gamed case: an ownership prefix stacked with an assertion
+// Nothing here fires without an assertion marker. A bare declarative claim with
+// no marker ("nuclear power is too dangerous") is let through, which is the
+// larger half of this foul as the card defines it and is deliberately not
+// caught: no phrase rule can tell a bare claim from a bare fact, so catching it
+// needs the model. Whether to approximate it offline is HEART-T260823-47.
+// The gamed case is caught: an ownership prefix stacked with an assertion
 // marker (the backstop watch item from HEART-T260711-06).
 export function detectOpinionAsFact(text: string): PhraseHit | null {
   const norm = normalize(text);
