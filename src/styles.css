@@ -1,0 +1,217 @@
+/* Palette is the HT print system from docs/reference/design-system/design-tokens.json
+   (ht_print + ht_semantic). Cream page, charcoal text, orange for the foul side,
+   teal for the clean side. Do not mix in the pt_digital greens; they are a separate
+   system for the Brain game. */
+
+:root {
+  --cream: #f7f0e8;
+  --cream-dark: #ede0d4;
+  --orange: #e8845a;
+  --teal: #52c4a0;
+  --charcoal: #2d2d2d;
+  --purple: #9b6bc4;
+  --rule: #d4c4b4;
+  --white: #fff;
+
+  --w: 44rem;
+  --radius: 0.75rem;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--cream);
+  color: var(--charcoal);
+  font: 16px/1.55 ui-serif, Georgia, "Iowan Old Style", serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font: inherit; cursor: pointer; }
+
+.page {
+  height: 100%;
+  margin: 0 auto;
+  max-width: var(--w);
+  display: flex;
+  flex-direction: column;
+}
+
+.page-narrow {
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  overflow-y: auto;
+}
+.page-narrow > * { flex: 0 0 auto; }
+
+h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 0.75rem; }
+h2 { font-size: 1.1rem; margin: 1.5rem 0 0.25rem; }
+p  { margin: 0 0 0.75rem; }
+.muted { color: #6d6355; }
+
+/* ---------- level select ---------- */
+
+.levels { list-style: none; padding: 0; margin: 1rem 0 0; }
+.levels li { margin-bottom: 0.6rem; }
+
+.level-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  text-align: left;
+  padding: 0.9rem 1rem;
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+.level-card:hover { border-color: var(--orange); }
+
+.level-n {
+  font-size: 1.4rem;
+  color: var(--orange);
+  min-width: 1.2rem;
+}
+.level-mid { display: flex; flex-direction: column; flex: 1; }
+.level-title { font-size: 1.05rem; }
+.level-sub { font-size: 0.85rem; color: #6d6355; }
+.level-done {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+/* ---------- level chrome ---------- */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+.header-mid { flex: 1; text-align: center; }
+.header-title { font-size: 0.95rem; }
+.header-sub { font-size: 0.75rem; color: #6d6355; }
+
+.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: #6d6355;
+  font-size: 0.85rem;
+  text-decoration: underline;
+}
+
+.pips { display: flex; gap: 3px; min-width: 3.5rem; justify-content: flex-end; }
+.pip {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--rule);
+}
+.pip-on { background: var(--teal); }
+
+/* ---------- thread ---------- */
+
+.thread {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.msg { max-width: 84%; }
+.msg-body {
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius);
+  white-space: pre-wrap;
+}
+
+.msg-coach .msg-body { background: var(--white); border: 1px solid var(--rule); }
+
+.msg-opponent { align-self: flex-start; }
+.msg-opponent .msg-body {
+  background: var(--cream-dark);
+  border: 1px solid var(--rule);
+}
+.msg-speaker {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--purple);
+  margin-bottom: 0.2rem;
+  padding-left: 0.15rem;
+}
+
+.msg-player { align-self: flex-end; }
+.msg-player .msg-body {
+  background: var(--charcoal);
+  color: var(--cream);
+}
+
+/* the line actually under test, not ordinary speech */
+.msg-specimen { max-width: 92%; }
+.msg-specimen .msg-body {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--orange);
+  font-style: italic;
+  font-size: 1.05rem;
+}
+
+/* ---------- composer ---------- */
+
+.composer {
+  border-top: 1px solid var(--rule);
+  padding: 0.75rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.composer-locked { min-height: 3.9rem; border-top-color: transparent; }
+.composer-buttons { flex-direction: row; gap: 0.6rem; }
+
+.btn {
+  flex: 0 0 auto;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--charcoal);
+  background: var(--white);
+  color: var(--charcoal);
+}
+.btn:hover { background: var(--cream-dark); }
+.btn:disabled { opacity: 0.35; cursor: default; }
+.btn-wide { width: 100%; }
+.composer-buttons .btn { flex: 1; }
+.btn-send { flex: 0 0 auto; align-self: flex-end; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.chip {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px dashed var(--rule);
+  background: transparent;
+  font-size: 0.85rem;
+  color: #6d6355;
+}
+.chip:hover { border-color: var(--teal); color: var(--charcoal); }
+
+.composer-row { display: flex; gap: 0.6rem; align-items: flex-end; }
+.composer-row textarea {
+  flex: 1;
+  resize: none;
+  font: inherit;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  background: var(--white);
+  color: inherit;
+}
+.composer-row textarea:focus { outline: 2px solid var(--teal); outline-offset: -1px; }
