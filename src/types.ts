@@ -41,7 +41,10 @@ export interface Revision {
 export interface ItemRecord {
   itemId: string;
   levelSlug: string;
-  rule: FoulType;
+  /** 'mixed' where an item is not testing one named card: a live-play turn where
+   *  any of the three could land, or a clean line testing restraint across all
+   *  three. Never fake a specific card to satisfy the type. */
+  rule: FoulType | 'mixed';
   /** the raw answer: a button value, or the text the player sent */
   answer: string;
   /** null where the item has no right answer (free text, model-judged edits) */

@@ -8,12 +8,15 @@ import { useGym } from './engine.ts';
 import { Composer } from './ui/Composer.tsx';
 import { Thread } from './ui/Thread.tsx';
 import { Header } from './ui/Header.tsx';
+import { useShowdown } from './showdown.ts';
+import { SHOWDOWN_SLUG } from './content/showdown.ts';
 import { isCleared, load } from './storage.ts';
 
 type Screen =
   | { name: 'agreement' }
   | { name: 'select' }
-  | { name: 'level'; level: LevelDef };
+  | { name: 'level'; level: LevelDef }
+  | { name: 'showdown' };
 
 export function App() {
   const seen = Object.keys(load().cleared).length > 0;
@@ -23,7 +26,15 @@ export function App() {
 
   if (screen.name === 'agreement') return <Agreement onIn={() => setScreen({ name: 'select' })} />;
   if (screen.name === 'select') {
-    return <Select onPick={(level) => setScreen({ name: 'level', level })} />;
+    return (
+      <Select
+        onPick={(level) => setScreen({ name: 'level', level })}
+        onShowdown={() => setScreen({ name: 'showdown' })}
+      />
+    );
+  }
+  if (screen.name === 'showdown') {
+    return <Showdown onExit={() => setScreen({ name: 'select' })} />;
   }
   return (
     <Level
@@ -64,11 +75,19 @@ function Agreement({ onIn }: { onIn: () => void }) {
   );
 }
 
-function Select({ onPick }: { onPick: (l: LevelDef) => void }) {
+function Select({
+  onPick,
+  onShowdown,
+}: {
+  onPick: (l: LevelDef) => void;
+  onShowdown: () => void;
+}) {
   return (
     <div className="page page-narrow">
       <h1>The gym</h1>
-      <p className="muted">Three levels. Each one is one habit and one opponent.</p>
+      <p className="muted">
+        Three levels, each one habit and one opponent. Then all three at once, for tokens.
+      </p>
       <ul className="levels">
         {LEVELS.map((l, i) => (
           <li key={l.slug}>
@@ -84,6 +103,16 @@ function Select({ onPick }: { onPick: (l: LevelDef) => void }) {
             </button>
           </li>
         ))}
+        <li>
+          <button className="level-card level-card-boss" onClick={onShowdown}>
+            <span className="level-n">4</span>
+            <span className="level-mid">
+              <span className="level-title">The Showdown</span>
+              <span className="level-sub">All three cards &middot; Slippery Sofia</span>
+            </span>
+            {isCleared(SHOWDOWN_SLUG) && <span className="level-done">played</span>}
+          </button>
+        </li>
       </ul>
     </div>
   );
@@ -111,6 +140,34 @@ function Level({ level, onExit }: { level: LevelDef; onExit: () => void }) {
         </div>
       ) : (
         <Composer state={gym.composer} onSubmit={gym.submit} />
+      )}
+    </div>
+  );
+}
+
+function Showdown({ onExit }: { onExit: () => void }) {
+  const match = useShowdown();
+
+  return (
+    <div className="page page-level">
+      <Header
+        title="The Showdown"
+        teaches="All three cards"
+        beatName={match.phase}
+        itemsDone={0}
+        itemsTotal={0}
+        tokens={{ player: match.playerTokens, sofia: match.sofiaTokens }}
+        onExit={onExit}
+      />
+      <Thread messages={match.messages} waiting={match.waiting} onSkip={match.skip} />
+      {match.finished ? (
+        <div className="composer">
+          <button className="btn btn-wide" onClick={onExit}>
+            Back to the gym
+          </button>
+        </div>
+      ) : (
+        <Composer state={match.composer} onSubmit={match.submit} />
       )}
     </div>
   );

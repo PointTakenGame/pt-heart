@@ -13,12 +13,7 @@ import type { ComposerState, Message, Revision, Step } from './types.ts';
 import type { LevelDef } from './types.ts';
 import { judgeEdit, restate } from './coach.ts';
 import { markCleared, recordItem } from './storage.ts';
-
-const BEAT_GAP = 400;
-
-function dwellMs(text: string): number {
-  return Math.min(2500, Math.max(600, 22 * text.length));
-}
+import { BEAT_GAP, dwellMs } from './pacing.ts';
 
 function isItem(step: Step): boolean {
   return (

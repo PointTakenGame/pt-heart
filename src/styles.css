@@ -71,6 +71,13 @@ p  { margin: 0 0 0.75rem; }
 }
 .level-card:hover { border-color: var(--orange); }
 
+/* The showdown is not another drill, so it does not look like one. */
+.level-card-boss {
+  border-color: var(--purple);
+  background: var(--cream-dark);
+}
+.level-card-boss .level-n { color: var(--purple); }
+
 .level-n {
   font-size: 1.4rem;
   color: var(--orange);
@@ -115,6 +122,29 @@ p  { margin: 0 0 0.75rem; }
   background: var(--rule);
 }
 .pip-on { background: var(--teal); }
+
+/* Live play shows two purses instead of pips. Numbers, not fourteen dots: a
+   number that drops by two when you get Judged is legible at phone width. */
+.ledger {
+  display: flex;
+  gap: 0.55rem;
+  align-items: baseline;
+  min-width: 3.5rem;
+  justify-content: flex-end;
+}
+.ledger-side { display: flex; flex-direction: column; align-items: center; }
+.ledger-n {
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--teal);
+}
+.ledger-them .ledger-n { color: var(--purple); }
+.ledger-who {
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6d6355;
+}
 
 /* ---------- thread ---------- */
 
