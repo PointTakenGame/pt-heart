@@ -9,6 +9,14 @@
 // same handler, so there is one implementation and local play exercises it.
 // Without a key this returns 503 and every caller falls back to authored copy.
 
+// Pin the edge runtime. Without this Vercel builds the file for the Node runtime
+// and calls it as a legacy (req, res) handler: the Response this function returns
+// is discarded, res is never ended, and every request to /api/coach hangs until
+// the gateway times out. Edge takes the Web signature this file already uses, and
+// is the same signature the dev plugin in vite.config.ts calls, so local and
+// deployed stay one implementation. Found live 2026-08-24.
+export const config = { runtime: 'edge' };
+
 const MODEL = 'claude-haiku-4-5-20251001';
 
 const TEMPLATE = 'So what I\'m hearing is: it bugs you that [X], because [Y]. Did I get that right?';
