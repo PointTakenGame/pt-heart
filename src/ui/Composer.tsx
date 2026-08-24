@@ -15,10 +15,21 @@ const PAUSE_MS = 900;
 interface Props {
   state: ComposerState;
   onSubmit: (value: string, revisions: Revision[]) => void;
+  /** Called after any change that alters this component's height, from a layout
+   *  effect. The thread above is a scroll container sized by what is left over,
+   *  so it has to be re-landed on its bottom in the same frame. */
+  onResize?: () => void;
 }
 
-export function Composer({ state, onSubmit }: Props) {
+export function Composer({ state, onSubmit, onResize }: Props) {
   const key = composerKey(state);
+
+  // Every state change resizes the composer: locked is 3.9rem, a button row is
+  // taller, a textarea taller again. Layout effect, not effect, so the correction
+  // lands before the paint rather than one frame after it.
+  useLayoutEffect(() => {
+    onResize?.();
+  }, [key, onResize]);
 
   if (state.kind === 'locked') {
     return <div className="composer composer-locked" aria-hidden="true" />;
@@ -35,10 +46,10 @@ export function Composer({ state, onSubmit }: Props) {
   }
 
   if (state.kind === 'buttons') {
-    return <ButtonComposer key={key} state={state} onSubmit={onSubmit} />;
+    return <ButtonComposer key={key} state={state} onSubmit={onSubmit} onResize={onResize} />;
   }
 
-  return <TextComposer key={key} state={state} onSubmit={onSubmit} />;
+  return <TextComposer key={key} state={state} onSubmit={onSubmit} onResize={onResize} />;
 }
 
 // The buttons state, plus the optional reference card. The reference is closed by
@@ -47,12 +58,19 @@ export function Composer({ state, onSubmit }: Props) {
 function ButtonComposer({
   state,
   onSubmit,
+  onResize,
 }: {
   state: Extract<ComposerState, { kind: 'buttons' }>;
   onSubmit: (value: string, revisions: Revision[]) => void;
+  onResize?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const help = state.help;
+
+  // Opening the reference card takes a chunk out of the thread.
+  useLayoutEffect(() => {
+    onResize?.();
+  }, [open, onResize]);
 
   return (
     <div className="composer composer-buttons">
@@ -94,9 +112,11 @@ function composerKey(state: ComposerState): string {
 function TextComposer({
   state,
   onSubmit,
+  onResize,
 }: {
   state: Extract<ComposerState, { kind: 'prefilled' | 'free' }>;
   onSubmit: (value: string, revisions: Revision[]) => void;
+  onResize?: () => void;
 }) {
   const initial = state.kind === 'prefilled' ? state.prefill : '';
   const [text, setText] = useState(initial);
@@ -133,7 +153,9 @@ function TextComposer({
     // borders back or the field sits two pixels short and grows a scrollbar.
     const border = el.offsetHeight - el.clientHeight;
     el.style.height = `${el.scrollHeight + border}px`;
-  }, [text]);
+    // Whatever the field just took, the thread just lost.
+    onResize?.();
+  }, [text, onResize]);
 
   const onChange = (value: string) => {
     setText(value);

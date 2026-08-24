@@ -1,12 +1,12 @@
 // Three screens: the agreement (Beat 0), level select, and the thread.
 // Everything that carries game state lives in the thread.
 
-import { useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { LEVELS } from './content/index.ts';
 import type { LevelDef } from './types.ts';
 import { useGym } from './engine.ts';
 import { Composer } from './ui/Composer.tsx';
-import { Thread } from './ui/Thread.tsx';
+import { Thread, type ThreadHandle } from './ui/Thread.tsx';
 import { Header } from './ui/Header.tsx';
 import { useShowdown } from './showdown.ts';
 import { SHOWDOWN_SLUG } from './content/showdown.ts';
@@ -120,6 +120,13 @@ function Select({
 
 function Level({ level, onExit }: { level: LevelDef; onExit: () => void }) {
   const gym = useGym(level);
+  const thread = useRef<ThreadHandle>(null);
+  const land = useCallback(() => {
+    thread.current?.land();
+  }, []);
+  // The end-of-level button replaces the composer outright, which is one more
+  // height change with no message behind it.
+  useLayoutEffect(land, [gym.finished, land]);
 
   return (
     <div className="page page-level">
@@ -131,7 +138,7 @@ function Level({ level, onExit }: { level: LevelDef; onExit: () => void }) {
         itemsTotal={gym.itemsTotal}
         onExit={onExit}
       />
-      <Thread messages={gym.messages} waiting={gym.waiting} onSkip={gym.skip} />
+      <Thread ref={thread} messages={gym.messages} waiting={gym.waiting} onSkip={gym.skip} />
       {gym.finished ? (
         <div className="composer">
           <button className="btn btn-wide" onClick={onExit}>
@@ -139,7 +146,7 @@ function Level({ level, onExit }: { level: LevelDef; onExit: () => void }) {
           </button>
         </div>
       ) : (
-        <Composer state={gym.composer} onSubmit={gym.submit} />
+        <Composer state={gym.composer} onSubmit={gym.submit} onResize={land} />
       )}
     </div>
   );
@@ -147,6 +154,11 @@ function Level({ level, onExit }: { level: LevelDef; onExit: () => void }) {
 
 function Showdown({ onExit }: { onExit: () => void }) {
   const match = useShowdown();
+  const thread = useRef<ThreadHandle>(null);
+  const land = useCallback(() => {
+    thread.current?.land();
+  }, []);
+  useLayoutEffect(land, [match.finished, land]);
 
   return (
     <div className="page page-level">
@@ -159,7 +171,7 @@ function Showdown({ onExit }: { onExit: () => void }) {
         tokens={{ player: match.playerTokens, sofia: match.sofiaTokens }}
         onExit={onExit}
       />
-      <Thread messages={match.messages} waiting={match.waiting} onSkip={match.skip} />
+      <Thread ref={thread} messages={match.messages} waiting={match.waiting} onSkip={match.skip} />
       {match.finished ? (
         <div className="composer">
           <button className="btn btn-wide" onClick={onExit}>
@@ -167,7 +179,7 @@ function Showdown({ onExit }: { onExit: () => void }) {
           </button>
         </div>
       ) : (
-        <Composer state={match.composer} onSubmit={match.submit} />
+        <Composer state={match.composer} onSubmit={match.submit} onResize={land} />
       )}
     </div>
   );

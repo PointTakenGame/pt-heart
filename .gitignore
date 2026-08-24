@@ -3,3 +3,6 @@ dist/
 .vercel/
 .env
 .env.local
+
+# local test driver, injected into the dev server by hand
+_driver.js
