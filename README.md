@@ -95,12 +95,35 @@ on the first child, which is what `.thread > .msg:first-child` does.
 **Tokens move, they never burn.** Fourteen are on the table when a match starts
 and fourteen when it ends. A foul hands tokens to the other player; nothing is
 created or destroyed, and the two numbers in the header always add to fourteen.
+Half tokens are real: letting one of Sofia's fouls go past you hands her half a
+token (`MISS_COST`), so a player who calls nothing still watches the ledger
+drain. Halves are exact in binary floating point, so the purses do not drift;
+`formatTokens` in `src/content/showdown.ts` is what prints `6½`.
 `transfer` in `src/showdown.ts` clamps a move to what the losing purse actually
 holds, because judging costs two and a purse can be holding one. Without the
 clamp the ledger paints a negative number for a full beat and then the bust line
 says "you are empty" over it.
 
-**Political balance is non-negotiable.** Every politically-perceptible example
+**Rulings on the player land in the moment, not at the end of the round.** These
+are training rounds and feedback that arrives three messages later is not
+attached to anything. `missedCount` in `src/showdown.ts` survives to the end of
+the round only so the coach knows whether to say the round was clean.
+
+**Judging outranks Fake Listening inside a summary.** A summarizing turn runs the
+phrase detectors before the structural because/question check, so a summary that
+judges the other person is charged two tokens and not one, and the summary then
+has to be done again (up to three attempts). Each attempt is its own corpus row,
+suffixed `-redo1`, `-redo2`.
+
+**Training summaries are pre-typed and wrong.** In levels 1 to 3 the player never
+types a summary from nothing: the line arrives finished, carrying one planted
+mistake, and the work is finding it. Level 3's `l3-i2` is the clearest case, and
+its `target` names exactly which half is planted.
+
+**Political balance is non-negotiable, and is currently in debt.**  Steve's
+ruling of 2026-08-24 allows the prototype to ship to the internal playtest
+imbalanced; it has to be corrected before anything goes out publicly (see
+`HEART-T260823-33`). Every politically-perceptible example
 needs an equally vivid opposite-side counterpart, or an explicit flag that it is
 imbalanced and why. Each level file carries a balance ledger in its header
 comment, and that ledger has to stay accurate if you touch the lines. It is

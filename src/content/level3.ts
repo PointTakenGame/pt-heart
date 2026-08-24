@@ -95,14 +95,22 @@ export const level3: LevelDef = {
           kind: 'edit',
           id: 'l3-i2',
           rule: 'fake_listening',
-          ask: 'Your turn. I have started it. Finish it.',
+          // Pre-typed and wrong, not a blanks template. Steve's ruling of
+          // 2026-08-24: in the training rounds the summary arrives finished and
+          // carries a planted mistake, and the player earns it by finding the
+          // mistake rather than by filling in scaffolding. The planted mistake is
+          // in the second half, because the second half is the one people drop:
+          // the first clause is a faithful restatement, and the reason attached
+          // to it is invented. That is exactly what Fake Listening sounds like
+          // when it is done well, and it is why reading it is the work.
+          ask: 'Your turn, and I have done the typing. One part of this is not what I said. Find it and fix it.',
           prefill:
-            'So what I\'m hearing is: it bugs you that ___, because ___. Did I get that right?',
-          chips: ['customer funds are mixed in', 'you had money frozen', 'nobody could tell you where it was'],
+            'So what I\'m hearing is: it bugs you that exchanges can mix customer funds in with their own, because you think crypto is too risky for regular people. Did I get that right?',
+          chips: ['your own money was frozen', 'for nine weeks', 'nobody could tell you where it was'],
           target:
-            'Both blanks must be filled from what the coach actually said. The first blank is the complaint (funds not held separately). The second blank is the reason (their own money was frozen for nine weeks with no answer). Leaving the "because" clause empty, generic, or filled with a restatement of the first blank is the failure this level teaches.',
+            'The first clause is already right and should survive. The "because" clause is the planted mistake: the coach never said crypto is too risky for regular people, he said his own money was frozen for nine weeks in a collapse and nobody could tell him where it was. A correct edit replaces that invented reason with the one he actually gave. Leaving the invented reason in place, or replacing it with a restatement of the first clause, is the failure this level teaches.',
           fallback:
-            'The shape is: "it bugs you that exchanges can mix customer funds in, because yours were frozen for nine weeks and nobody could tell you where they were." The second blank is the one people drop.',
+            'Here it is with my reason back in it: "it bugs you that exchanges can mix customer funds in, because yours were frozen for nine weeks and nobody could tell you where they were." The because half is the one people quietly write for you.',
         },
         { kind: 'continue', label: 'Face him' },
       ],

@@ -32,10 +32,20 @@ import {
   START_TOKENS,
   TURNS,
   foulCost,
+  formatTokens,
   type Turn,
 } from './content/showdown.ts';
 
 const SOFIA = 'Slippery Sofia';
+
+/**
+ * What a foul you failed to whistle costs you. Half a token, not a whole one:
+ * Steve's ruling of 2026-08-24 on a player who calls nothing and so watches a
+ * completely still scoreboard for three rounds. It is a fraction rather than a
+ * full token because missing a call is worse than doing nothing and cheaper
+ * than committing the foul yourself. Tokens still only move, never burn.
+ */
+const MISS_COST = 0.5;
 
 /** The four buttons after one of her turns. Naming the card is the answer. */
 const CALL_OPTIONS = [
@@ -93,6 +103,12 @@ export interface Match {
  */
 function offlineRuling(kind: 'speak' | 'summarize', text: string): FoulType | null {
   if (kind === 'summarize') {
+    // The phrase detectors run first, before the structural check. A summary
+    // that judges the other person is a Judging foul at two tokens, not a Fake
+    // Listening foul at one, and the cheaper card does not get to absorb it
+    // just because of where in the turn it happened.
+    const inside = runPhraseDetectors(text, ['judging', 'opinion_as_fact']);
+    if (inside) return inside.foulType;
     const hasWhy = /\b(because|since|so that|the reason)\b/i.test(text);
     const hasCheck = text.includes('?');
     return hasWhy || hasCheck ? null : 'fake_listening';
@@ -216,10 +232,13 @@ export function useShowdown(): Match {
       });
     };
 
-    // A ruling the player missed. Named at the end of the round rather than in the
-    // moment, so the round keeps its tension: you find out what got past you when
-    // it is too late to whistle it, which is the whole lesson.
-    let missed: string[] = [];
+    // How many of her fouls got past the player this round. The rulings
+    // themselves land in the moment now, not at the end of the round: these are
+    // training rounds, and feedback that arrives three messages after the thing
+    // it is about is not attached to anything (Steve's ruling, 2026-08-24). The
+    // count survives to the end of the round only so the coach knows whether to
+    // say the round was clean.
+    let missedCount = 0;
 
     const end = async (result: Outcome, why: string) => {
       await coach(why);
@@ -249,6 +268,9 @@ export function useShowdown(): Match {
         await end('loss', COACH.bankrupt);
         return true;
       }
+      // Unreachable, deliberately. See the comment on COACH.bankruptHer: her
+      // authored fouls cannot empty her, because knocking a boss out mid-training
+      // would end the lesson early through no fault of the player.
       if (purse.current.sofia <= 0) {
         await end('win', COACH.bankruptHer);
         return true;
@@ -310,10 +332,15 @@ export function useShowdown(): Match {
             await coach(COACH.onHit(turn.foul, moved));
             if (bust && (await bankruptCheck())) return;
           } else if (turn.foul && called !== 'stand') {
-            // Right instinct, wrong card. Nothing moves, and she does not get told.
-            missed.push(COACH.onWrongCard(called as FoulType, turn.foul));
+            // Right instinct, wrong card. Nothing moves: you saw it, which is the
+            // hard half. Naming it is what the next three rounds are for.
+            missedCount += 1;
+            await coach(COACH.onWrongCard(called as FoulType, turn.foul));
           } else if (turn.foul) {
-            missed.push(COACH.onMissed(turn.foul));
+            missedCount += 1;
+            const { moved, bust } = transfer('player', MISS_COST);
+            await coach(COACH.onMissed(turn.foul, moved));
+            if (bust && (await bankruptCheck())) return;
           } else if (called !== 'stand') {
             // A bad whistle is the only way a clean round of hers costs you
             // anything, and it is what makes round 2 expensive.
@@ -322,35 +349,57 @@ export function useShowdown(): Match {
             if (bust && (await bankruptCheck())) return;
           }
         } else {
-          const answer =
-            turn.kind === 'summarize'
-              ? await ask({ kind: 'prefilled', prefill: SUMMARY_PREFILL, chips: SUMMARY_CHIPS })
-              : await ask({
-                  kind: 'free',
-                  placeholder: 'say it in your own words...',
-                  chips: SPEAK_CHIPS,
-                });
+          // A summarizing turn that carries one of the other two fouls gets ruled
+          // on that card, at that card's price, and then has to be done again:
+          // the summary was never delivered. Three attempts is the ceiling, so a
+          // player who cannot get there does not sit in the loop; the token cost
+          // has already made the point by then.
+          for (let attempt = 1; attempt <= 3; attempt += 1) {
+            const answer =
+              turn.kind === 'summarize'
+                ? await ask({ kind: 'prefilled', prefill: SUMMARY_PREFILL, chips: SUMMARY_CHIPS })
+                : await ask({
+                    kind: 'free',
+                    placeholder: 'say it in your own words...',
+                    chips: SPEAK_CHIPS,
+                  });
 
-          const text = answer.value;
-          lastPlayer = text;
-          push({ lane: 'player', text });
+            const text = answer.value;
+            lastPlayer = text;
+            push({ lane: 'player', text });
 
-          // Model first, local phrase rules second. Either way the coach rules on
-          // the sentence and never on who is right about the policy.
-          const ruled = await judgeTurn(topic, turn.kind, text, lastSofia);
-          const foul = ruled ? ruled.foul : offlineRuling(turn.kind, text);
+            // Model first, local phrase rules second. Either way the coach rules on
+            // the sentence and never on who is right about the policy.
+            const ruled = await judgeTurn(topic, turn.kind, text, lastSofia);
+            const foul = ruled ? ruled.foul : offlineRuling(turn.kind, text);
 
-          record(turn, '', turn.kind === 'summarize' ? 'fake_listening' : 'mixed', text, foul === null, answer.revisions);
+            // Every attempt is its own row in the corpus. What somebody wrote on
+            // the second pass, after being told what the first one cost, is the
+            // interesting half of this level.
+            record(
+              turn,
+              attempt === 1 ? '' : `-redo${attempt - 1}`,
+              turn.kind === 'summarize' ? 'fake_listening' : 'mixed',
+              text,
+              foul === null,
+              answer.revisions,
+            );
 
-          if (foul) {
-            const { moved, bust } = transfer('player', foulCost(foul));
-            await coach(ruled?.text ?? COACH.onPlayerFoul(foul, moved));
-            if (ruled) await coach(COACH.onPlayerFoul(foul, moved));
-            if (bust && (await bankruptCheck())) return;
-          } else if (ruled?.text) {
-            await coach(ruled.text);
-          } else {
-            await coach(COACH.onPlayerClean);
+            if (foul) {
+              const { moved, bust } = transfer('player', foulCost(foul));
+              await coach(ruled?.text ?? COACH.onPlayerFoul(foul, moved));
+              if (ruled) await coach(COACH.onPlayerFoul(foul, moved));
+              if (bust && (await bankruptCheck())) return;
+            } else if (ruled?.text) {
+              await coach(ruled.text);
+            } else {
+              await coach(COACH.onPlayerClean);
+            }
+
+            const owesRedo =
+              turn.kind === 'summarize' && (foul === 'judging' || foul === 'opinion_as_fact');
+            if (!owesRedo || attempt === 3) break;
+            await coach(COACH.redoSummary(foul));
           }
         }
 
@@ -362,9 +411,8 @@ export function useShowdown(): Match {
         // reads as the game saying 7 and 7 twice in a row.
         const next = TURNS[i + 1];
         if (!next || next.round !== turn.round) {
-          for (const m of missed) await coach(m);
-          if (missed.length === 0) await coach(COACH.roundClean);
-          missed = [];
+          if (missedCount === 0) await coach(COACH.roundClean);
+          missedCount = 0;
           if (next) {
             await coach(COACH.ledger(purse.current.player, purse.current.sofia));
             await ask({ kind: 'continue', label: `Round ${next.round}` });
@@ -376,7 +424,7 @@ export function useShowdown(): Match {
       const s = purse.current.sofia;
       await end(
         p > s ? 'win' : p < s ? 'loss' : 'draw',
-        `Three rounds. You ${p}, her ${s}.`,
+        `Three rounds. You ${formatTokens(p)}, her ${formatTokens(s)}.`,
       );
     })();
     // The match script runs once, on mount. There is nothing to re-run it for.

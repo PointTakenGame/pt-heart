@@ -19,6 +19,18 @@ export const SHOWDOWN_SLUG = 'full-showdown';
 export const START_TOKENS = 7;
 
 /** Printed rule: Judging costs two, the other two cost one. */
+/**
+ * Tokens print as halves, because a missed foul costs half of one (ruling of
+ * 2026-08-24: a player who lets everything stand has to see the ledger move).
+ * Halves are exact in binary floating point, so the purses never drift and the
+ * two sides still add to fourteen after any number of transfers.
+ */
+export function formatTokens(n: number): string {
+  const whole = Math.floor(n);
+  if (n - whole < 0.5) return String(whole);
+  return whole === 0 ? '\u00bd' : `${whole}\u00bd`;
+}
+
 export function foulCost(foul: FoulType): number {
   return foul === 'judging' ? 2 : 1;
 }
@@ -186,7 +198,7 @@ export const OPENING = {
 export const COACH = {
   intro: [
     'This is the whole thing. Three rounds, both of you on the clock, all three cards live.',
-    'Seven tokens each. A foul does not burn a token, it hands one over. Judging costs two. The other two cost one each. Empty and you are done, whatever the round says.',
+    'Seven tokens each. A foul does not burn a token, it hands one over. Judging costs two. The other two cost one each. Let one of hers go past you and half a token crosses anyway. Empty and you are done, whatever the round says.',
     'She is Slippery Sofia. She does not shout, she does not insult you, and she will foul you twice before you notice once. You whistle her. I whistle you.',
   ],
   callAsk: 'Call it.',
@@ -196,9 +208,14 @@ export const COACH = {
   /** any card named on a clean line */
   onFalseCall:
     'That one was clean. Coming at your position hard is not a foul, and a bad whistle costs you 1.',
-  /** named at the end of the round, not in the moment */
-  onMissed: (foul: FoulType) =>
-    `You let one go: ${RULE_LABEL[foul]}, ${RULE_GLOSS[foul]}. She kept the token.`,
+  /**
+   * Called the moment the line goes past, not at the end of the round. A
+   * training round has to answer fast or the answer is not attached to
+   * anything (ruling of 2026-08-24). A miss costs half a token, so the player
+   * who lets everything stand watches the ledger drain anyway.
+   */
+  onMissed: (foul: FoulType, cost: number) =>
+    `You let one go: ${RULE_LABEL[foul]}, ${RULE_GLOSS[foul]}. She keeps her token and takes ${formatTokens(cost)} of yours for the miss.`,
   onWrongCard: (called: FoulType, actual: FoulType) =>
     `You had the whistle right and the card wrong. That was ${RULE_LABEL[actual]}, not ${RULE_LABEL[called]}. No token moves on a wrong card.`,
   roundClean: 'Nothing missed that round.',
@@ -206,10 +223,26 @@ export const COACH = {
   onPlayerFoul: (foul: FoulType, cost: number) =>
     `That is on you. ${RULE_LABEL[foul]}: ${RULE_GLOSS[foul]}. ${cost} to her.`,
   onPlayerClean: 'Clean.',
-  ledger: (p: number, s: number) => `End of the round. You ${p}, her ${s}.`,
+  /**
+   * A Judging or Opinions-as-Facts foul committed inside a summarizing turn.
+   * The expensive card gets ruled and paid for, and then the summary still has
+   * to be done (ruling of 2026-08-24). Burying a two-token foul in a summary
+   * does not convert it into a one-token one.
+   */
+  redoSummary: (foul: FoulType) =>
+    `${RULE_LABEL[foul]} does not get cheaper because it happened inside a summary. That is paid for. The summary still has not been done. Do it again.`,
+  ledger: (p: number, s: number) =>
+    `End of the round. You ${formatTokens(p)}, her ${formatTokens(s)}.`,
   win: 'You took it. Not because you were right about the policy; I have no idea who was right about the policy. You took it because you stayed on the argument and she did not.',
   loss: 'She took it. Go back and drill the card she kept getting past you.',
   draw: 'Dead even. Which, in this game, is not a bad night.',
   bankrupt: 'You are empty. That ends it, whatever the round said.',
+  /**
+   * Unreachable by design, and kept anyway. Sofia's authored fouls total four
+   * tokens against a seven-token purse, so her floor is three and she cannot be
+   * knocked out. Steve's ruling of 2026-08-24: the bosses are training rounds,
+   * and ending one early through no fault of the player would cut the training
+   * short. Do not "fix" this by giving her a fourth foul.
+   */
   bankruptHer: 'She is empty. That ends it right there.',
 };

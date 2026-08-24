@@ -1,3 +1,5 @@
+import { formatTokens } from '../content/showdown.ts';
+
 interface Props {
   title: string;
   teaches: string;
@@ -34,14 +36,14 @@ export function Header({
         // decoration; a number that drops by two when you get Judged does not.
         <div
           className="ledger"
-          aria-label={`you ${tokens.player}, opponent ${tokens.sofia}`}
+          aria-label={`you ${formatTokens(tokens.player)}, opponent ${formatTokens(tokens.sofia)}`}
         >
           <span className="ledger-side">
-            <span className="ledger-n">{tokens.player}</span>
+            <span className="ledger-n">{formatTokens(tokens.player)}</span>
             <span className="ledger-who">you</span>
           </span>
           <span className="ledger-side ledger-them">
-            <span className="ledger-n">{tokens.sofia}</span>
+            <span className="ledger-n">{formatTokens(tokens.sofia)}</span>
             <span className="ledger-who">her</span>
           </span>
         </div>

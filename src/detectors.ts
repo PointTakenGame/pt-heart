@@ -47,8 +47,8 @@ export const OWNERSHIP_PREFIXES = [
   'from where i sit',
 ];
 
-// Judging: "you" plus a character or motive word (an attack on the person, not
-// the argument). Cheap nomination only; the listener confirms whether it stung.
+// Judging: a character word aimed at the person, not the argument. Cheap
+// nomination only; the listener confirms whether it stung.
 export const TRAIT_WORDS = [
   'lazy',
   'stupid',
@@ -65,15 +65,33 @@ export const TRAIT_WORDS = [
   'stubborn',
   'immature',
   'irrational',
-  'always',
-  'never',
+];
+
+// Telling somebody what they really want underneath. These are motive claims
+// rather than adjectives, so they live in their own list and are matched as
+// whole phrases attached to "you".
+export const MOTIVE_PHRASES = [
   'just want',
   'just trying to',
-  'dont even care',
   "don't even care",
+  'dont even care',
+  "don't care",
   'dont care',
   'only care',
 ];
+
+// Deliberately NOT here: 'always' and 'never'. They used to sit in TRAIT_WORDS
+// as bare substrings, which made "a bill you never signed" a two-token Judging
+// foul, because the old rule only asked whether the message contained a "you"
+// somewhere and a trait somewhere. Level 4 asks the player to summarize the
+// other person, so almost every line they write contains "you", and the false
+// whistles landed on clean summaries. Attaching the word to the subject does
+// not rescue it either: "you never signed" is attached and still innocent.
+// Telling "you always do this" (a verdict) apart from "a bill you never signed"
+// (a relative clause) needs the model, so offline we let both through. Same
+// principle as the bare-declarative gap in Opinions-as-Facts, HEART-T260823-47:
+// a coach with no model should under-call, because a false whistle on a clean
+// sentence teaches the player the wrong thing and charges them for it.
 
 function normalize(text: string): string {
   return text.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
@@ -144,16 +162,48 @@ export function detectOpinionAsFact(text: string): PhraseHit | null {
   return null;
 }
 
-// Judging phrase check: a "you" aimed at a trait or motive.
+// The person, as the sentence addresses them.
+const SUBJECT = "(?:\\byou\\b(?:'re| are| r)?|\\byour\\b)";
+
+// Words that can sit between the subject and the verdict without softening it:
+// "you are just being so stubborn" is the same foul as "you are stubborn".
+const HEDGE =
+  '(?:\\s+(?:just|only|so|such|a|an|the|really|being|act|acting|sound|sounding|seem|seeming|kind|sort|of|totally|completely|always|never|too))*';
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Is the phrase actually pointed at the person, rather than merely present in
+// the same sentence as a "you"? The old rule asked only the second question,
+// which charged two tokens for "a bill you never signed". Both orders count:
+// "you are being selfish" and "that was selfish of you".
+function aimedAtYou(norm: string, phrase: string): boolean {
+  const esc = escapeRe(phrase);
+  const forward = new RegExp(`${SUBJECT}${HEDGE}\\s+${esc}\\b`);
+  const backward = new RegExp(`\\b${esc}\\b\\s+(?:of|about|on)\\s+you\\b`);
+  return forward.test(norm) || backward.test(norm);
+}
+
+// Judging phrase check: a character word or a motive claim aimed at the person.
 export function detectJudging(text: string): PhraseHit | null {
   const norm = normalize(text);
   if (!/\byou('?re| are|r)?\b|\byour\b/.test(norm)) return null;
   for (const trait of TRAIT_WORDS) {
-    if (norm.includes(trait)) {
+    if (aimedAtYou(norm, trait)) {
       return {
         foulType: 'judging',
         matched: trait,
-        reason: `"you" aimed at a trait or motive ("${trait}") rather than the argument.`,
+        reason: `"you" aimed at a trait ("${trait}") rather than at the argument.`,
+      };
+    }
+  }
+  for (const motive of MOTIVE_PHRASES) {
+    if (aimedAtYou(norm, motive)) {
+      return {
+        foulType: 'judging',
+        matched: motive,
+        reason: `Tells the other person what they really want ("${motive}") instead of answering what they said.`,
       };
     }
   }
