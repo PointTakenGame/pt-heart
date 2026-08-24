@@ -92,6 +92,14 @@ paint. A `ResizeObserver` lands it a frame or two late and you see the jump.
 at the top instead of scrolling to it. The safe equivalent is `margin-top: auto`
 on the first child, which is what `.thread > .msg:first-child` does.
 
+**Tokens move, they never burn.** Fourteen are on the table when a match starts
+and fourteen when it ends. A foul hands tokens to the other player; nothing is
+created or destroyed, and the two numbers in the header always add to fourteen.
+`transfer` in `src/showdown.ts` clamps a move to what the losing purse actually
+holds, because judging costs two and a purse can be holding one. Without the
+clamp the ledger paints a negative number for a full beat and then the bust line
+says "you are empty" over it.
+
 **Political balance is non-negotiable.** Every politically-perceptible example
 needs an equally vivid opposite-side counterpart, or an explicit flag that it is
 imbalanced and why. Each level file carries a balance ledger in its header
