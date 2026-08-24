@@ -215,9 +215,17 @@ p  { margin: 0 0 0.75rem; }
 .composer-locked { min-height: 3.9rem; border-top-color: transparent; }
 /* Wrap, do not overflow. Four whistle buttons at phone width cannot shrink
    below their longest word, so a single row pushed "Let it stand" off the right
-   edge and the player could not decline to call a foul. The 8rem basis puts two
-   per row on a phone and all four on one row at full page width. */
-.composer-btn-row { display: flex; flex-direction: row; flex-wrap: wrap; gap: 0.6rem; }
+   edge and the player could not decline to call a foul. The 8rem track puts two
+   per row on a phone and all four on one row at full page width.
+   Grid rather than wrapping flex because a wrapped flex row stretches whatever
+   is left over: three options became two half-width buttons and one full-width
+   one, and the wide one reads as the answer the game wants. Every option here is
+   supposed to look equally plausible. */
+.composer-btn-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.6rem;
+}
 
 /* The reference card, closed by default. It sits above the buttons rather than
    in the header so it costs nothing on the screens that do not offer it. */
@@ -245,7 +253,6 @@ p  { margin: 0 0 0.75rem; }
 .btn:hover { background: var(--cream-dark); }
 .btn:disabled { opacity: 0.35; cursor: default; }
 .btn-wide { width: 100%; }
-.composer-btn-row .btn { flex: 1 1 8rem; }
 .btn-send { flex: 0 0 auto; align-self: flex-end; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
