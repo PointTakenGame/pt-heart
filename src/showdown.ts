@@ -182,13 +182,19 @@ export function useShowdown(): Match {
      * anybody. Fourteen tokens are on the table at the start and fourteen are on
      * the table at the end; nothing here creates or destroys one.
      */
-    const transfer = (from: 'player' | 'sofia', n: number): boolean => {
+    const transfer = (from: 'player' | 'sofia', n: number): { moved: number; bust: boolean } => {
       const to = from === 'player' ? 'sofia' : 'player';
-      purse.current[from] -= n;
-      purse.current[to] += n;
+      // A purse stops at empty. A two-token foul against a one-token purse moves
+      // one, because a foul moves tokens and never burns them: fourteen are on
+      // the table at the start and fourteen at the end. Without this the header
+      // paints a negative number for a full beat before the bust line lands, and
+      // the bust line says "you are empty" over a ledger reading -1.
+      const moved = Math.min(n, purse.current[from]);
+      purse.current[from] -= moved;
+      purse.current[to] += moved;
       setPlayerTokens(purse.current.player);
       setSofiaTokens(purse.current.sofia);
-      return purse.current[from] <= 0;
+      return { moved, bust: purse.current[from] <= 0 };
     };
 
     const record = (
@@ -300,10 +306,9 @@ export function useShowdown(): Match {
           record(turn, '-call', turn.foul ?? 'mixed', called, correct, []);
 
           if (turn.foul && called === turn.foul) {
-            const cost = foulCost(turn.foul);
-            const done = transfer('sofia', cost);
-            await coach(COACH.onHit(turn.foul, cost));
-            if (done && (await bankruptCheck())) return;
+            const { moved, bust } = transfer('sofia', foulCost(turn.foul));
+            await coach(COACH.onHit(turn.foul, moved));
+            if (bust && (await bankruptCheck())) return;
           } else if (turn.foul && called !== 'stand') {
             // Right instinct, wrong card. Nothing moves, and she does not get told.
             missed.push(COACH.onWrongCard(called as FoulType, turn.foul));
@@ -312,9 +317,9 @@ export function useShowdown(): Match {
           } else if (called !== 'stand') {
             // A bad whistle is the only way a clean round of hers costs you
             // anything, and it is what makes round 2 expensive.
-            const done = transfer('player', 1);
+            const { bust } = transfer('player', 1);
             await coach(COACH.onFalseCall);
-            if (done && (await bankruptCheck())) return;
+            if (bust && (await bankruptCheck())) return;
           }
         } else {
           const answer =
@@ -338,11 +343,10 @@ export function useShowdown(): Match {
           record(turn, '', turn.kind === 'summarize' ? 'fake_listening' : 'mixed', text, foul === null, answer.revisions);
 
           if (foul) {
-            const cost = foulCost(foul);
-            const done = transfer('player', cost);
-            await coach(ruled?.text ?? COACH.onPlayerFoul(foul, cost));
-            if (ruled) await coach(COACH.onPlayerFoul(foul, cost));
-            if (done && (await bankruptCheck())) return;
+            const { moved, bust } = transfer('player', foulCost(foul));
+            await coach(ruled?.text ?? COACH.onPlayerFoul(foul, moved));
+            if (ruled) await coach(COACH.onPlayerFoul(foul, moved));
+            if (bust && (await bankruptCheck())) return;
           } else if (ruled?.text) {
             await coach(ruled.text);
           } else {
