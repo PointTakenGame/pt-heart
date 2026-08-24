@@ -11,7 +11,7 @@
 //   pro-forgiveness position; item 4 aims at an anti-forgiveness one, and item 4
 //   is the one put in the player's own mouth.
 //   Clean arguments modelled: item 2 is anti-forgiveness, item 3 is
-//   pro-forgiveness (it argues the cost figure down), Vikram's closing line is
+//   pro-forgiveness (it argues the cost figure down), Victor's closing line is
 //   anti-forgiveness.
 // So this level runs 2:1 against forgiveness in both columns, because it has one
 // boss and a boss only argues one side. Flagged rather than hidden; the
@@ -25,7 +25,7 @@ export const level1: LevelDef = {
   title: 'The word "You"',
   teaches: 'Judging',
   rule: 'judging',
-  boss: 'Verdict Vikram',
+  boss: 'Verdict Victor',
   beats: [
     {
       // Not the level title again. The header prints the title and the beat
@@ -38,7 +38,7 @@ export const level1: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'That is Verdict Vikram. You are in with him in two minutes.',
+          text: 'That is Verdict Victor. You are in with him in two minutes.',
         },
         {
           kind: 'say',
@@ -89,7 +89,7 @@ export const level1: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Vikram will use blunt as cover. Do not swing at it.',
+          text: 'Victor will use blunt as cover. Do not swing at it.',
         },
 
         {
@@ -111,7 +111,7 @@ export const level1: LevelDef = {
       ],
     },
     {
-      name: 'Verdict Vikram',
+      name: 'Verdict Victor',
       steps: [
         { kind: 'say', lane: 'coach', text: 'Here he comes. You know his move.' },
         {
@@ -119,7 +119,7 @@ export const level1: LevelDef = {
           id: 'l1-boss',
           rule: 'judging',
           lane: 'opponent',
-          speaker: 'Verdict Vikram',
+          speaker: 'Verdict Victor',
           line: 'You want the write-off because you have never once had to think about who pays for it, and you would rather not start now.',
           expected: 'foul',
           onCall: 'Called it.',
@@ -128,7 +128,7 @@ export const level1: LevelDef = {
         {
           kind: 'say',
           lane: 'opponent',
-          speaker: 'Verdict Vikram',
+          speaker: 'Verdict Victor',
           text: 'Fine. Then argue the cost. It is 400 billion dollars and it goes mostly to people who will out-earn the people paying for it.',
         },
         {

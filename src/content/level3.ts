@@ -1,6 +1,6 @@
 // Level 3: Did I miss anything (Fake Listening).
 // Source: docs/design/2026-08-23_mvp-build-plan.md §4, Beat 4 (the ten-step table),
-// plus the cold open and the Nodding Nils exchange in
+// plus the cold open and the Nodding Noemi exchange in
 // 2026-08-23_full-game-scripts.md §3.
 //
 // This is the only level that needs the model. Steps 4 and 5 restate the player's
@@ -23,7 +23,7 @@ export const level3: LevelDef = {
   title: 'Did I miss anything?',
   teaches: 'Fake Listening',
   rule: 'fake_listening',
-  boss: 'Nodding Nils',
+  boss: 'Nodding Noemi',
   beats: [
     {
       name: 'Say it back',
@@ -31,17 +31,17 @@ export const level3: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Nodding Nils. He will agree with you. He will nod. He will repeat your point back so smoothly you will feel heard.',
+          text: 'Nodding Noemi. She will agree with you. She will nod. She will repeat your point back so smoothly you will feel heard.',
         },
         {
           kind: 'say',
           lane: 'coach',
-          text: 'And he will leave out the one part of it that costs him something.',
+          text: 'And she will leave out the one part of it that costs her something.',
         },
         {
           kind: 'say',
           lane: 'coach',
-          text: 'So we are going to practice saying somebody\'s point back to them until it is a reflex. Then you will notice when his version is short.',
+          text: 'So we are going to practice saying somebody\'s point back to them until it is a reflex. Then you will notice when her version is short.',
         },
 
         {
@@ -112,17 +112,17 @@ export const level3: LevelDef = {
           fallback:
             'Here it is with my reason back in it: "it bugs you that exchanges can mix customer funds in, because yours were frozen for nine weeks and nobody could tell you where they were." The because half is the one people quietly write for you.',
         },
-        { kind: 'continue', label: 'Face him' },
+        { kind: 'continue', label: 'Face her' },
       ],
     },
 
     {
-      name: 'Nodding Nils',
+      name: 'Nodding Noemi',
       steps: [
         {
           kind: 'say',
           lane: 'coach',
-          text: 'You are arguing for working from home. You gave him three reasons: the commute costs you, you focus better, and you have childcare in the afternoon.',
+          text: 'You are arguing for working from home. You gave her three reasons: the commute costs you, you focus better, and you have childcare in the afternoon.',
         },
         {
           kind: 'say',
@@ -132,14 +132,14 @@ export const level3: LevelDef = {
         {
           kind: 'say',
           lane: 'opponent',
-          speaker: 'Nodding Nils',
+          speaker: 'Nodding Noemi',
           text: 'So you are saying the commute is expensive and you focus better at home. Did I get that right?',
         },
         {
           kind: 'sort',
           id: 'l3-boss-1',
           rule: 'fake_listening',
-          line: 'Which one did he leave out?',
+          line: 'Which one did she leave out?',
           options: [
             { value: 'commute', label: 'The commute cost' },
             { value: 'focus', label: 'Focusing better' },
@@ -147,22 +147,22 @@ export const level3: LevelDef = {
           ],
           expected: 'childcare',
           feedback: {
-            commute: 'He kept that one. He said it first, in fact.',
-            focus: 'He named that one. Two of your three came back; the third did not.',
+            commute: 'She kept that one. She said it first, in fact.',
+            focus: 'She named that one. Two of your three came back; the third did not.',
             childcare:
-              'Childcare. The one he cannot answer cheaply, and the only one missing.',
+              'Childcare. The one she cannot answer cheaply, and the only one missing.',
           },
         },
         {
           kind: 'say',
           lane: 'opponent',
-          speaker: 'Nodding Nils',
+          speaker: 'Nodding Noemi',
           text: 'Right. Childcare. I did leave that out.',
         },
         {
           kind: 'say',
           lane: 'coach',
-          text: 'He did not mishear you. He dropped the one you cannot answer cheaply. Notice that this is an absence, not a mistake, which is why it is the hardest one to catch.',
+          text: 'She did not mishear you. She dropped the one you cannot answer cheaply. Notice that this is an absence, not a mistake, which is why it is the hardest one to catch.',
         },
         { kind: 'continue', label: 'Finish' },
       ],

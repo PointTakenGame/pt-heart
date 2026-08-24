@@ -16,7 +16,7 @@ export const level2: LevelDef = {
   title: 'In my head, because',
   teaches: 'Opinions as Facts',
   rule: 'opinion_as_fact',
-  boss: 'Obvious Ottoline',
+  boss: 'Obvious Olivia',
   beats: [
     {
       name: 'Own it',
@@ -24,7 +24,7 @@ export const level2: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Obvious Ottoline. She is the nicest person you will fight all week.',
+          text: 'Obvious Olivia. She is the nicest person you will fight all week.',
         },
         {
           kind: 'say',
@@ -245,7 +245,7 @@ export const level2: LevelDef = {
     },
 
     {
-      name: 'Obvious Ottoline',
+      name: 'Obvious Olivia',
       steps: [
         {
           kind: 'say',
@@ -257,7 +257,7 @@ export const level2: LevelDef = {
           id: 'l2-boss-1',
           rule: 'opinion_as_fact',
           lane: 'opponent',
-          speaker: 'Obvious Ottoline',
+          speaker: 'Obvious Olivia',
           line: 'Obviously the market would sort out the coins on its own. Everybody who works in this knows that.',
           expected: 'foul',
           onCall: 'Two markers in one sentence. She did not notice either.',
@@ -268,7 +268,7 @@ export const level2: LevelDef = {
           id: 'l2-boss-2',
           rule: 'opinion_as_fact',
           lane: 'opponent',
-          speaker: 'Obvious Ottoline',
+          speaker: 'Obvious Olivia',
           line: 'And of course the states that raised their wage floor lost the jobs. That is just what happens.',
           expected: 'foul',
           onCall: 'Same shape, other side of the aisle. She does it to everyone.',
@@ -278,7 +278,7 @@ export const level2: LevelDef = {
         {
           kind: 'say',
           lane: 'opponent',
-          speaker: 'Obvious Ottoline',
+          speaker: 'Obvious Olivia',
           text: 'I am not being difficult. These are simply the facts.',
         },
         {
