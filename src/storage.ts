@@ -85,7 +85,9 @@ export function reset(): void {
   }
 }
 
-/** For eyeballing the corpus during playtests. Wired to a keyboard shortcut. */
+/** The whole save file as text, for eyeballing the corpus during playtests.
+ *  Wired up in main.tsx: Ctrl/Cmd+Shift+E on a desktop, window.__export() from
+ *  an inspector attached to a phone. */
 export function exportJson(): string {
   return JSON.stringify(load(), null, 2);
 }

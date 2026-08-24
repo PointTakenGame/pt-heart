@@ -119,6 +119,12 @@ No accounts, no auth, nothing leaves the browser. PT Brain owns auth and hands
 it over later, at which point `storage.ts` gains a sync path and nothing else
 changes.
 
+Two ways to get the corpus out, both invisible to a player. `Ctrl/Cmd+Shift+E`
+copies the whole save file to the clipboard and logs it, which is the desktop
+path. That combo is dead on a phone, so `window.__export()` is the other one,
+reachable from an inspector attached to the real device. Playtesting happens on
+a phone, so in practice the second one is the one you want.
+
 ## Keys
 
 The dev server reads the API key from a file outside this repo:
