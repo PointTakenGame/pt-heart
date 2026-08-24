@@ -21,16 +21,29 @@ export interface JudgeResult {
   fromModel: boolean;
 }
 
+// Degrading in content is not enough; it has to degrade in time as well. Without
+// a deadline here, an upstream that hangs rather than refusing takes the beat with
+// it, and the player sits in front of a locked composer with nothing to look at.
+// A dead operator key on 2026-08-23 turned every beat into a multi-minute wait
+// this way, even though the authored fallback was right there the whole time.
+//
+// 6 seconds is well past a normal short Haiku line and well short of feeling
+// broken. Past it we stop waiting and use the authored line, which is what a
+// refusal would have given us anyway.
+const COACH_TIMEOUT_MS = 6000;
+
 async function callCoach(body: unknown): Promise<any | null> {
   try {
     const res = await fetch('/api/coach', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(COACH_TIMEOUT_MS),
     });
     if (!res.ok) return null;
     return await res.json();
   } catch {
+    // includes the abort: a timeout is just one more unreachable model
     return null;
   }
 }

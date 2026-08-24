@@ -90,20 +90,31 @@ const PROMPTS = {
     `\n\nReply with your line only. No preamble, no quotation marks, no stage directions.`,
 } as const;
 
+// Deliberately under the client's own 6s deadline, so a slow upstream comes back
+// here as an ordinary "no line available" and the client uses its authored
+// fallback, rather than the client giving up on a request still in flight.
+const UPSTREAM_TIMEOUT_MS = 5000;
+
 async function ask(key: string, prompt: string): Promise<string | null> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 300,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 300,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    });
+  } catch {
+    return null;
+  }
   if (!res.ok) return null;
   const data: any = await res.json();
   return data?.content?.[0]?.text?.trim() ?? '';
