@@ -6,9 +6,17 @@
 // verdict out of a line drafted for them.
 //
 // Political balance ledger, which is non-negotiable and must stay accurate if the
-// lines are touched: item 1 attacks a pro-forgiveness position. Item 4 attacks an
-// anti-forgiveness position, and it is the one put in the player's own mouth.
-// Items 2 and 3 are policy-neutral.
+// lines are touched.
+//   Judging lines, by who they are aimed at: item 1 and the boss line aim at a
+//   pro-forgiveness position; item 4 aims at an anti-forgiveness one, and item 4
+//   is the one put in the player's own mouth.
+//   Clean arguments modelled: item 2 is anti-forgiveness, item 3 is
+//   pro-forgiveness (it argues the cost figure down), Vikram's closing line is
+//   anti-forgiveness.
+// So this level runs 2:1 against forgiveness in both columns, because it has one
+// boss and a boss only argues one side. Flagged rather than hidden; the
+// counterweight sits in level 2's ledger, which opens on the right. Steve's call
+// whether that is enough (HEART-T260823-33).
 
 import type { LevelDef } from '../types.ts';
 
@@ -112,7 +120,7 @@ export const level1: LevelDef = {
           rule: 'judging',
           lane: 'opponent',
           speaker: 'Verdict Vikram',
-          line: 'You are against the write-off because you resent people who went to better schools than you.',
+          line: 'You want the write-off because you have never once had to think about who pays for it, and you would rather not start now.',
           expected: 'foul',
           onCall: 'Called it.',
           onPass: 'That was the move, start to finish. Call it.',
