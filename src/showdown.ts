@@ -352,13 +352,17 @@ export function useShowdown(): Match {
 
         // End of round housekeeping: report what got past the player, then the
         // ledger, so every round ends on the same two beats.
+        //
+        // The last round gets no ledger line. The final tally follows it
+        // immediately and prints the same two numbers, so the round line only
+        // reads as the game saying 7 and 7 twice in a row.
         const next = TURNS[i + 1];
         if (!next || next.round !== turn.round) {
           for (const m of missed) await coach(m);
           if (missed.length === 0) await coach(COACH.roundClean);
           missed = [];
-          await coach(COACH.ledger(purse.current.player, purse.current.sofia));
           if (next) {
+            await coach(COACH.ledger(purse.current.player, purse.current.sofia));
             await ask({ kind: 'continue', label: `Round ${next.round}` });
           }
         }
