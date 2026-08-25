@@ -18,7 +18,6 @@
 // the player has pressed Next or clicked into the game, so the page has already
 // been gestured at by the time an AudioContext is created.
 
-const KEY = 'humility-showdown.blip';
 const VOICE_KEY = 'humility-showdown.blip-voice';
 
 export type BlipVoice = 'wood' | 'low' | 'retro' | 'breath';
@@ -35,10 +34,17 @@ function isVoice(v: string | null): v is BlipVoice {
   return v === 'wood' || v === 'low' || v === 'retro' || v === 'breath';
 }
 
-let on = true;
+// Silent on every load. Steve, 2026-08-25: "turn off the sounds by default
+// unless user turns it on actively after reload. it's annoying me."
+//
+// So the mute state is deliberately NOT persisted, which is the difference
+// between a default and a preference: a preference would remember that he
+// switched it on last Tuesday and start beeping at him again today. Turning the
+// voice on is a per-session act. The chosen voice still persists, because that
+// is a real preference: it says which voice he wants when he does turn it on.
+let on = false;
 let voice: BlipVoice = 'wood';
 try {
-  on = localStorage.getItem(KEY) !== 'off';
   const saved = localStorage.getItem(VOICE_KEY);
   if (isVoice(saved)) voice = saved;
 } catch {
@@ -54,12 +60,8 @@ export function blipMuted(): boolean {
 }
 
 export function setBlipMuted(muted: boolean): void {
+  // Not written to storage; see the note on the initializer above.
   on = !muted;
-  try {
-    localStorage.setItem(KEY, on ? 'on' : 'off');
-  } catch {
-    /* see above */
-  }
 }
 
 export function blipVoice(): BlipVoice {
