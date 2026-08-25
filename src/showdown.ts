@@ -385,14 +385,14 @@ export function useShowdown(): Match {
           const call = await ask({
             kind: 'call',
             hint: COACH.callAsk,
-            pass: { value: 'stand', label: 'Let it stand' },
+            pass: { value: 'stand', label: "I might not agree, but it's not a foul" },
             callable,
             nonce: nonce.current,
           });
           const called = call.value;
           push({
             lane: 'player',
-            text: called === 'stand' ? 'Let it stand' : RULE_LABEL[called as FoulType],
+            text: called === 'stand' ? 'Not a foul' : RULE_LABEL[called as FoulType],
             isCall: called !== 'stand',
           });
 

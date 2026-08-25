@@ -26,7 +26,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { FoulType } from '../types.ts';
-import { RuleCardFull } from './RuleCards.tsx';
+import { RuleCardFull, RuleCardMini } from './RuleCards.tsx';
 import {
   blip,
   blipMuted,
@@ -53,6 +53,12 @@ interface Props {
   mug?: Mug | null;
   /** speaker tint: whose frame this is */
   tone?: 'coach' | 'opponent' | 'player' | 'table' | 'call';
+  /** drill mode: no full card will ever be dealt here, so do not reserve the
+   *  height for one. Steve, 2026-08-25: "there's a lot of space in the area
+   *  where the text can appear. I don't know why it's so enormous. I think it's
+   *  designed to fit the entire card, which made sense in the introduction
+   *  phase, but now we're never going to show the entire card in this pane." */
+  compact?: boolean;
 }
 
 /** Roughly the reading speed the thread's dwell timer assumes (pacing.ts).
@@ -67,7 +73,7 @@ const MS_PER_CHAR = 34;
 /** The seeds a voice preview plays, so every sample is the same five notes. */
 const SAMPLE = [72, 101, 108, 108, 111];
 
-export function Dialogue({ face, name, text, card, mug, tone = 'coach' }: Props) {
+export function Dialogue({ face, name, text, card, mug, tone = 'coach', compact = false }: Props) {
   const [shown, setShown] = useState(0);
   const [muted, setMuted] = useState(blipMuted);
   const [voice, setVoice] = useState<BlipVoice>(blipVoice);
@@ -104,7 +110,12 @@ export function Dialogue({ face, name, text, card, mug, tone = 'coach' }: Props)
   };
 
   return (
-    <div className={`dlg dlg-${tone}`} onClick={dump}>
+    <div
+      className={`dlg dlg-${tone}${card ? ' has-card' : ''}${mug ? ' has-mug' : ''}${
+        compact ? ' is-compact' : ''
+      }`}
+      onClick={dump}
+    >
       <button
         className="dlg-mute"
         aria-label={muted ? 'turn the voice on' : 'turn the voice off'}
@@ -148,6 +159,10 @@ export function Dialogue({ face, name, text, card, mug, tone = 'coach' }: Props)
                 setBlipVoice(v.id);
                 setVoice(v.id);
                 sample(v.id);
+                // Steve, 2026-08-25: "When the new voice is clicked, then close
+                // the pop-up menu." The sample still plays; the menu closing is
+                // what says the choice took.
+                setPicking(false);
               }}
             >
               <span className="dlg-voice-name">{v.label}</span>
@@ -173,7 +188,7 @@ export function Dialogue({ face, name, text, card, mug, tone = 'coach' }: Props)
         </div>
       </div>
 
-      {card && <RuleCardFull rule={card} />}
+      {card && (compact ? <RuleCardMini rule={card} /> : <RuleCardFull rule={card} />)}
 
       {/* The RPG "line's over" wedge. It says the typing has stopped, which is
           the one thing the stepper's Next button cannot say: Next is always

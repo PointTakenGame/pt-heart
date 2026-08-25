@@ -379,6 +379,12 @@ function Room({
           </button>
         }
       />
+      {/* Whoever is across from you right now, which in the practice room is
+          the coach. Steve, 2026-08-25: "it's weird because Victor is there but
+          we're not playing him? What's going on? At this point we should be
+          playing the coach and the coach should be like sparring with us. So
+          the coach is the person on the left side. Don't put Victor up there."
+          Victor's face comes back the moment the walk-out screen is over. */}
       <Header
         title={level.title}
         teaches={level.teaches}
@@ -386,8 +392,8 @@ function Room({
         purses={{
           player: gym.playerTokens,
           opponent: gym.opponentTokens,
-          opponentLabel: level.boss.split(' ')[0].toLowerCase(),
-          opponentEmoji: level.bossEmoji,
+          opponentLabel: inBoss ? level.boss.split(' ')[0].toLowerCase() : 'coach',
+          opponentEmoji: inBoss ? level.bossEmoji : COACH_EMOJI,
           playerEmoji: avatar,
         }}
       />
@@ -405,10 +411,12 @@ function Room({
       ) : (
         <Drill
           messages={gym.messages}
-          avatars={{ coach: COACH_EMOJI, opponent: level.bossEmoji, player: avatar }}
+          avatars={{ coach: COACH_EMOJI, opponent: COACH_EMOJI, player: avatar }}
           waiting={gym.waiting}
           onSkip={gym.skip}
-          opponent={{ emoji: level.bossEmoji, name: level.boss, epithet: level.bossEpithet }}
+          // null, so a training line that happens to say "Victor" does not deal
+          // his baseball card in a room he is not in. See the Header note above.
+          opponent={null}
           composer={composerNode}
           composerReady={gym.finished || gym.composer.kind !== 'locked'}
           onBehind={setDrillBehind}

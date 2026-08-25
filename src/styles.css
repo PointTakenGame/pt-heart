@@ -49,8 +49,12 @@
      request. */
   --font-cond: Impact, Haettenschweiler, "Arial Narrow Bold", "Arial Narrow", sans-serif;
 
-  /* The one height of the NPC dialogue box. See .dlg for the arithmetic. */
-  --dlg-h: 34rem;
+  /* The heights of the NPC dialogue box, one per class of thing it holds. See
+     .dlg for the arithmetic and for why this is a tier list and not one number. */
+  --dlg-h: 34rem;          /* holds the full printed card */
+  --dlg-h-mug: 33.5rem;    /* holds the opponent's baseball card */
+  --dlg-h-text: 11rem;     /* a floor for plain talk, not a ceiling */
+  --dlg-h-compact: 15rem;  /* training: text, or text plus the small card */
 }
 
 * { box-sizing: border-box; }
@@ -407,8 +411,14 @@ p  { margin: 0 0 0.75rem; }
 
 /* ---------- thread ---------- */
 
+/* Steve, 2026-08-25: "the chat window is still too tlal, cut it vert by 30%."
+   Capped rather than re-flexed, so the thread still fills what it is given on a
+   short screen and still scrolls. The freed space falls to the bottom of the
+   window, under the rail, so the room stays anchored to the top like every
+   other screen in the game. */
 .thread {
   flex: 1;
+  max-height: 50vh;
   min-height: 0;
   overflow-y: auto;
   padding: 1.25rem 1rem 0.5rem;
@@ -424,6 +434,12 @@ p  { margin: 0 0 0.75rem; }
    container and makes the earliest messages unreachable.
    Untyped selector on purpose: the children are rows now, not bubbles. */
 .thread > :first-child { margin-top: auto; }
+
+/* Where the 30% goes: to the bottom of the window, under the rail. The freed
+   band was parked above the title first, which on a tall screen opened a hole
+   between the masthead and the fight name. Every other room in the game hangs
+   its content off the top and leaves the slack underneath, and the boss room
+   reads wrong when it is the one screen that does not. */
 
 /* A row is one bubble, with the speaker's face inside it. Steve, 2026-08-24: it
    "should feel liek mortal kombat", and that starts with knowing at a glance who
@@ -540,6 +556,11 @@ p  { margin: 0 0 0.75rem; }
   border-left: 4px solid var(--purple);
   box-shadow: 0 1px 6px rgba(45, 45, 45, 0.08);
 }
+
+/* The face lives inside the bubble, so the italic on a specimen or a take was
+   slanting the speaker's head along with their words. Steve, 2026-08-25:
+   "victor's emoji is slanted, remove the italic from it." */
+.msg-body .face { font-style: normal; }
 
 /* A dealt rule card is the card, not a bubble around one. */
 .msg-card { width: 100%; }
@@ -675,7 +696,9 @@ p  { margin: 0 0 0.75rem; }
   color: inherit;
   font-size: 0.9rem;
   letter-spacing: 0.03em;
-  text-transform: uppercase;
+  /* No uppercase. It reads "I might not agree, but it's not a foul" now, which
+     is something the player says, and shouting a concession is the wrong tone
+     as well as three lines of text. */
 }
 .rail {
   display: flex;
@@ -741,9 +764,13 @@ p  { margin: 0 0 0.75rem; }
 .rail-tip {
   position: absolute;
   left: 50%;
-  bottom: calc(100% - 0.25rem);
+  bottom: calc(100% - 0.9rem);
   transform: translateX(-50%);
-  width: min(19rem, 92vw);
+  /* Steve, 2026-08-25: "it does pop up, but it needs to be about twice as big.
+     It's too small. The text size should be this at least as big as the other
+     text on the screen." Width and --u move together, so the card keeps its
+     printed proportion and every line on it doubles with the frame. */
+  width: min(29rem, 94vw);
   z-index: 40;
   pointer-events: none;
   opacity: 0;
@@ -751,13 +778,22 @@ p  { margin: 0 0 0.75rem; }
   filter: drop-shadow(0 6px 14px rgba(45, 45, 45, 0.28));
   transition: opacity 120ms ease, visibility 0s;
 }
-/* The preview is the printed card, so it wears the printed proportion too. */
+/* The preview is the printed card, so it wears the printed proportion too.
+   --u is set for the reading, not for the frame: 0.78 * 1.28rem lands the body
+   text at 16px, which is the size of the rail label under the cursor. Steve's
+   floor was "at least as big as the other text on the screen", and the frame is
+   held one rem narrower than that would imply so the tall card still clears the
+   top of the window when it opens upward. */
 .rail-tip .card-full {
-  --u: 0.72rem;
+  --u: 1.28rem;
   aspect-ratio: var(--card-ar);
 }
+/* :has(:focus-visible) rather than :focus-within, because a mouse click leaves
+   the foul card focused and the preview is now big enough to cover the whole
+   room while the player is trying to read what their call did. Keyboard focus
+   still opens it. */
 .rail-slot:hover .rail-tip,
-.rail-slot:focus-within .rail-tip {
+.rail-slot:has(:focus-visible) .rail-tip {
   opacity: 1;
   visibility: visible;
   transition: opacity 120ms ease 320ms, visibility 0s 320ms;
@@ -967,17 +1003,24 @@ p  { margin: 0 0 0.75rem; }
   align-items: center;
   padding: 0 6vw;
 }
+/* The player is on the right and the boss is on the left, which is backwards
+   from how a fight card is usually drawn and right for this game: every other
+   screen puts your words on the right and theirs on the left, and the walk-out
+   is the screen that introduces those two positions. Steve, 2026-08-25: "the
+   fanfare before the match is awesome, but keep teh player at right for
+   consistency with chat interface." Colours stay with their fighter, teal for
+   you and navy for the boss; only the sides moved. */
 .vs-you {
-  justify-content: flex-start;
-  background: var(--print-teal);
-  clip-path: polygon(0 0, 62% 0, 38% 100%, 0 100%);
-  animation: slam-left 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.vs-boss {
   justify-content: flex-end;
-  background: var(--print-navy);
+  background: var(--print-teal);
   clip-path: polygon(62% 0, 100% 0, 100% 100%, 38% 100%);
   animation: slam-right 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.vs-boss {
+  justify-content: flex-start;
+  background: var(--print-navy);
+  clip-path: polygon(0 0, 62% 0, 38% 100%, 0 100%);
+  animation: slam-left 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-delay: 90ms;
 }
 /* The boss lands second and lands bigger. That is the point of a boss. */
@@ -1084,7 +1127,28 @@ p  { margin: 0 0 0.75rem; }
   max-width: 26rem;
   font-style: italic;
   color: var(--print-tint);
+  /* see .dlg-mug-epithet: the authored break is a beat. */
+  white-space: pre-line;
 }
+/* The splash carries its own speaker. Sound is off on every load, and the box
+   that normally holds the toggle is two screens back, so without this the
+   pre-fight fanfare would be unreachable from the one screen it plays on. Same
+   dimmed-until-hovered chrome as .dlg-mute, sitting over both halves. */
+.vs-mute {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.7rem;
+  z-index: 50;
+  border: 0;
+  background: none;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.3rem;
+  cursor: pointer;
+  opacity: 0.45;
+}
+.vs-mute:hover { opacity: 1; }
+
 .vs-start { max-width: 18rem; }
 .vs-count {
   margin: 0;
@@ -1119,7 +1183,11 @@ p  { margin: 0 0 0.75rem; }
 .page-prefight { overflow: hidden; }
 
 .pf-stage {
-  flex: 1;
+  /* 0 1 auto, not 1: the stage used to eat every spare pixel and park the box
+     at the top of it, which is where the foot of blank cream under a one-line
+     panel came from. Now it is exactly as tall as the panel, and the spare
+     pixels are handed to the auto margins below. */
+  flex: 0 1 auto;
   display: flex;
   flex-direction: column;
   /* flex-start, not center: the box has a fixed height now, so centering a
@@ -1167,7 +1235,23 @@ p  { margin: 0 0 0.75rem; }
    to 5rem for a three-line quote beside the 3rem face, the 0.75rem gap, and
    the printed card at 21rem wide over its 0.805 proportion, which is 26.1rem.
    Anything taller than the viewport scrolls in the stage rather than
-   overflowing it. */
+   overflowing it.
+
+   2026-08-25, Steve, third pass: "When I'm learning from the coach, the next
+   button is way on the bottom. I think that this screen can be a lot more
+   compressed, get rid of all that extra blank space that's meant for the chat
+   bar", and about training, "there's a lot of space in the area where the text
+   can appear... I think it's designed to fit the entire card, which made sense
+   in the introduction phase, but now we're never going to show the entire card
+   in this pane."
+
+   Both are the same complaint: one number sized every panel to the tallest
+   thing the box holds anywhere, so a one-line ruling arrived inside a
+   card-sized frame. The constant-rectangle ruling survives, scoped to what it
+   actually meant: panels OF THE SAME KIND are the same size. So the height is
+   a tier list keyed on what the panel is carrying, and the plain-text tier
+   uses min-height rather than height, because one prefight line runs four
+   lines long and clipping it would be worse than the void ever was. */
 .dlg {
   position: relative;
   width: 100%;
@@ -1175,7 +1259,8 @@ p  { margin: 0 0 0.75rem; }
   /* Top margin, not zero: the name plate hangs off the top edge and needs the
      room to hang into. */
   margin: 0.9rem auto 0;
-  height: var(--dlg-h);
+  height: auto;
+  min-height: var(--dlg-h-text);
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -1197,6 +1282,14 @@ p  { margin: 0 0 0.75rem; }
   text-align: left;
   cursor: pointer;
 }
+/* The tiers. Fixed heights where a fixed-size object dominates the panel (a
+   dealt card, a mug shot), so those panels are identical to each other; the
+   plain-text tier above keeps its floor and grows. */
+.dlg.has-card { height: var(--dlg-h); }
+.dlg.has-mug { height: var(--dlg-h-mug); }
+.dlg.is-compact,
+.dlg.is-compact.has-card { height: var(--dlg-h-compact); }
+
 /* Whose frame this is, said once, in the outer ring. */
 .dlg-opponent {
   box-shadow:
@@ -1322,8 +1415,14 @@ p  { margin: 0 0 0.75rem; }
 
    Its ink is the printed deck's, not the app's softened screen palette: this
    is the card the coach is holding up. */
+/* Steve, 2026-08-25: "Make Verdic Victor's card much bigger, I can barely read
+   it. Just twice as big." Doubled at the card, and every piece of type on it is
+   a fraction of that one width, so the card stays a card at any size instead of
+   growing a big picture over the same small caption. The fractions are the
+   ratios it already had at 9.5rem. */
 .dlg-mug {
-  width: 9.5rem;
+  --mug: 19rem;
+  width: var(--mug);
   aspect-ratio: 2.5 / 3.5;
   margin: auto auto 0;
   flex: 0 0 auto;
@@ -1341,7 +1440,7 @@ p  { margin: 0 0 0.75rem; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3.6rem;
+  font-size: calc(var(--mug) * 0.38);
   line-height: 1;
   background: radial-gradient(circle at 50% 42%, #fff 0%, var(--print-peach) 65%);
 }
@@ -1355,16 +1454,20 @@ p  { margin: 0 0 0.75rem; }
 }
 .dlg-mug-name {
   font-family: var(--font-cond);
-  font-size: 1.05rem;
+  font-size: calc(var(--mug) * 0.11);
   letter-spacing: 0.03em;
   text-transform: uppercase;
   line-height: 1.05;
 }
 .dlg-mug-epithet {
-  font-size: 0.66rem;
+  font-size: calc(var(--mug) * 0.07);
   font-style: italic;
   color: var(--print-tint);
   line-height: 1.25;
+  /* The epithet is authored with its own break in it ("...what kind of person
+     you are.\nSays so."), which is a beat, not a wrap. pre-line honours the
+     break and still lets the rest wrap. */
+  white-space: pre-line;
 }
 
 .dlg-row { flex: 0 0 auto; display: flex; align-items: flex-start; gap: 0.8rem; }
@@ -1467,6 +1570,15 @@ p  { margin: 0 0 0.75rem; }
    Everything inside an actual conversation keeps the fixed height. */
 .pf-meet .dlg { height: auto; min-height: 9.5rem; margin-top: 0.5rem; }
 
+/* Where the reclaimed space goes. The masthead is inside the page column, so
+   centering the page would drag the masthead down the screen with everything
+   else. An auto margin under the masthead AND under the foot splits the free
+   space in two: the masthead stays pinned at the top, and the box with its Next
+   button sits in the middle of the room below it instead of at the far ends of
+   it. Steve, 2026-08-25: "the next button is way on the bottom". */
+.page-prefight .mast,
+.page-prefight .pf-foot { margin-bottom: auto; }
+
 .pf-foot { flex: 0 0 auto; padding: 0.5rem 1.25rem 1.5rem; }
 .pf-dots {
   display: flex;
@@ -1498,7 +1610,8 @@ p  { margin: 0 0 0.75rem; }
 .page-drill { overflow: hidden; }
 
 .drill-stage {
-  flex: 1;
+  /* see .pf-stage: the stage hugs the box, and the auto margins below place it. */
+  flex: 0 1 auto;
   display: flex;
   flex-direction: column;
   /* see .pf-stage: the box is a constant rectangle, so the stage anchors it. */

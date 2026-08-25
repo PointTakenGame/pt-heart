@@ -160,19 +160,20 @@ export function useGym(level: LevelDef): Gym {
     [push, dwell],
   );
 
-  /** The boss walks out. The thread does NOT clear.
+  /** The boss walks out, and the thread starts empty.
    *
-   *  Steve, 2026-08-25: "the scroll is gone? just decontrast old/done material,
-   *  don't delete it, one big scroll in teh match." The drill lines stay where
-   *  they were, the crowd row lands under them as the door opens, and the
-   *  thread's own age fade (Thread.tsx, data-age) is what pushes the finished
-   *  work back rather than deleting it. Everything the coach taught you is
-   *  still scrollable while you are getting hit. */
+   *  Reversed on 2026-08-25. It used to keep the drill lines, on Steve's "the
+   *  scroll is gone? just decontrast old/done material, don't delete it, one big
+   *  scroll in teh match." That ruling was written when training and the fight
+   *  shared one room. They do not any more: training is the stepper (Drill.tsx)
+   *  and the scroll now belongs to the fight alone, so the same words became
+   *  "when fight chat comes online, clear the chat log from the practice round."
+   *  The crowd row is the first thing in the room. */
   const beginBoss = useCallback(() => {
     bossShown.current = true;
     uid.current += 1;
     const id = `m${uid.current}`;
-    setMessages((ms) => [...ms, { id, lane: 'crowd', text: crowdRow(0) }]);
+    setMessages([{ id, lane: 'crowd', text: crowdRow(0) }]);
     setBossPending(false);
   }, []);
 
@@ -267,8 +268,8 @@ export function useGym(level: LevelDef): Gym {
           if (!alive) return;
           setComposer({
             kind: 'call',
-            hint: 'Press the card to call it, or let it stand.',
-            pass: { value: 'clean', label: 'Let it stand' },
+            hint: 'Press a foul card to call it, or say it is not a foul.',
+            pass: { value: 'clean', label: "I might not agree, but it's not a foul" },
             callable: [step.rule],
           });
           return;
@@ -330,6 +331,8 @@ export function useGym(level: LevelDef): Gym {
        *
        *  No tokens here. Steve, 2026-08-25: "player does not get points for
        *  'let it stand', points are only given as comppensation for fouls."
+       *  (The button now reads "I might not agree, but it's not a foul"; the
+       *  economics of it did not change.)
        *  A token is compensation for something that was done to you, so the
        *  only thing that pays is a foul the player actually called, and that
        *  payment is made at the call site below, after the card lands. */
@@ -360,7 +363,7 @@ export function useGym(level: LevelDef): Gym {
           // black"). Letting it stand is a pass, and stays ordinary.
           push({
             lane: 'player',
-            text: called ? `Foul: ${CARDS[value as FoulType]?.name ?? value}` : 'Let it stand',
+            text: called ? `Foul: ${CARDS[value as FoulType]?.name ?? value}` : 'Not a foul',
             isCall: called,
           });
           record(correct, attempts.current === 0 ? '' : `-redo${attempts.current}`);
@@ -395,13 +398,13 @@ export function useGym(level: LevelDef): Gym {
                 ? `That one was not clean. Read it again: ${CARDS[step.rule].tell}`
                 : 'That line was clean. A bad whistle costs you one. Read it again.'),
           });
-          push({ lane: 'coach', text: 'Again. Call it or let it stand.' });
+          push({ lane: 'coach', text: 'Again. Call the foul, or say it is not one.' });
           attempts.current += 1;
           nonce.current += 1;
           setComposer({
             kind: 'call',
-            hint: 'Press the card to call it, or let it stand.',
-            pass: { value: 'clean', label: 'Let it stand' },
+            hint: 'Press a foul card to call it, or say it is not a foul.',
+            pass: { value: 'clean', label: "I might not agree, but it's not a foul" },
             callable: [step.rule],
             nonce: nonce.current,
           });

@@ -18,7 +18,7 @@
 // the player has pressed Next or clicked into the game, so the page has already
 // been gestured at by the time an AudioContext is created.
 
-const VOICE_KEY = 'humility-showdown.blip-voice';
+const VOICE_KEY = 'humility-showdown.blip-voice2';
 
 export type BlipVoice = 'wood' | 'low' | 'retro' | 'breath';
 
@@ -43,7 +43,11 @@ function isVoice(v: string | null): v is BlipVoice {
 // voice on is a per-session act. The chosen voice still persists, because that
 // is a real preference: it says which voice he wants when he does turn it on.
 let on = false;
-let voice: BlipVoice = 'wood';
+// Hum, not Block. Steve, 2026-08-25: "I like the new voices. make hum the
+// default. I like that the user can pick actually." The key above was bumped in
+// the same motion, because a saved 'wood' would otherwise win on his machine and
+// the new default would never be heard.
+let voice: BlipVoice = 'low';
 try {
   const saved = localStorage.getItem(VOICE_KEY);
   if (isVoice(saved)) voice = saved;
@@ -161,5 +165,70 @@ export function blip(seed: number, as?: BlipVoice): void {
     osc.stop(t + 0.065);
   } catch {
     /* no audio device, no problem. The game is playable in silence. */
+  }
+}
+
+// The walk-out fanfare. Steve, 2026-08-25: "need some fanfare pre-fight midi
+// 8-bit music while the fight card is up."
+//
+// Square waves and nothing else, the way a cartridge would have done it: a
+// three-note call, an answer, a run up the triad, and a held tonic. Two voices,
+// lead and bass, because a third one starts to sound like a score rather than a
+// title card. It runs about 1.8 seconds, which is the length of the countdown it
+// plays under.
+//
+// [hz, start in seconds, length in seconds]
+const FANFARE: [number, number, number][] = [
+  [523.25, 0.0, 0.11],
+  [523.25, 0.14, 0.11],
+  [523.25, 0.28, 0.11],
+  [659.25, 0.44, 0.3],
+  [523.25, 0.78, 0.11],
+  [659.25, 0.92, 0.11],
+  [783.99, 1.06, 0.11],
+  [1046.5, 1.22, 0.52],
+];
+const FANFARE_BASS: [number, number, number][] = [
+  [130.81, 0.0, 0.4],
+  [130.81, 0.44, 0.3],
+  [196.0, 0.78, 0.4],
+  [130.81, 1.22, 0.6],
+];
+
+/** Plays once, on the Start button. That press is the gesture the autoplay
+ *  policy wants, so the context is allowed to open here. Muted by default like
+ *  every other sound in the build; the splash carries its own speaker toggle so
+ *  the fanfare is reachable without walking back to the corner. */
+export function fanfare(): void {
+  if (!on) return;
+  try {
+    if (!ctx) ctx = new AudioContext();
+    if (ctx.state === 'suspended') void ctx.resume();
+    const c = ctx;
+    const t0 = c.currentTime + 0.05;
+    // One filter for the whole piece. A raw square is all fizz on small
+    // speakers, and the fizz is the part that sounds cheap rather than retro.
+    const lp = c.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 2600;
+    lp.connect(c.destination);
+    const play = (hz: number, at: number, len: number, level: number) => {
+      const osc = c.createOscillator();
+      osc.type = 'square';
+      osc.frequency.value = hz;
+      const g = c.createGain();
+      const t = t0 + at;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(level, t + 0.012);
+      g.gain.setValueAtTime(level, t + len * 0.6);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      osc.connect(g).connect(lp);
+      osc.start(t);
+      osc.stop(t + len + 0.02);
+    };
+    FANFARE.forEach(([hz, at, len]) => play(hz, at, len, 0.055));
+    FANFARE_BASS.forEach(([hz, at, len]) => play(hz, at, len, 0.04));
+  } catch {
+    /* see above */
   }
 }

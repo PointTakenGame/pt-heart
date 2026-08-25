@@ -212,7 +212,7 @@ export const COACH = {
     'She\'s Slippery Sofia. She doesn\'t shout, she doesn\'t insult you, and she will foul you twice before you notice once. You whistle her. I whistle you.',
   ],
   /** The hint under the rail while a call is open. The cards are the buttons. */
-  callAsk: 'Press the card to call it, or let it stand.',
+  callAsk: 'Press a foul card to call it, or say it is not a foul.',
   /** correct card named on a fouled line */
   onHit: (foul: FoulType, cost: number) =>
     `Called it. ${RULE_LABEL[foul]}: ${RULE_GLOSS[foul]}. That is ${cost} to you.`,

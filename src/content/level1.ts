@@ -6,17 +6,25 @@
 // verdict out of a line drafted for them.
 //
 // Political balance ledger, which is non-negotiable and must stay accurate if the
-// lines are touched.
-//   Judging lines, by who they are aimed at: item 1 and the boss line aim at a
-//   pro-forgiveness position; item 4 aims at an anti-forgiveness one, and item 4
-//   is the one put in the player's own mouth.
+// lines are touched. It moved on 2026-08-25 and the new count is worse; read it
+// before writing anything else into this file.
+//   Judging lines, by who they are aimed at: item 1, item 4, and both of the
+//   boss's two fouls now aim at a pro-forgiveness position. Nothing in this
+//   level judges an anti-forgiveness one.
+//   Item 4 used to be the counterweight: a judgement aimed the other way, and
+//   the only one put in the player's own mouth. Steve dictated its replacement
+//   text on 2026-08-25 ("You only think that because you want your own loans
+//   forgiven"), which flipped it, and B6 added a second boss foul on the same
+//   side. Built as dictated and flagged here rather than quietly re-balanced.
 //   Clean arguments modelled: item 2 is anti-forgiveness, item 3 is
-//   pro-forgiveness (it argues the cost figure down), Victor's closing line is
+//   pro-forgiveness (it argues the cost figure down), and both Victor's cost
+//   line and the half of item 4 that survives the player's edit are
 //   anti-forgiveness.
-// So this level runs 2:1 against forgiveness in both columns, because it has one
-// boss and a boss only argues one side. Flagged rather than hidden; the
-// counterweight sits in level 2's ledger, which opens on the right. Steve's call
-// whether that is enough (HEART-T260823-33).
+// So the level now runs 4:0 against forgiveness in the judging column and 3:1 in
+// the argument column. One boss can only argue one side, which explains the boss
+// lines but not item 4. The counterweight sits in level 2's ledger, which opens
+// on the right. Whether that is enough is Steve's call (HEART-T260823-33), and
+// this change makes the question sharper than it was.
 
 import type { LevelDef } from '../types.ts';
 
@@ -27,7 +35,10 @@ export const level1: LevelDef = {
   rule: 'judging',
   boss: 'Verdict Victor',
   bossEmoji: '\u{1F468}\u{1F3FB}\u{200D}\u{2696}\u{FE0F}',
-  bossEpithet: 'Has already decided what kind of person you are. Says so.',
+  // The newline is deliberate. Steve, 2026-08-25: "put a new line before
+  // says so." Both places this string lands, the baseball card in the
+  // dialogue box and the VS splash, honour it through white-space: pre-line.
+  bossEpithet: 'Has already decided what kind of person you are.\nSays so.',
   // Said in the corner, before the door opens. Steve's ruling of 2026-08-24
   // (name the argument and both sides of it before anything else, because a
   // player who does not know what is being argued cannot tell a hard argument
@@ -118,14 +129,20 @@ export const level1: LevelDef = {
           id: 'l1-i4',
           rule: 'judging',
           ask: 'Your turn, and I already did the typing. This one goes out with your name on it. Cut the part that judges him, keep the part that argues.',
-          prefill: 'You got yours and now you want to pull the ladder up behind you.',
+          // Dictated by Steve, 2026-08-25, along with what the right answer
+          // is: "they should cut the first half." So the exercise is now a
+          // deletion rather than a rewrite. The first sentence tells the man
+          // his own motive; the second one is a real argument about fairness
+          // and survives untouched.
+          prefill:
+            'You only think that because you want your own loans forgiven. Forgiving some loans is unfair to people who already paid them off.',
           // Chips are droppable sentence openers, not advice. A chip the player
           // taps has to read correctly inside the line they are writing.
           chips: ['The part I disagree with is', 'What that costs me is', "What I'd rather see is"],
           target:
-            'The edit must stop guessing at what the person wants or why they want it. It should go after the idea itself, what it costs, or what the writer would rather see. Cutting "you got yours" and "pull the ladder up behind you" is the move.',
+            'The edit must drop the first sentence, the one that tells the other person why they really believe what they believe. What is left has to keep arguing: the fairness point about people who already paid is the part worth sending. Cutting "you only think that because you want your own loans forgiven" is the move.',
           fallback:
-            'Here\'s one off the card if you want it: "You added up what the write-off costs, but not what the tuition costs." Same disagreement, nobody gets judged.',
+            'Here\'s the whole fix if you want it: cut the first sentence and send the second. "Forgiving some loans is unfair to people who already paid them off." Same disagreement, nobody gets read.',
         },
 
         { kind: 'continue', label: 'Face him' },
@@ -147,16 +164,52 @@ export const level1: LevelDef = {
           onCall: 'Called it.',
           onPass: 'That was the move, start to finish. Call it.',
         },
+        // Steve, 2026-08-25: "When you actually play Victor, he only ever says
+        // one thing and then you call him on a foul. Let him say one more thing
+        // and then make sure that the person says that it's fair." So the clean
+        // line he used to simply deliver is now judged. Letting an honest
+        // argument through is the harder half of the skill, and until now the
+        // level never asked for it against the boss.
         {
-          kind: 'say',
+          kind: 'call_or_pass',
+          id: 'l1-boss-clean',
+          rule: 'judging',
           lane: 'opponent',
           speaker: 'Verdict Victor',
-          text: 'Fine. Then argue the cost. It\'s 400 billion dollars, and most of it goes to people who will end up earning more than the people paying for it.',
+          line: 'Fine. Then argue the cost. It\'s 400 billion dollars, and most of it goes to people who will end up earning more than the people paying for it.',
+          expected: 'clean',
+          onCall: 'No. He went at the money that time, not at you. A bad whistle costs you.',
+          onPass: 'Look at that. Same guy, better argument. That\'s the whole trade.',
+        },
+        // Steve, same day: "Then make him say one more thing about the player's
+        // entire group. Like people who want to forgive loans are just X, and
+        // then you have to call them out on it, and then the coach congratulates
+        // you, and then Victor actually literally gives ... says he's beaten."
+        //
+        // The escalation is the point: beaten on the person, beaten on the
+        // argument, he reaches for the whole group. That is the same foul at its
+        // widest, which is why the card still reads Judging.
+        {
+          kind: 'call_or_pass',
+          id: 'l1-boss-group',
+          rule: 'judging',
+          lane: 'opponent',
+          speaker: 'Verdict Victor',
+          line: 'Though let\'s be honest about who I\'m arguing with. People who want these loans wiped are all the same. They want somebody else to carry what they signed for.',
+          expected: 'foul',
+          onCall: 'Called it. He just sentenced a few million people in one line.',
+          onPass: 'He did it to your entire side at once. That is the card. Call it.',
         },
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Look at that. Same guy, better argument. That\'s the whole trade.',
+          text: 'That is the job, start to finish. Two whistles, and you let the honest one through.',
+        },
+        {
+          kind: 'say',
+          lane: 'opponent',
+          speaker: 'Verdict Victor',
+          text: 'All right. I\'m beaten. I came in here to tell you what kind of person you are, and you would not take it. I have got nothing left but the argument.',
         },
         { kind: 'continue', label: 'Finish' },
       ],

@@ -170,6 +170,13 @@ export function Drill({
           card={m.card}
           mug={namesOpponent(m.text, opponent) ? opponent : null}
           tone={tone}
+          // Steve, 2026-08-25: "there's a lot of space in the area where the
+          // text can appear... I think it's designed to fit the entire card,
+          // which made sense in the introduction phase, but now we're never
+          // going to show the entire card in this pane." Right: the corner
+          // screen deals the full card, the drill never does. So the box sizes
+          // itself to the tallest thing training will actually put in it.
+          compact
         />
       </div>
 

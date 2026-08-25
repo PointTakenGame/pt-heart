@@ -1,6 +1,6 @@
 import { useEffect, useImperativeHandle, useRef } from 'react';
 import type { Message } from '../types.ts';
-import { RuleCardFull } from './RuleCards.tsx';
+import { RuleCardMini } from './RuleCards.tsx';
 
 export interface Avatars {
   coach: string;
@@ -155,8 +155,15 @@ export function Thread({ messages, avatars, waiting, onSkip, ref }: Props) {
         return (
           <div key={m.id} className={`msg-row row-${m.lane}`} data-age={age}>
             <div className={cls}>
+              {/* The small card, not the big one. Steve, 2026-08-25: "When a
+                  foul call card is played in the chat, use the small version...
+                  Don't use the huge version. Or use one that looks like the
+                  button that the player just pressed." The mini card is the same
+                  shape as the rail button, so a call now reads as the button
+                  landing in the room rather than as a rulebook page dropping in
+                  mid-argument. */}
               {m.card ? (
-                <RuleCardFull rule={m.card} />
+                <RuleCardMini rule={m.card} />
               ) : (
                 <div className="msg-body">
                   {!faceless && (

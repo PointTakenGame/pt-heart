@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from 'react';
 import { crowdRow } from '../avatars.ts';
+import { blipMuted, setBlipMuted, fanfare } from './blip.ts';
 
 interface Props {
   fightNumber: number;
@@ -36,6 +37,7 @@ export function BossIntro({
 }: Props) {
   // null while waiting on the button, then 3, 2, 1, 0 (0 prints FIGHT).
   const [count, setCount] = useState<number | null>(null);
+  const [muted, setMuted] = useState(blipMuted);
 
   useEffect(() => {
     if (count === null) return;
@@ -62,6 +64,21 @@ export function BossIntro({
       </div>
       <div className="vs-flash" aria-hidden="true" />
 
+      {/* The splash carries its own speaker, because sound is off on every load
+          (blip.ts) and the corner box that normally holds the toggle is two
+          screens back. Without this the fanfare would be unreachable from the
+          one screen it plays on. */}
+      <button
+        className="vs-mute"
+        aria-label={muted ? 'turn the sound on' : 'turn the sound off'}
+        onClick={() => {
+          setBlipMuted(!muted);
+          setMuted(!muted);
+        }}
+      >
+        {muted ? '\u{1F507}' : '\u{1F50A}'}
+      </button>
+
       <div className="vs-front">
         <div className="vs-top">
           <div className="vs-crowd" aria-hidden="true">
@@ -79,8 +96,19 @@ export function BossIntro({
             <span>{boss}</span>
           </div>
           <p className="vs-epithet">{epithet}</p>
+          {/* Steve, 2026-08-25: "need some fanfare pre-fight midi 8-bit music
+              while the fight card is up." It hangs off the Start press because
+              that press is the user gesture the autoplay policy wants, and
+              because the piece is written to run about as long as the countdown
+              it plays under. Silent unless the speaker above is on. */}
           {count === null ? (
-            <button className="btn btn-wide vs-start" onClick={() => setCount(3)}>
+            <button
+              className="btn btn-wide vs-start"
+              onClick={() => {
+                fanfare();
+                setCount(3);
+              }}
+            >
               Start
             </button>
           ) : (

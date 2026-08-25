@@ -94,10 +94,18 @@ function fly(from: HTMLElement | null, to: HTMLElement | null) {
   el.textContent = TOKEN;
   el.setAttribute('aria-hidden', 'true');
   el.className = 'tok-flight';
-  el.style.left = `${a.right - 20}px`;
+  // Shortest hop, between the two facing edges. Steve, 2026-08-25: "When a point
+  // is moved, it moves, should move the shortest possible distance. So from the
+  // right side of the left stack to the left side of the right stack. Right now
+  // it moves too far." It used to fly right edge to right edge, which crosses
+  // the whole width of the receiving purse for no reason.
+  const goingRight = b.left >= a.right;
+  const startX = goingRight ? a.right - 20 : a.left + 20;
+  const endX = goingRight ? b.left + 20 : b.right - 20;
+  el.style.left = `${startX}px`;
   el.style.top = `${a.top}px`;
   document.body.appendChild(el);
-  const dx = b.right - a.right;
+  const dx = endX - startX;
   const dy = b.top - a.top;
   const anim = el.animate(
     [

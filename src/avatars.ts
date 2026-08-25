@@ -22,17 +22,24 @@ export const COACH_EMOJI = '\u{1F468}\u{1F3FE}\u{200D}\u{1F9B3}'; // man, medium
 export const COACH_LINE =
   'Ray. Thirty years in this corner. I do not care who wins tonight, I care that you can still talk to them tomorrow.';
 
-export const PLAYER_AVATARS = [
-  '\u{1F468}\u{1F3FB}', // man, light
-  '\u{1F469}\u{1F3FB}', // woman, light
-  '\u{1F471}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}', // blond man, light
-  '\u{1F469}\u{1F3FB}\u{200D}\u{1F9B0}', // redheaded woman, light
-  '\u{1F9D1}\u{1F3FC}', // person, medium light
-  '\u{1F468}\u{1F3FD}', // man, medium
-  '\u{1F469}\u{1F3FD}', // woman, medium
-  '\u{1F468}\u{1F3FE}\u{200D}\u{1F9B2}', // bald man, medium dark
-  '\u{1F469}\u{1F3FE}\u{200D}\u{1F9B1}', // woman, medium dark, curly
+/** Each tile carries what it reads as, because the picker has to lay the grid
+ *  out against those two traits and not against the order they are written in.
+ *  `tone` is the band the skin-tone modifier falls in, not the modifier itself:
+ *  medium-light and medium are one band because nobody scanning a 3x3 grid at
+ *  tile size tells them apart. */
+const TILES: { emoji: string; gender: 'm' | 'w' | 'n'; tone: 'light' | 'mid' | 'dark' }[] = [
+  { emoji: '\u{1F468}\u{1F3FB}', gender: 'm', tone: 'light' }, // man, light
+  { emoji: '\u{1F469}\u{1F3FB}', gender: 'w', tone: 'light' }, // woman, light
+  { emoji: '\u{1F471}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}', gender: 'm', tone: 'light' }, // blond man, light
+  { emoji: '\u{1F469}\u{1F3FB}\u{200D}\u{1F9B0}', gender: 'w', tone: 'light' }, // redheaded woman, light
+  { emoji: '\u{1F9D1}\u{1F3FC}', gender: 'n', tone: 'mid' }, // person, medium light
+  { emoji: '\u{1F468}\u{1F3FD}', gender: 'm', tone: 'mid' }, // man, medium
+  { emoji: '\u{1F469}\u{1F3FD}', gender: 'w', tone: 'mid' }, // woman, medium
+  { emoji: '\u{1F468}\u{1F3FE}\u{200D}\u{1F9B2}', gender: 'm', tone: 'dark' }, // bald man, medium dark
+  { emoji: '\u{1F469}\u{1F3FE}\u{200D}\u{1F9B1}', gender: 'w', tone: 'dark' }, // woman, medium dark, curly
 ];
+
+export const PLAYER_AVATARS = TILES.map((t) => t.emoji);
 
 export const DEFAULT_AVATAR = PLAYER_AVATARS[4];
 
@@ -48,12 +55,47 @@ export const DEFAULT_AVATAR = PLAYER_AVATARS[4];
  *  so nothing about a match replays differently. Everything else in the build
  *  stays deterministic (see crowdRow below). */
 export function shuffledAvatars(): string[] {
-  const out = PLAYER_AVATARS.slice();
-  for (let i = out.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    const out = TILES.slice();
+    for (let i = out.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    if (scattered(out)) return out.map((t) => t.emoji);
   }
-  return out;
+  // Unreachable in practice: a clean deal turns up in a handful of tries, and
+  // 200 of them failing would mean the tile list changed shape. Falling through
+  // to an unconstrained order beats looping forever or throwing at the picker.
+  return PLAYER_AVATARS.slice();
+}
+
+/** No line of three, across or down, is all one gender or all one tone.
+ *
+ *  Steve, 2026-08-25: "purposely don't allow any one row or column to be any
+ *  single gender or race. we don't want to look like we are organizing it in any
+ *  way. It should just be a three by three grid that looks random without strong
+ *  regularities."
+ *
+ *  Worth being precise about what this does, because it is the opposite of what
+ *  it looks like: a genuinely uniform shuffle produces an all-women row often
+ *  enough that a player will meet one, and a grid with a line like that reads as
+ *  deliberate sorting. Rejecting those deals is not organising the grid, it is
+ *  removing the arrangements that look organised. The cost is that the deal is
+ *  no longer uniform over all 9! orders, which nothing here depends on. */
+function scattered(g: typeof TILES): boolean {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+  ];
+  return lines.every(([a, b, c]) => {
+    const sameGender = g[a].gender === g[b].gender && g[b].gender === g[c].gender;
+    const sameTone = g[a].tone === g[b].tone && g[b].tone === g[c].tone;
+    return !sameGender && !sameTone;
+  });
 }
 
 /** The ring, between rounds and when somebody lands one. */
