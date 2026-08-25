@@ -10,8 +10,9 @@ import { Thread, type ThreadHandle } from './ui/Thread.tsx';
 import { Header } from './ui/Header.tsx';
 import { RuleCards } from './ui/RuleCards.tsx';
 import { BossIntro } from './ui/BossIntro.tsx';
+import { Prefight } from './ui/Prefight.tsx';
 import { useShowdown } from './showdown.ts';
-import { SHOWDOWN_SLUG, SOFIA_EMOJI } from './content/showdown.ts';
+import { SHOWDOWN_PREFIGHT, SHOWDOWN_SLUG, SOFIA_EMOJI } from './content/showdown.ts';
 import { CARD_ORDER } from './content/cards.ts';
 import { COACH_EMOJI, DEFAULT_AVATAR, PLAYER_AVATARS } from './avatars.ts';
 import { getAvatar, isCleared, load, setAvatar } from './storage.ts';
@@ -99,7 +100,35 @@ function Select({
   onPick: (l: LevelDef) => void;
   onShowdown: () => void;
 }) {
+  // Two screens, not one. Steve, 2026-08-25: "Let them choose their fighter. And
+  // then hit done and then show the levels. Don't show them both at once." So
+  // picking is a full screen of its own, and Change goes back to it.
   const [picking, setPicking] = useState(getAvatar() === null);
+
+  if (picking) {
+    return (
+      <div className="page page-narrow page-picker">
+        <h1>Choose your fighter</h1>
+        <p className="muted">This is the face you wear in the room. You can change it later.</p>
+        <div className="picker-grid" role="group" aria-label="Pick your fighter">
+          {PLAYER_AVATARS.map((e) => (
+            <button
+              key={e}
+              className={`picker-opt${e === avatar ? ' is-on' : ''}`}
+              aria-label={`fighter ${e}`}
+              aria-pressed={e === avatar}
+              onClick={() => onAvatar(e)}
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+        <button className="btn btn-wide" onClick={() => setPicking(false)}>
+          Done
+        </button>
+      </div>
+    );
+  }
 
   // The ladder is a ladder. Steve's ruling of 2026-08-24: level 2 cannot be
   // opened before level 1 is cleared, because each level assumes the card the
@@ -114,31 +143,12 @@ function Select({
         Three levels, each one habit and one opponent. Then all three at once, for tokens.
       </p>
 
-      <div className="picker">
-        <div className="picker-head">
-          <span className="picker-you" aria-hidden="true">{avatar}</span>
-          <span className="picker-label">Your fighter</span>
-          <button className="link" onClick={() => setPicking((v) => !v)}>
-            {picking ? 'done' : 'change'}
-          </button>
-        </div>
-        {picking && (
-          <div className="picker-grid" role="group" aria-label="Pick your fighter">
-            {PLAYER_AVATARS.map((e) => (
-              <button
-                key={e}
-                className={`picker-opt${e === avatar ? ' is-on' : ''}`}
-                aria-label={`fighter ${e}`}
-                onClick={() => {
-                  onAvatar(e);
-                  setPicking(false);
-                }}
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-        )}
+      <div className="picker picker-done">
+        <span className="picker-you" aria-hidden="true">{avatar}</span>
+        <span className="picker-label">Your fighter</span>
+        <button className="link" onClick={() => setPicking(true)}>
+          change
+        </button>
       </div>
 
       <ul className="levels">
@@ -155,7 +165,7 @@ function Select({
                 <span className="level-mid">
                   <span className="level-title">{l.title}</span>
                   <span className="level-sub">
-                    {locked ? `clear level ${i} first` : `${l.teaches} · ${l.boss}`}
+                    {locked ? `clear level ${i} first` : `${l.teaches} \u00b7 ${l.boss}`}
                   </span>
                 </span>
                 {cleared[i] && <span className="level-done">cleared</span>}
@@ -173,7 +183,7 @@ function Select({
             <span className="level-mid">
               <span className="level-title">The Showdown</span>
               <span className="level-sub">
-                {allCleared ? 'All three cards · Slippery Sofia' : 'clear all three levels first'}
+                {allCleared ? 'All three cards \u00b7 Slippery Sofia' : 'clear all three levels first'}
               </span>
             </span>
             {isCleared(SHOWDOWN_SLUG) && <span className="level-done">played</span>}
@@ -190,6 +200,31 @@ function liveCards(kind: string, callable?: FoulType[]): FoulType[] | null {
 }
 
 function Level({
+  level,
+  avatar,
+  onExit,
+}: {
+  level: LevelDef;
+  avatar: string;
+  onExit: () => void;
+}) {
+  // The corner comes first. Everything the coach used to say in the first six
+  // chat lines is a stepper now, and the door opens on the drill.
+  const [inRoom, setInRoom] = useState(false);
+  if (!inRoom) {
+    return (
+      <Prefight
+        steps={level.prefight}
+        enterLabel={`In with ${level.boss.split(' ').slice(-1)[0]}`}
+        onEnter={() => setInRoom(true)}
+        onExit={onExit}
+      />
+    );
+  }
+  return <Room level={level} avatar={avatar} onExit={onExit} />;
+}
+
+function Room({
   level,
   avatar,
   onExit,
@@ -222,8 +257,15 @@ function Level({
     );
   }
 
+  const call = gym.composer.kind === 'call' ? gym.composer : null;
+
   return (
     <div className="page page-level">
+      <div className="page-topbar">
+        <button className="link" onClick={onExit}>
+          Leave
+        </button>
+      </div>
       <Header
         title={level.title}
         teaches={level.teaches}
@@ -232,16 +274,9 @@ function Level({
           player: gym.playerTokens,
           opponent: gym.opponentTokens,
           opponentLabel: level.boss.split(' ')[0].toLowerCase(),
+          opponentEmoji: level.bossEmoji,
+          playerEmoji: avatar,
         }}
-        onExit={onExit}
-      />
-      <RuleCards
-        enabled={[level.rule]}
-        live={liveCards(
-          gym.composer.kind,
-          gym.composer.kind === 'call' ? gym.composer.callable : undefined,
-        )}
-        onCall={(f) => gym.submit(f, [])}
       />
       <Thread
         ref={thread}
@@ -259,15 +294,32 @@ function Level({
       ) : (
         <Composer state={gym.composer} onSubmit={gym.submit} onResize={land} />
       )}
+      <RuleCards
+        enabled={[level.rule]}
+        live={liveCards(gym.composer.kind, call?.callable)}
+        onCall={(f) => gym.submit(f, [])}
+        pass={call ? { label: call.pass.label, onPass: () => gym.submit(call.pass.value, []) } : undefined}
+      />
     </div>
   );
 }
 
 function Showdown({ avatar, onExit }: { avatar: string; onExit: () => void }) {
-  // The match does not start until the walk-out finishes, so the opening line is
-  // not already three messages up the thread by the time the player looks.
-  const [started, setStarted] = useState(false);
-  if (!started) {
+  // Corner, then walk-out, then the match. The match does not start until the
+  // walk-out finishes, so the opening line is not already three messages up the
+  // thread by the time the player looks.
+  const [stage, setStage] = useState<'prefight' | 'intro' | 'match'>('prefight');
+  if (stage === 'prefight') {
+    return (
+      <Prefight
+        steps={SHOWDOWN_PREFIGHT}
+        enterLabel="In with Sofia"
+        onEnter={() => setStage('intro')}
+        onExit={onExit}
+      />
+    );
+  }
+  if (stage === 'intro') {
     return (
       <BossIntro
         fightNumber={4}
@@ -275,7 +327,7 @@ function Showdown({ avatar, onExit }: { avatar: string; onExit: () => void }) {
         bossEmoji={SOFIA_EMOJI}
         epithet="Never raises her voice. Fouls you twice before you notice once."
         playerEmoji={avatar}
-        onStart={() => setStarted(true)}
+        onStart={() => setStage('match')}
       />
     );
   }
@@ -290,22 +342,26 @@ function Match({ avatar, onExit }: { avatar: string; onExit: () => void }) {
   }, []);
   useLayoutEffect(land, [match.finished, land]);
 
+  const call = match.composer.kind === 'call' ? match.composer : null;
+
   return (
     <div className="page page-level">
+      <div className="page-topbar">
+        <button className="link" onClick={onExit}>
+          Leave
+        </button>
+      </div>
       <Header
         title="The Showdown"
         teaches="All three cards"
         beatName={match.phase}
-        purses={{ player: match.playerTokens, opponent: match.sofiaTokens, opponentLabel: 'sofia' }}
-        onExit={onExit}
-      />
-      <RuleCards
-        enabled={CARD_ORDER}
-        live={liveCards(
-          match.composer.kind,
-          match.composer.kind === 'call' ? match.composer.callable : undefined,
-        )}
-        onCall={(f) => match.submit(f, [])}
+        purses={{
+          player: match.playerTokens,
+          opponent: match.sofiaTokens,
+          opponentLabel: 'sofia',
+          opponentEmoji: SOFIA_EMOJI,
+          playerEmoji: avatar,
+        }}
       />
       <Thread
         ref={thread}
@@ -323,6 +379,12 @@ function Match({ avatar, onExit }: { avatar: string; onExit: () => void }) {
       ) : (
         <Composer state={match.composer} onSubmit={match.submit} onResize={land} />
       )}
+      <RuleCards
+        enabled={CARD_ORDER}
+        live={liveCards(match.composer.kind, call?.callable)}
+        onCall={(f) => match.submit(f, [])}
+        pass={call ? { label: call.pass.label, onPass: () => match.submit(call.pass.value, []) } : undefined}
+      />
     </div>
   );
 }

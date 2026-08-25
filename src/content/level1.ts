@@ -28,6 +28,34 @@ export const level1: LevelDef = {
   boss: 'Verdict Victor',
   bossEmoji: '\u{1F468}\u{1F3FB}\u{200D}\u{2696}\u{FE0F}',
   bossEpithet: 'Has already decided what kind of person you are. Says so.',
+  // Said in the corner, before the door opens. Steve's ruling of 2026-08-24
+  // (name the argument and both sides of it before anything else, because a
+  // player who does not know what is being argued cannot tell a hard argument
+  // from a foul) now runs as the stepper rather than as seven chat lines.
+  prefight: [
+    {
+      kind: 'line',
+      text: 'Tonight\u2019s argument: should the government forgive student loan debt?',
+    },
+    {
+      kind: 'line',
+      text: 'One side says the debt is crushing a generation over a price nobody warned them about. The other side says a write-off sends the bill to people who never went, and does nothing about the prices. Both of those are real arguments. Neither one is a foul.',
+    },
+    {
+      kind: 'line',
+      text: 'You can take either side in here. I do not care which. I care about one rule.',
+    },
+    // The card itself, before the drill. Pinned in the tray from here on.
+    { kind: 'card', rule: 'judging' },
+    {
+      kind: 'line',
+      text: 'That is Verdict Victor. You are in with him in two minutes.',
+    },
+    {
+      kind: 'line',
+      text: 'He has exactly one move. He tells you what is going on inside your head, and he says it like a doctor reading a chart off a clipboard.',
+    },
+  ],
   beats: [
     {
       // Not the level title again. The header prints the title and the beat
@@ -35,37 +63,6 @@ export const level1: LevelDef = {
       // nothing twice. The sibling levels name this beat with a verb.
       name: 'Spot it',
       steps: [
-        // Cold open. Steve's ruling of 2026-08-24: name the argument and both
-        // sides of it before anything else, because a player who does not know
-        // what is being argued cannot tell a hard argument from a foul, and that
-        // distinction is the whole level.
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'Tonight\u2019s argument: should the government forgive student loan debt?',
-        },
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'One side says the debt is crushing a generation over a price nobody warned them about. The other side says a write-off sends the bill to people who never went, and does nothing about the prices. Both of those are real arguments. Neither one is a foul.',
-        },
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'You can take either side in here. I do not care which. I care about one rule.',
-        },
-        // The card itself, before the drill. Pinned in the rail from here on.
-        { kind: 'card', rule: 'judging' },
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'That is Verdict Victor. You are in with him in two minutes.',
-        },
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'He has exactly one move. He tells you what is going on inside your head, and he says it like a doctor reading a chart off a clipboard.',
-        },
         {
           kind: 'say',
           lane: 'coach',

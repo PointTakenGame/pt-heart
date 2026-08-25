@@ -153,6 +153,15 @@ export interface Beat {
   boss?: boolean;
 }
 
+/** One panel of the pre-room stepper: a coach line, or the printed rule card
+ *  dealt out on its own screen. Steve, 2026-08-25: the setup and the card
+ *  teaching happen before the room, one thing at a time with a Next button,
+ *  "like a stepper instead of a barf of a bunch of vertically stacked cat
+ *  lines". By the time the room opens it is the player and the opponent. */
+export type PrefightStep =
+  | { kind: 'line'; text: string }
+  | { kind: 'card'; rule: FoulType };
+
 export interface LevelDef {
   /** Saved progress names levels by this, never by number (ruling B3,
    *  2026-08-23): renumbering the ladder must not orphan saves. */
@@ -165,5 +174,7 @@ export interface LevelDef {
   bossEmoji: string;
   /** one line of trash talk for the entrance screen */
   bossEpithet: string;
+  /** everything the coach says before the door opens */
+  prefight: PrefightStep[];
   beats: Beat[];
 }

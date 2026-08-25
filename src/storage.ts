@@ -19,6 +19,9 @@ export interface SaveFile {
   items: ItemRecord[];
   /** the emoji the player picked as their face. Absent until they pick one. */
   avatar?: string;
+  /** true once the coach has introduced himself. He does it once, not before
+   *  every level (Steve, 2026-08-25). */
+  metCoach?: boolean;
 }
 
 function blank(): SaveFile {
@@ -86,6 +89,18 @@ export function setAvatar(emoji: string): void {
   const file = load();
   file.avatar = emoji;
   save(file);
+}
+
+export function hasMetCoach(): boolean {
+  return Boolean(load().metCoach);
+}
+
+export function markMetCoach(): void {
+  const file = load();
+  if (!file.metCoach) {
+    file.metCoach = true;
+    save(file);
+  }
 }
 
 export function reset(): void {

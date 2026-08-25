@@ -26,26 +26,25 @@ export const level3: LevelDef = {
   boss: 'Nodding Noemi',
   bossEmoji: '\u{1F469}\u{1F3FD}',
   bossEpithet: 'Agrees with everything. Heard none of it.',
+  prefight: [
+    {
+      kind: 'line',
+      text: 'Nodding Noemi. She will agree with you. She will nod. She will repeat your point back so smoothly you will feel heard.',
+    },
+    {
+      kind: 'line',
+      text: 'And she will leave out the one part of it that costs her something.',
+    },
+    {
+      kind: 'line',
+      text: 'So we are going to practice saying somebody\'s point back to them until it is a reflex. Then you will notice when her version is short.',
+    },
+    { kind: 'card', rule: 'fake_listening' },
+  ],
   beats: [
     {
       name: 'Say it back',
       steps: [
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'Nodding Noemi. She will agree with you. She will nod. She will repeat your point back so smoothly you will feel heard.',
-        },
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'And she will leave out the one part of it that costs her something.',
-        },
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'So we are going to practice saying somebody\'s point back to them until it is a reflex. Then you will notice when her version is short.',
-        },
-        { kind: 'card', rule: 'fake_listening' },
 
         {
           kind: 'say',

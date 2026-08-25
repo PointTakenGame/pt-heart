@@ -18,6 +18,48 @@ export interface Delta {
   fix: string;
 }
 
+/**
+ * The printed card face, slot for slot.
+ *
+ * Source: docs/reference/print/v7/card-anatomy.md §B.1 and §B.2, taken off the
+ * PPTX XML of the printed deck. Steve, 2026-08-25: "use a UI element that
+ * reflects the actual structure of the real card in the PDF game. It's been
+ * carefully thought out. Including the wording and the layout."
+ *
+ * So the wording here is the deck's, not ours, with three exceptions, all of
+ * them the house no-em-dash rule: the deck writes "fail - because", "offensive
+ * - because" and "[X] - did I miss anything?" with an en or em dash, and those
+ * three read here with a comma or a full stop instead. Nothing else is
+ * paraphrased. If a line looks wrong, it is wrong on the card too, and the fix
+ * is on the card first.
+ */
+export interface IntroSeg {
+  t: string;
+  /** set in italic heavy on the printed card, one word or phrase per card */
+  em?: boolean;
+}
+
+export interface PrintedFace {
+  /** all-caps eyebrow above the title, inside the orange header bar */
+  eyebrow: string;
+  /** "PENALTY" or "DOUBLE PENALTY" */
+  penalty: string;
+  /** Fake Listening only: its penalty is per missing point, not flat */
+  penaltyNote?: string;
+  intro: IntroSeg[];
+  /** Fake Listening only: the mint procedure strip under the intro */
+  band?: string[];
+  /** left column, peach: the phrases that set the alarm off */
+  smoke: string[];
+  /** right column eyebrow: INSTEAD, BEFORE YOUR TURN, or REPHRASE AS */
+  insteadLabel: string;
+  instead: string[];
+  incorrect: string[];
+  correct: string[];
+  /** the teal footer band: the skill the card trains */
+  trains: string;
+}
+
 export interface RuleCard {
   rule: FoulType;
   emoji: string;
@@ -31,6 +73,8 @@ export interface RuleCard {
   deltas: Delta[];
   /** the shape of the repair, as the card prints it */
   fix: string;
+  /** the printed face, rendered whenever the card is shown full size */
+  printed: PrintedFace;
 }
 
 export const CARDS: Record<FoulType, RuleCard> = {
@@ -56,6 +100,36 @@ export const CARDS: Record<FoulType, RuleCard> = {
       },
     ],
     fix: 'Attack the argument, not the person.',
+    printed: {
+      eyebrow: 'TONE FOUL',
+      penalty: 'DOUBLE PENALTY',
+      intro: [
+        { t: "Don't render a verdict on who they are, and don't tell them what's in their head. The word " },
+        { t: "'You'", em: true },
+        { t: ' is a major red flag.' },
+      ],
+      smoke: [
+        "\u201cYou're saying that because\u2026\u201d",
+        '\u201cYou only care about\u2026\u201d',
+        "\u201cYou don't really believe that\u201d",
+        "\u201cYou're an [X]-ist / -phobe\u201d",
+        "\u201cYou're so [adjective]\u201d",
+      ],
+      insteadLabel: 'INSTEAD',
+      instead: [
+        'Stick to reasoning, not personal attacks',
+        'Challenge their argument, not their hidden motives.',
+      ],
+      incorrect: [
+        "\u201cThat's typical conservative / liberal thinking\u201d",
+        "\u201cYou just don't care about the poor\u201d",
+      ],
+      correct: [
+        '\u201cI noticed you cited [X] but skipped [Y]\u201d',
+        '\u201cI worry that policy would be unfair to the poor\u201d',
+      ],
+      trains: 'Critique the argument, not the person.',
+    },
   },
 
   opinion_as_fact: {
@@ -82,6 +156,40 @@ export const CARDS: Record<FoulType, RuleCard> = {
       },
     ],
     fix: 'Two parts, both of them: "In my head, [opinion], because [something checkable]."',
+    printed: {
+      eyebrow: 'TONE FOUL',
+      penalty: 'PENALTY',
+      intro: [
+        { t: "Don't state a contested opinion as fact. Rule: 'Contested' = other player " },
+        { t: 'disagrees', em: true },
+        { t: '.' },
+      ],
+      smoke: [
+        '\u201cObviously\u2026\u201d',
+        '\u201cOf course\u2026\u201d',
+        '\u201cEveryone knows\u2026\u201d',
+        "\u201cIt's a fact that\u2026\u201d",
+        '\u201cX would cause Y\u2026\u201d',
+      ],
+      insteadLabel: 'REPHRASE AS',
+      instead: [
+        'Both halves required',
+        '1. \u201cIn my head, [opinion]\u201d',
+        '\u201cThe story I tell myself...\u201d',
+        '\u201cThe way I think is...\u201d',
+        '\u201cI feel like\u2026\u201d',
+        '2. \u201cbecause [evidence]\u201d',
+      ],
+      incorrect: [
+        '\u201cThat policy would fail...\u201d',
+        "\u201cObviously that's deeply offensive\u201d",
+      ],
+      correct: [
+        '\u201cI feel like that policy would fail, because in the past...\u201d',
+        '\u201cIn my head, that felt offensive, because my experience...\u201d',
+      ],
+      trains: 'Be a role model for comfortable uncertainty.',
+    },
   },
 
   fake_listening: {
@@ -106,6 +214,37 @@ export const CARDS: Record<FoulType, RuleCard> = {
       },
     ],
     fix: 'Say their view back, including their reason, then ask: "Did I miss anything?"',
+    printed: {
+      eyebrow: 'SUMMARIZATION FOUL',
+      penalty: 'PENALTY',
+      penaltyNote: 'For each missing major point',
+      intro: [
+        {
+          t: 'Before you respond: show you actually heard them, instead of nodding, while loading your mic-drop rebuttal.',
+        },
+      ],
+      band: [
+        'Two steps are required during the Summarize step:',
+        '(1) \u201cWhat I heard is [\u2026]\u201d  \u2192  (2) \u201cDid I miss anything?\u201d',
+      ],
+      smoke: [
+        '\u201cI hear you, but\u2026\u201d',
+        '\u201cSure, but my point is\u2026\u201d',
+        '\u201cRespectfully\u2026\u201d',
+        '\u201cFirst of all\u2026\u201d',
+      ],
+      insteadLabel: 'BEFORE YOUR TURN',
+      instead: [
+        'Both halves required',
+        '1. Generous summary:',
+        '\u201cWhat I heard is [\u2026]\u201d',
+        '2. \u201cDid I miss anything?\u201d',
+        'Thank them for corrections',
+      ],
+      incorrect: ['\u201cI hear you, but [my opinion]\u201d'],
+      correct: ['\u201cWhat I heard is [X]. Did I miss anything?\u201d'],
+      trains: 'Set a high bar for respectful listening.',
+    },
   },
 };
 

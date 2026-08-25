@@ -12,7 +12,7 @@
 // fallback lines below carry the same property, which is why they are written
 // topic-agnostic and read a little bare. That is the cost of the guarantee.
 
-import type { FoulType } from '../types.ts';
+import type { FoulType, PrefightStep } from '../types.ts';
 
 export const SHOWDOWN_SLUG = 'full-showdown';
 
@@ -271,4 +271,18 @@ export const SOFIA_THIN = [
   'That is not a sentence. I am not answering it.',
   'Try that again with words in it. I will wait.',
   'You are wasting your own clock, not mine.',
+];
+
+/** The corner, before the walk-out. Steve, 2026-08-25: the setup and the card
+ *  teaching happen before the room, one panel at a time, not as a stack of coach
+ *  lines the player scrolls past. All three cards are dealt here because all
+ *  three are live in this match. Sourced from COACH.intro, which no longer runs
+ *  in the thread. */
+export const SHOWDOWN_PREFIGHT: PrefightStep[] = [
+  { kind: 'line', text: COACH.intro[0] },
+  { kind: 'line', text: COACH.intro[1] },
+  { kind: 'card', rule: 'judging' },
+  { kind: 'card', rule: 'opinion_as_fact' },
+  { kind: 'card', rule: 'fake_listening' },
+  { kind: 'line', text: COACH.intro[2] },
 ];

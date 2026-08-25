@@ -58,12 +58,13 @@ export function Composer({ state, onSubmit, onResize }: Props) {
   }
 
   if (state.kind === 'call') {
+    // The pass button used to live here. Steve, 2026-08-25: "let it stand is the
+    // top row" of the card tray, so the whole call gesture is now in one place at
+    // the bottom of the screen (src/ui/RuleCards.tsx). All that is left here is
+    // the question itself.
     return (
       <div className="composer composer-call">
         <p className="composer-hint">{state.hint}</p>
-        <button className="btn btn-wide" onClick={() => onSubmit(state.pass.value, [])}>
-          {state.pass.label}
-        </button>
       </div>
     );
   }

@@ -127,18 +127,28 @@ export function Thread({ messages, avatars, waiting, onSkip, ref }: Props) {
         ]
           .filter(Boolean)
           .join(' ');
+        // The face lives inside the bubble, not beside it (Steve, 2026-08-25:
+        // "put the emoji in the thought bubble"). Widths are fixed by lane in
+        // the stylesheet: opponent two thirds on the left, player two thirds on
+        // the right, coach one third down the middle, so the three speakers land
+        // on three predictable columns.
+        //
+        // A drill specimen in the coach lane wears no face. Nobody is saying it:
+        // it is a line on the table to be judged, and putting the coach's face on
+        // it makes him the one committing the foul. Sofia's fouls are also
+        // specimens, but they are in her lane and she keeps her face.
+        const faceless = m.isSpecimen && m.lane === 'coach';
         return (
           <div key={m.id} className={`msg-row row-${m.lane}`}>
-            {m.lane !== 'player' && (
-              <div className="face" aria-hidden="true">{face}</div>
-            )}
             <div className={cls}>
-              {m.speaker && <div className="msg-speaker">{m.speaker}</div>}
+              {!faceless && (
+                <div className="msg-top">
+                  <span className="face" aria-hidden="true">{face}</span>
+                  {m.speaker && <span className="msg-speaker">{m.speaker}</span>}
+                </div>
+              )}
               {m.card ? <RuleCardFull rule={m.card} /> : <div className="msg-body">{m.text}</div>}
             </div>
-            {m.lane === 'player' && (
-              <div className="face" aria-hidden="true">{face}</div>
-            )}
           </div>
         );
       })}

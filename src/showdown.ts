@@ -321,8 +321,9 @@ export function useShowdown(): Match {
     void (async () => {
       // The room, before anybody speaks. Steve, 2026-08-24: the boss levels
       // "should feel liek mortal kombat", and a fight happens in front of people.
+      // COACH.intro used to be dumped here. It runs as the pre-room stepper now
+      // (src/ui/Prefight.tsx), so the room opens on the crowd and the first ask.
       push({ lane: 'crowd', text: crowdRow(0) });
-      for (const line of COACH.intro) await coach(line);
 
       // The opening. Whatever the player names here is the topic, and Sofia takes
       // the other side of it, which is how this level stays politically balanced

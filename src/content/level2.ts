@@ -29,26 +29,25 @@ export const level2: LevelDef = {
   boss: 'Obvious Olivia',
   bossEmoji: '\u{1F469}\u{1F3FF}',
   bossEpithet: 'Never says "I think." Everything she believes is simply a fact.',
+  prefight: [
+    {
+      kind: 'line',
+      text: 'Obvious Olivia. She is the nicest person you will fight all week.',
+    },
+    {
+      kind: 'line',
+      text: 'Her move is that she never says "I think". Everything is just how it is, and everybody knows it, and you are the only one being difficult.',
+    },
+    {
+      kind: 'line',
+      text: 'Two minutes. One habit: saying your opinion like it is the weather.',
+    },
+    { kind: 'card', rule: 'opinion_as_fact' },
+  ],
   beats: [
     {
       name: 'Own it',
       steps: [
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'Obvious Olivia. She is the nicest person you will fight all week.',
-        },
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'Her move is that she never says "I think". Everything is just how it is, and everybody knows it, and you are the only one being difficult.',
-        },
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'Two minutes. One habit: saying your opinion like it is the weather.',
-        },
-        { kind: 'card', rule: 'opinion_as_fact' },
         {
           kind: 'say',
           lane: 'coach',

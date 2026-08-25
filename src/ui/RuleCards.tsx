@@ -1,4 +1,4 @@
-// The three rule cards, pinned above the thread and live for the whole level.
+// The three rule cards, pinned under the thread and live for the whole level.
 //
 // Steve's ruling of 2026-08-24: the printed cards are the teaching, so they have
 // to be on screen through every stage rather than explained once in a coach line
@@ -9,7 +9,12 @@
 //      of the repair. The deltas are the point (Steve: "need the direct deltas").
 //   2. The whistle. Pressing a card IS calling that foul. There is no separate
 //      row of call buttons any more, and the card sits in the same place every
-//      time, so the gesture is the same in the gym and in the showdown.
+//      time, so the gesture is the same in the gym and in the showdown. Letting
+//      it stand is the full-width row above the three cards (Steve, 2026-08-25),
+//      so every response to an opponent's line is one gesture in one place.
+//
+// The tray sits at the bottom of the screen, under the thread and the composer,
+// "at the bottom where the action is".
 //
 // Greying is honest rather than decorative. A card the level has not taught yet
 // is dim and inert. A card that cannot apply at this instant is dim too: Fake
@@ -26,9 +31,11 @@ interface Props {
   /** cards that can be called right now. null means no call is open. */
   live: FoulType[] | null;
   onCall?: (foul: FoulType) => void;
+  /** the let-it-stand row, present only while a call is open */
+  pass?: { label: string; onPass: () => void };
 }
 
-export function RuleCards({ enabled, live, onCall }: Props) {
+export function RuleCards({ enabled, live, onCall, pass }: Props) {
   const [open, setOpen] = useState<FoulType | null>(null);
 
   const press = (rule: FoulType) => {
@@ -44,6 +51,11 @@ export function RuleCards({ enabled, live, onCall }: Props) {
 
   return (
     <div className="rail-wrap">
+      {pass && (
+        <button className="rail-pass" onClick={pass.onPass}>
+          {pass.label}
+        </button>
+      )}
       <div className="rail" role="group" aria-label="Rule cards">
         {CARD_ORDER.map((rule) => {
           const card = CARDS[rule];
@@ -70,39 +82,127 @@ export function RuleCards({ enabled, live, onCall }: Props) {
       </div>
       {open && (
         <div className="rail-open">
-          <RuleCardFull rule={open} />
+          <RuleCardFull rule={open} full />
         </div>
       )}
     </div>
   );
 }
 
-/** The printed face of one card. Also used in the thread, where the coach deals
- *  the card out before the drilling on it starts. */
-export function RuleCardFull({ rule }: { rule: FoulType }) {
+/**
+ * The printed face of one card, slot for slot.
+ *
+ * Rebuilt 2026-08-25 against docs/reference/print/v7/card-anatomy.md, which was
+ * read off the XML of the printed deck. Steve: "It's been carefully thought
+ * out. Including the wording and the layout." So the order is the printed
+ * order, top to bottom: orange header bar with the icon, the foul-type eyebrow,
+ * the title and the penalty badge; the rule sentence with its one italic word;
+ * the mint procedure strip on Fake Listening only; the peach/mint pair of
+ * smoke-alarm terms and what to say instead; the peach/mint pair of worked
+ * incorrect and correct examples; and the teal Trains band at the foot.
+ *
+ * Note the colour: the header is the same orange on all three cards, because
+ * the printed deck has no per-foul colour at all. Colour there encodes problem
+ * versus solution, peach against mint, and the icon and the title are what tell
+ * the fouls apart. The per-foul tint the app uses survives only on the rail
+ * chips, where it is doing a job the paper game never had to do.
+ *
+ * `full` opens the coach's extra examples underneath. Off in the pre-fight
+ * stepper, where the card is being taught one panel at a time, and on in the
+ * rail, where the player has deliberately opened it to study.
+ */
+export function RuleCardFull({ rule, full = false }: { rule: FoulType; full?: boolean }) {
   const card: RuleCard = CARDS[rule];
+  const p = card.printed;
   return (
-    <div className="card-full" style={{ '--card': CARD_COLOR[rule] } as React.CSSProperties}>
+    <div className="card-full">
       <div className="card-head">
         <span className="card-emoji" aria-hidden="true">
           {card.emoji}
         </span>
-        <span className="card-title">{card.name}</span>
-        <span className="card-cost">
-          {card.cost} token{card.cost === 1 ? '' : 's'}
+        <span className="card-head-mid">
+          <span className="card-eyebrow">{p.eyebrow}</span>
+          <span className="card-title">{card.name}</span>
+        </span>
+        <span className="card-penalty">
+          <span className="card-penalty-glyph" aria-hidden="true">
+            {'\u{1F64F}'.repeat(card.cost)}
+            {'\u2192'}
+          </span>
+          <span className="card-penalty-label">{p.penalty}</span>
+          {p.penaltyNote && <span className="card-penalty-note">{p.penaltyNote}</span>}
         </span>
       </div>
-      <p className="card-what">{card.what}</p>
-      <p className="card-tell">{card.tell}</p>
-      <ul className="card-deltas">
-        {card.deltas.map((d) => (
-          <li key={d.bad}>
-            <span className="delta-bad">{d.bad}</span>
-            <span className="delta-fix">{d.fix}</span>
-          </li>
-        ))}
-      </ul>
-      <p className="card-fix">{card.fix}</p>
+
+      <p className="card-intro">
+        {p.intro.map((seg, i) => (seg.em ? <em key={i}>{seg.t}</em> : <span key={i}>{seg.t}</span>))}
+      </p>
+
+      {p.band && (
+        <div className="card-band">
+          {p.band.map((line) => (
+            <div key={line}>{line}</div>
+          ))}
+        </div>
+      )}
+
+      <div className="card-pair">
+        <div className="card-col card-col-bad">
+          <div className="card-col-eyebrow">SMOKE ALARM TERMS</div>
+          {p.smoke.map((line) => (
+            <div key={line} className="card-col-line">
+              {line}
+            </div>
+          ))}
+        </div>
+        <div className="card-col card-col-good">
+          <div className="card-col-eyebrow">{p.insteadLabel}</div>
+          {p.instead.map((line) => (
+            <div key={line} className="card-col-line">
+              {line}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card-pair">
+        <div className="card-col card-col-bad">
+          <div className="card-col-eyebrow">INCORRECT</div>
+          {p.incorrect.map((line) => (
+            <div key={line} className="card-col-line card-col-eg">
+              {line}
+            </div>
+          ))}
+        </div>
+        <div className="card-col card-col-good">
+          <div className="card-col-eyebrow">CORRECT</div>
+          {p.correct.map((line) => (
+            <div key={line} className="card-col-line card-col-eg">
+              {line}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card-trains">
+        <span className="card-trains-tag">Trains</span>
+        <span className="card-trains-line">{p.trains}</span>
+      </div>
+
+      {full && (
+        <div className="card-more">
+          <div className="card-col-eyebrow">MORE, FROM THE COACH</div>
+          <p className="card-more-tell">{card.tell}</p>
+          <ul className="card-deltas">
+            {card.deltas.map((d) => (
+              <li key={d.bad}>
+                <span className="delta-bad">{d.bad}</span>
+                <span className="delta-fix">{d.fix}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
