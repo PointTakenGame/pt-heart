@@ -173,11 +173,11 @@ function Select({
         {/* Smash Bros ideation B2, shipped 2026-08-25: nine buttons with emoji in
             them read as a settings control, so they are nine cards built on the
             print template instead. Same 4:5 face as the printed deck, an orange
-            CHALLENGER strip, a roster number at the foot. The number is the
-            position in the deal, which is shuffled per visit, so it is a plate
-            on a locker rather than a claim about the character. */}
+            CHALLENGER strip. The roster number at the foot came off on
+            2026-08-25 (Steve): the deal is shuffled per visit, so the number
+            labelled a position rather than a fighter and read as data. */}
         <div className="roster" role="group" aria-label="Pick your fighter">
-          {tiles.map((e, i) => (
+          {tiles.map((e) => (
             <button
               key={e}
               className={`fighter${e === avatar ? ' is-on' : ''}`}
@@ -192,7 +192,6 @@ function Select({
               <span className="fighter-face" aria-hidden="true">
                 {e}
               </span>
-              <span className="fighter-plate">{String(i + 1).padStart(2, '0')}</span>
             </button>
           ))}
         </div>

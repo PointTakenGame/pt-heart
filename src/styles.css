@@ -1726,15 +1726,6 @@ p  { margin: 0 0 0.75rem; }
   font-size: clamp(2.6rem, 9vw, 4.4rem);
   line-height: 1;
 }
-.fighter-plate {
-  flex: 0 0 auto;
-  border-top: 1px solid var(--print-card-border);
-  padding: 0.2rem 0;
-  font-family: var(--font-cond);
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  color: var(--print-eyebrow-grey);
-}
 /* Angled, and hanging off the corner, the way a sticker is applied after the
    card is printed. */
 .fighter-tag {

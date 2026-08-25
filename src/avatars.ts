@@ -32,16 +32,19 @@ const TILES: { emoji: string; gender: 'm' | 'w' | 'n'; tone: 'light' | 'mid' | '
   { emoji: '\u{1F469}\u{1F3FB}', gender: 'w', tone: 'light' }, // woman, light
   { emoji: '\u{1F471}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}', gender: 'm', tone: 'light' }, // blond man, light
   { emoji: '\u{1F469}\u{1F3FB}\u{200D}\u{1F9B0}', gender: 'w', tone: 'light' }, // redheaded woman, light
-  { emoji: '\u{1F9D1}\u{1F3FC}', gender: 'n', tone: 'mid' }, // person, medium light
-  { emoji: '\u{1F468}\u{1F3FD}', gender: 'm', tone: 'mid' }, // man, medium
   { emoji: '\u{1F469}\u{1F3FD}', gender: 'w', tone: 'mid' }, // woman, medium
+  { emoji: '\u{1F468}\u{1F3FD}', gender: 'm', tone: 'mid' }, // man, medium
+  { emoji: '\u{1F9D1}\u{1F3FC}', gender: 'n', tone: 'mid' }, // person, medium light
   { emoji: '\u{1F468}\u{1F3FE}\u{200D}\u{1F9B2}', gender: 'm', tone: 'dark' }, // bald man, medium dark
   { emoji: '\u{1F469}\u{1F3FE}\u{200D}\u{1F9B1}', gender: 'w', tone: 'dark' }, // woman, medium dark, curly
 ];
 
 export const PLAYER_AVATARS = TILES.map((t) => t.emoji);
 
-export const DEFAULT_AVATAR = PLAYER_AVATARS[4];
+// The neutral person tile, which moved to slot 7 when Steve swapped five and
+// seven on 2026-08-25. Pinned by index so the pre-pick fallback face did not
+// change along with the list order.
+export const DEFAULT_AVATAR = PLAYER_AVATARS[6];
 
 /** The picker deals the tiles in a different order every time it opens.
  *
