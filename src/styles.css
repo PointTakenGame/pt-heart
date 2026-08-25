@@ -15,6 +15,42 @@
 
   --w: 44rem;
   --radius: 0.75rem;
+
+  /* The printed deck's own palette, read off the PPTX XML and recorded in
+     docs/reference/print/v7/card-anatomy.md §C. Steve, 2026-08-25: "use the
+     design system from the pdf."
+
+     These are NOT the same values as the six tokens above. Those are the app's
+     softened screen palette (--orange #e8845a is a tint); these are the ink the
+     printed cards actually carry. Any surface that is reproducing something
+     printed, the card faces, the masthead, the front page, uses these. Any
+     surface the app invented for itself uses the ones above. Keeping the two
+     sets separate is what stops the app drifting into a third palette that
+     matches neither the deck nor itself. */
+  --print-orange: #d4520a;        /* card header bars, the front-page rule */
+  --print-orange-mast: #e86820;   /* the SHOWDOWN half of the wordmark, page 1 */
+  --print-orange-pill: #d87036;   /* page 2's pill */
+  --print-peach: #fdf0e7;         /* the problem column */
+  --print-mint: #e8f5f3;          /* the solution column */
+  --print-teal: #085e53;          /* card eyebrows, the HUMILITY half */
+  --print-teal-flow: #0d9b8a;     /* the flow diagram and its arrows */
+  --print-teal-token: #46988a;    /* the gratitude token glyph */
+  --print-navy: #0d1b2a;          /* pages 2 and 3's bars; see below */
+  --print-ink: #535353;           /* body copy on a card */
+  --print-eyebrow-grey: #62626a;  /* the neutral eyebrow */
+  --print-tint: #f3cfba;          /* type sitting on an orange header */
+  --print-card-border: #ddd8d0;
+
+  /* Page 1 prints its top bar pure black while pages 2 and 3 are navy;
+     card-anatomy.md §G reads that as drift, so the app is navy throughout.
+
+     The wordmark is heavy condensed caps. The deck names Anton; nothing in that
+     family ships everywhere, so this is the closest stack that needs no network
+     request. */
+  --font-cond: Impact, Haettenschweiler, "Arial Narrow Bold", "Arial Narrow", sans-serif;
+
+  /* The one height of the NPC dialogue box. See .dlg for the arithmetic. */
+  --dlg-h: 34rem;
 }
 
 * { box-sizing: border-box; }
@@ -42,16 +78,200 @@ button { font: inherit; cursor: pointer; }
 }
 
 .page-narrow {
+  position: relative;
   justify-content: center;
-  padding: 2rem 1.25rem;
+  padding: 3.4rem 1.25rem 2rem;
   overflow-y: auto;
 }
 .page-narrow > * { flex: 0 0 auto; }
+/* A masthead belongs at the top of the page, and these pages centre their
+   contents vertically, so it is lifted out of the centred stack and pinned to
+   the head of the column. The padding above pays for the height it takes. */
+.page-narrow > .mast-slim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
 
 h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 0.75rem; }
 h2 { font-size: 1.1rem; margin: 1.5rem 0 0.25rem; }
 p  { margin: 0 0 0.75rem; }
 .muted { color: #6d6355; }
+
+/* ---------- the front page ----------
+   Harvested from page 1 of the printed deck, 2026-08-25. The vocabulary here is
+   the deck's: a navy masthead with a two-colour wordmark, the orange left rule
+   on the quote, orange header bars on the short foul cards, and a split footer.
+   Everything bleeds to the edge of the 44rem column, so the screen reads as a
+   page of the deck rather than as a web form on cream. */
+
+.page-front {
+  overflow-y: auto;
+  justify-content: flex-start;
+  background: var(--white);
+}
+.page-front > * { flex: 0 0 auto; }
+
+/* The masthead. Two tones, as page 1 has them: a lighter strip carrying the
+   letterspaced eyebrow, then the bar with the wordmark. Navy rather than the
+   printed page's pure black; pages 2 and 3 are navy and card-anatomy.md reads
+   the black as drift. */
+.mast { background: var(--print-navy); }
+.mast-eyebrow {
+  background: #16293b;
+  color: var(--white);
+  font-family: var(--font-cond);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  padding: 0.55rem 1.25rem 0.5rem;
+}
+.mast-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 1.25rem 0.85rem;
+}
+.mast-word {
+  font-family: var(--font-cond);
+  font-size: clamp(2rem, 8vw, 3rem);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+.mast-humility { color: var(--print-teal); }
+.mast-showdown { color: var(--print-orange-mast); }
+.mast-pill {
+  flex: 0 0 auto;
+  background: #1d3346;
+  color: var(--white);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* The slim masthead, on every screen that is not the front page. Smash Bros
+   ideation B1: the navy bar "never moves and never scrolls", and it is what
+   lets the corner and the ring read as two rooms in one building rather than
+   two demos. The wordmark shrinks to a rule across the top and the eyebrow and
+   the social pill are dropped, because a play screen needs its height for the
+   fight. Leave rides on the right, where the .page-topbar strip used to be. */
+.mast-slim {
+  flex: 0 0 auto;
+  border-bottom: 3px solid var(--print-orange);
+}
+.mast-slim .mast-bar {
+  padding: 0.42rem 1rem;
+}
+.mast-slim .mast-word {
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+}
+.mast-right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+/* The Leave link is cream on navy up here, not the page's orange on cream. */
+.mast-right .link {
+  color: var(--cream-dark);
+  font-size: 0.85rem;
+}
+
+.front-body { padding: 1rem 1.25rem 1.5rem; }
+
+.front-tag {
+  font-style: italic;
+  color: #4a4a4a;
+  margin: 0 0 1.1rem;
+}
+
+/* The quote block. The thick orange rule down the left is the whole treatment;
+   the bolded words are the deck's own emphasis and are load-bearing. */
+.front-quote {
+  margin: 0 0 1.4rem;
+  padding: 0.15rem 0 0.15rem 0.9rem;
+  border-left: 4px solid var(--print-orange);
+  line-height: 1.6;
+}
+.front-quote strong { font-weight: 700; }
+
+.front-fouls { margin: 0 0 1.4rem; }
+.front-fouls-lede {
+  margin: 0 0 0.7rem;
+  line-height: 1.45;
+}
+.lede-humility { color: var(--print-teal); font-weight: 700; text-transform: uppercase; }
+.lede-showdown { color: var(--print-orange); font-weight: 700; text-transform: uppercase; }
+
+/* Three across, and they stay three across: on the printed page the row of
+   fouls is the picture of the game, and stacking them turns it into a list. */
+.mini-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+.mini-card {
+  border: 1px solid var(--print-card-border);
+  border-radius: 0.3rem;
+  overflow: hidden;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+}
+.mini-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--print-orange);
+  color: var(--white);
+  padding: 0.4rem 0.5rem;
+}
+.mini-emoji { font-size: 1rem; line-height: 1; }
+.mini-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.mini-body {
+  flex: 1 1 auto;
+  padding: 0.5rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: #535353;
+}
+
+.front-clause { margin: 0 0 0.9rem; }
+.btn-in { margin-top: 0.6rem; }
+
+/* The split footer, as printed: neutral on the left, orange on the right. The
+   right half carries the playtest notice rather than the print run's
+   do-not-distribute line, because that is this build's version of the same
+   sentence. */
+.front-foot {
+  margin-top: auto;
+  display: flex;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+}
+.front-foot-left,
+.front-foot-right {
+  padding: 0.5rem 1.25rem;
+  flex: 1 1 50%;
+}
+.front-foot-left { background: #e8e6e2; color: #5a5a5a; }
+.front-foot-right { background: var(--print-orange); color: var(--white); text-align: right; }
+
+@media (max-width: 30rem) {
+  .mast-pill { display: none; }
+  .front-foot { flex-direction: column; }
+  .front-foot-right { text-align: left; }
+}
 
 /* ---------- level select ---------- */
 
@@ -95,14 +315,11 @@ p  { margin: 0 0 0.75rem; }
 
 /* ---------- level chrome ---------- */
 
-/* Leave sits up here, on its own line, outside the column the game happens in.
-   Steve, 2026-08-25: next to the token stacks "it looks like you're leaving the
-   emojis". */
-.page-topbar {
-  display: flex;
-  padding: 0.6rem 1rem 0;
-  flex: 0 0 auto;
-}
+/* Leave used to sit on a strip of its own here (.page-topbar), outside the
+   column the game happens in, because next to the token stacks "it looks like
+   you're leaving the emojis" (Steve, 2026-08-25). It still sits outside that
+   column; it just rides in the slim masthead now, so the strip costs no height
+   of its own. */
 
 .header {
   display: flex;
@@ -302,10 +519,14 @@ p  { margin: 0 0 0.75rem; }
    in levels 1 and 2, so it has to break the one-third coach width or the line
    being judged is the narrowest thing on screen. */
 .msg-specimen, .msg-take, .msg-card { width: 78%; }
+/* The bar on a specimen says "this is the line on the table", nothing more.
+   It used to be orange, which is the colour this app uses for a called foul
+   (.msg-call), so an un-judged line arrived already wearing the verdict. Steve,
+   2026-08-25: "his box is tagged orange which already implies a foul?" Neutral
+   now, and the lane keeps its own bubble colour, so Victor's specimen looks like
+   Victor's other lines instead of a quarantined exhibit. */
 .msg-specimen .msg-body {
-  background: var(--white);
-  border: 1px solid var(--rule);
-  border-left: 4px solid var(--orange);
+  border-left: 4px solid var(--rule);
   font-style: italic;
   font-size: 1.05rem;
 }
@@ -322,7 +543,12 @@ p  { margin: 0 0 0.75rem; }
 
 /* A dealt rule card is the card, not a bubble around one. */
 .msg-card { width: 100%; }
-.msg-card .card-full { margin: 0; }
+.msg-card .card-full {
+  --u: 0.8rem;
+  width: min(100%, 20rem);
+  aspect-ratio: var(--card-ar);
+  margin: 0;
+}
 
 @media (max-width: 40rem) {
   .msg-opponent, .msg-player { width: 84%; }
@@ -433,6 +659,7 @@ p  { margin: 0 0 0.75rem; }
    row on top of them, so both answers to an opponent's turn are one gesture in
    one place. */
 .rail-wrap {
+  position: relative;
   border-top: 1px solid var(--rule);
   background: var(--cream);
   flex: 0 0 auto;
@@ -454,6 +681,12 @@ p  { margin: 0 0 0.75rem; }
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
+}
+/* The chip and its hover preview, boxed together. The slot carries the width
+   the chip used to carry, so the tray looks the same as it did. */
+.rail-slot {
+  flex: 1 1 0;
+  display: flex;
 }
 .rail-card {
   flex: 1 1 0;
@@ -492,7 +725,43 @@ p  { margin: 0 0 0.75rem; }
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
-.rail-cost { font-size: 0.66rem; color: #6d6355; }
+
+/* Steve, 2026-08-25: "foul cards at bottom: remove points number from bottom.
+   on hover, tooltip entire original card."
+   
+   Pure CSS on the slot, not React state on the button, because the button is
+   often disabled and a disabled control fires no mouse events of its own. Its
+   ancestors still resolve :hover, so the wrapper is what listens.
+   
+   Positioned against .rail-wrap rather than against its own slot, so the
+   leftmost and rightmost previews are centered over the tray instead of hanging
+   off the side of a phone. The delay on the way in keeps it from flashing while
+   a cursor crosses the tray to reach something else; there is no delay on the
+   way out. */
+.rail-tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 0.25rem);
+  transform: translateX(-50%);
+  width: min(19rem, 92vw);
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  filter: drop-shadow(0 6px 14px rgba(45, 45, 45, 0.28));
+  transition: opacity 120ms ease, visibility 0s;
+}
+/* The preview is the printed card, so it wears the printed proportion too. */
+.rail-tip .card-full {
+  --u: 0.72rem;
+  aspect-ratio: var(--card-ar);
+}
+.rail-slot:hover .rail-tip,
+.rail-slot:focus-within .rail-tip {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 120ms ease 320ms, visibility 0s 320ms;
+}
 
 /* The opened card pushes the thread up instead of covering it, and scrolls
    inside its own box if it runs long on a phone. */
@@ -514,7 +783,18 @@ p  { margin: 0 0 0.75rem; }
    colour in the printed deck. All three headers are the same orange; the icon
    and the title are what tell them apart. Sharp corners, because the card's own
    geometry is a rect, not a roundRect. */
+/* Every length on this card is a multiple of --u, so the whole thing scales as
+   one object. Steve, 2026-08-25: "that card is too wide, match the AR of
+   elements from teh pdf/pptx." The printed card is 3.985 x 4.948in, so any
+   context that shows the card sets --u and an aspect-ratio and the card
+   arrives at the right proportion instead of stretching to fill whatever box
+   it landed in. --u: 1rem is the size it has always been, for the rail. */
 .card-full {
+  --u: 1rem;
+  /* The printed card, 3.985 x 4.948in. Any context that wants the real shape
+     sets aspect-ratio: var(--card-ar) and a --u small enough that the content
+     still fits inside it. */
+  --card-ar: 3.985 / 4.948;
   --print-orange: #d4520a;
   --print-peach: #fdf0e7;
   --print-mint: #e8f5f3;
@@ -525,7 +805,12 @@ p  { margin: 0 0 0.75rem; }
   border: 1px solid #ddd8d0;
   background: var(--white);
   overflow: hidden;
-  font-size: 0.78rem;
+  /* A column, so a card held to the printed ratio can hand its slack to the
+     example blocks instead of pooling it as dead space under the Trains band.
+     That is also how the paper card reads: the two columns fill the body. */
+  display: flex;
+  flex-direction: column;
+  font-size: calc(var(--u) * 0.78);
   line-height: 1.35;
   color: var(--print-ink);
 }
@@ -533,90 +818,91 @@ p  { margin: 0 0 0.75rem; }
 .card-head {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: calc(var(--u) * 0.55);
   background: var(--print-orange);
-  padding: 0.45rem 0.6rem;
+  padding: calc(var(--u) * 0.45) calc(var(--u) * 0.6);
 }
-.card-emoji { font-size: 1.6rem; line-height: 1; flex: 0 0 auto; }
+.card-emoji { font-size: calc(var(--u) * 1.6); line-height: 1; flex: 0 0 auto; }
 .card-head-mid { flex: 1; min-width: 0; }
 .card-eyebrow {
   display: block;
-  font-size: 0.55rem;
+  font-size: calc(var(--u) * 0.55);
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--print-tint);
 }
 .card-title {
   display: block;
-  font-size: 1.05rem;
+  font-size: calc(var(--u) * 1.05);
   font-weight: 700;
   line-height: 1.1;
   color: var(--white);
 }
-.card-penalty { flex: 0 0 auto; text-align: right; max-width: 8rem; }
-.card-penalty-glyph { display: block; font-size: 0.8rem; color: var(--white); }
+.card-penalty { flex: 0 0 auto; text-align: right; max-width: calc(var(--u) * 8); }
+.card-penalty-glyph { display: block; font-size: calc(var(--u) * 0.8); color: var(--white); }
 .card-penalty-label {
   display: block;
-  font-size: 0.55rem;
+  font-size: calc(var(--u) * 0.55);
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--print-tint);
 }
 .card-penalty-note {
   display: block;
-  font-size: 0.5rem;
+  font-size: calc(var(--u) * 0.5);
   line-height: 1.2;
   color: var(--print-tint);
 }
 
-.card-intro { margin: 0; padding: 0.55rem 0.6rem 0.5rem; font-style: italic; }
+.card-intro { margin: 0; padding: calc(var(--u) * 0.55) calc(var(--u) * 0.6) calc(var(--u) * 0.5); font-style: italic; }
 .card-intro em { font-style: italic; font-weight: 700; }
 
 /* Fake Listening only: the two-step procedure it demands, banded in mint
    because it belongs to the solution side of the card. */
 .card-band {
-  margin: 0 0.6rem 0.5rem;
-  padding: 0.4rem 0.5rem;
+  margin: 0 calc(var(--u) * 0.6) calc(var(--u) * 0.5);
+  padding: calc(var(--u) * 0.4) calc(var(--u) * 0.5);
   background: var(--print-mint);
-  font-size: 0.72rem;
+  font-size: calc(var(--u) * 0.72);
 }
 
 .card-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.35rem;
-  padding: 0 0.6rem 0.5rem;
+  gap: calc(var(--u) * 0.35);
+  padding: 0 calc(var(--u) * 0.6) calc(var(--u) * 0.5);
   align-items: stretch;
+  flex: 1 1 auto;
 }
-.card-col { padding: 0.4rem 0.45rem; }
+.card-col { padding: calc(var(--u) * 0.4) calc(var(--u) * 0.45); }
 .card-col-bad { background: var(--print-peach); }
 .card-col-good { background: var(--print-mint); }
 .card-col-eyebrow {
-  font-size: 0.52rem;
+  font-size: calc(var(--u) * 0.52);
   font-weight: 700;
   letter-spacing: 0.09em;
   color: var(--print-grey);
-  margin-bottom: 0.25rem;
+  margin-bottom: calc(var(--u) * 0.25);
 }
 .card-col-good .card-col-eyebrow { color: var(--print-teal); }
-.card-col-line { margin-bottom: 0.15rem; }
+.card-col-line { margin-bottom: calc(var(--u) * 0.15); }
 .card-col-eg { font-style: italic; }
 
 .card-trains {
   display: flex;
   align-items: baseline;
-  gap: 0.4rem;
+  gap: calc(var(--u) * 0.4);
   background: var(--print-mint);
-  padding: 0.35rem 0.6rem;
+  padding: calc(var(--u) * 0.35) calc(var(--u) * 0.6);
 }
 .card-trains-tag {
-  font-size: 0.52rem;
+  font-size: calc(var(--u) * 0.52);
   font-weight: 700;
   letter-spacing: 0.09em;
   color: var(--print-teal);
   flex: 0 0 auto;
 }
-.card-trains-line { font-size: 0.75rem; }
+.card-trains-line { font-size: calc(var(--u) * 0.75); }
 
 /* Everything below the printed card is ours, not the deck's, so it sits outside
    the card's own frame on the cream: the coach's tell, and the direct deltas
@@ -625,10 +911,10 @@ p  { margin: 0 0 0.75rem; }
 .card-more {
   border-top: 1px solid #ddd8d0;
   background: var(--cream);
-  padding: 0.55rem 0.6rem 0.65rem;
+  padding: calc(var(--u) * 0.55) calc(var(--u) * 0.6) calc(var(--u) * 0.65);
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: calc(var(--u) * 0.4);
 }
 .card-more-tell { margin: 0; font-style: italic; color: #6d6355; }
 .card-deltas {
@@ -637,90 +923,191 @@ p  { margin: 0 0 0.75rem; }
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: calc(var(--u) * 0.4);
 }
 .card-deltas li {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding-left: 0.6rem;
+  gap: calc(var(--u) * 0.15);
+  padding-left: calc(var(--u) * 0.6);
   border-left: 2px solid var(--rule);
 }
 .delta-bad { color: var(--orange); }
 .delta-fix { color: #2f7f68; }
 
-@media (max-width: 30rem) {
-  .card-pair { grid-template-columns: 1fr; }
-}
+/* No single-column fallback for .card-pair below 30rem any more. The card is now
+   a fixed-width object held to the printed ratio, so stacking the columns on a
+   phone would double its height and clip it. The paper card is two columns at
+   3.985in across; the app card is the same object at the same proportion. */
 
 /* ---------- the walk-out ---------- */
 
 /* Punch-Out, in a browser. The boss gets an entrance, a name, an epithet, and a
    countdown, because a fight you walked into is a fight you remember (Steve,
-   2026-08-24: it "should feel liek mortal kombat"). */
-.intro {
+   2026-08-24: it "should feel liek mortal kombat").
+
+   Smash Bros ideation B3, 2026-08-25: the two fighters no longer sit in a row on
+   one cream ground. The screen is cut on a diagonal, each fighter gets his own
+   half, and the halves slam in from opposite sides 90ms apart with a white flash
+   on the meeting. Nothing here is measured in JS: the seam is a clip-path, so it
+   holds at any width, and the whole effect is four keyframes. */
+.vs {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: var(--print-navy);
+}
+
+/* Each half is the full screen, then cut. Mirrored polygons share the same
+   diagonal, so the two cuts meet exactly with no gap and no overlap. */
+.vs-half {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 6vw;
+}
+.vs-you {
+  justify-content: flex-start;
+  background: var(--print-teal);
+  clip-path: polygon(0 0, 62% 0, 38% 100%, 0 100%);
+  animation: slam-left 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.vs-boss {
+  justify-content: flex-end;
+  background: var(--print-navy);
+  clip-path: polygon(62% 0, 100% 0, 100% 100%, 38% 100%);
+  animation: slam-right 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 90ms;
+}
+/* The boss lands second and lands bigger. That is the point of a boss. */
+.vs-you .vs-face { font-size: clamp(3rem, 14vw, 5rem); }
+.vs-boss .vs-face { font-size: clamp(3.8rem, 18vw, 6.4rem); }
+.vs-face { line-height: 1; }
+
+@keyframes slam-left {
+  from { transform: translateX(-110%); }
+  70% { transform: translateX(2%); }
+  to { transform: translateX(0); }
+}
+@keyframes slam-right {
+  from { transform: translateX(110%); }
+  70% { transform: translateX(-2%); }
+  to { transform: translateX(0); }
+}
+
+/* One white frame over the whole screen at the moment the second half lands.
+   Sixty milliseconds is under a blink: you do not see a white rectangle, you see
+   the impact. */
+.vs-flash {
+  position: absolute;
+  inset: 0;
+  background: var(--white);
+  opacity: 0;
+  pointer-events: none;
+  animation: vs-flash 60ms linear 170ms forwards;
+}
+@keyframes vs-flash {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Everything readable rides above the seam in one column. The faces are pushed
+   out to the edges by the halves' own padding, so this column never lands on
+   top of one. */
+.vs-front {
+  position: relative;
+  z-index: 2;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 0.9rem;
   padding: 1.5rem 1.25rem;
   text-align: center;
-  background: var(--cream-dark);
+  color: var(--cream);
+  pointer-events: none;
 }
-.intro-crowd {
-  font-size: 1.4rem;
-  letter-spacing: 0.2em;
-  opacity: 0.4;
-}
-.intro-fight {
-  margin: 0;
-  font-size: 0.8rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: #6d6355;
-}
-.intro-vs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.2rem;
-}
-.intro-side {
+.vs-front .btn { pointer-events: auto; }
+.vs-top,
+.vs-bottom {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.6rem;
 }
-.intro-face { font-size: 4rem; line-height: 1; }
-/* The boss is bigger than you are. That is the point of a boss. */
-.intro-face-boss { font-size: 5.2rem; }
-.intro-label {
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
+.vs-crowd {
+  font-size: 1.4rem;
+  letter-spacing: 0.2em;
+  opacity: 0.45;
+}
+.vs-fight {
+  margin: 0;
+  font-family: var(--font-cond);
+  font-size: 0.8rem;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: #6d6355;
+  color: var(--print-tint);
 }
-.intro-versus {
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--orange);
+/* Dropped in oversized and settled, a beat after the halves land. */
+.vs-bolt {
+  font-family: var(--font-cond);
+  font-size: clamp(2.6rem, 12vw, 4.2rem);
+  letter-spacing: 0.06em;
+  color: var(--print-orange-mast);
+  -webkit-text-stroke: 2px var(--print-navy);
+  animation: vs-bolt 260ms cubic-bezier(0.16, 1, 0.3, 1) 170ms both;
 }
-.intro-epithet {
+@keyframes vs-bolt {
+  from { transform: scale(2.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+/* The name plate is skewed and the name inside it is skewed back, so the plate
+   leans without the letters leaning with it. */
+.vs-plate {
+  transform: skewX(-8deg);
+  background: var(--print-orange);
+  padding: 0.25rem 1.1rem;
+}
+.vs-plate span {
+  display: inline-block;
+  transform: skewX(8deg);
+  font-family: var(--font-cond);
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--white);
+}
+.vs-epithet {
   margin: 0;
   max-width: 26rem;
   font-style: italic;
+  color: var(--print-tint);
 }
-.intro-start { max-width: 18rem; }
-.intro-count {
+.vs-start { max-width: 18rem; }
+.vs-count {
   margin: 0;
+  font-family: var(--font-cond);
   font-size: 3.4rem;
-  font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--orange);
+  color: var(--print-orange-mast);
   line-height: 1;
+}
+
+/* Motion is the whole point of this screen, so with it off the screen still has
+   to work: the halves are already in place, and only the opacity moves. */
+@media (prefers-reduced-motion: reduce) {
+  .vs-you,
+  .vs-boss,
+  .vs-bolt {
+    animation: vs-fade 200ms linear both;
+  }
+  .vs-flash { display: none; }
+  @keyframes vs-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 }
 
 /* ---------- the corner, before the door ---------- */
@@ -735,7 +1122,10 @@ p  { margin: 0 0 0.75rem; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  /* flex-start, not center: the box has a fixed height now, so centering a
+     constant rectangle inside a variable stage is the one remaining way it
+     could still appear to move. */
+  justify-content: flex-start;
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 1.25rem;
@@ -763,41 +1153,76 @@ p  { margin: 0 0 0.75rem; }
    all the time it needs to be in a constant place in the box, maybe in a little
    frame."
    
-   So: one frame, one width, one place. The stage that holds it centers it and
-   the frame keeps a floor under itself, so a one-line ruling and a four-line
-   setup occupy the same rectangle and the Next button never moves. */
+   So: one frame, one width, one place.
+
+   2026-08-25, Steve again: "Keep a constant rect for the convo with him, it
+   keeps reappearing in diff sizes, it's one convo box at max size needed for
+   the convo duration (including 'here's the card', probably the max there)."
+   A floor was not enough, because the card panel is far taller than the floor
+   and every other panel then read as a different box. So the height is now
+   fixed at the tallest thing the box ever holds, and it is the same on a
+   one-line ruling as it is on the card.
+
+   --dlg-h is that tallest panel, added up: 1rem of padding top and bottom, up
+   to 5rem for a three-line quote beside the 3rem face, the 0.75rem gap, and
+   the printed card at 21rem wide over its 0.805 proportion, which is 26.1rem.
+   Anything taller than the viewport scrolls in the stage rather than
+   overflowing it. */
 .dlg {
   position: relative;
   width: 100%;
   max-width: 34rem;
-  margin: 0 auto;
-  min-height: 9.5rem;
+  /* Top margin, not zero: the name plate hangs off the top edge and needs the
+     room to hang into. */
+  margin: 0.9rem auto 0;
+  height: var(--dlg-h);
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem 1.1rem;
-  background: var(--white);
-  border: 2px solid var(--charcoal);
-  border-radius: var(--radius);
-  box-shadow: 0 3px 0 rgba(45, 45, 45, 0.18);
+  /* Smash Bros ideation B8: the corner box. Navy ground, so the box reads as a
+     lit panel over the room rather than as another sheet of paper on a cream
+     page, and the double frame that every fighting game puts round its dialogue.
+     The second ring is two box-shadows rather than a wrapper element: a solid
+     shadow at 2px and another at 4px draw a navy gutter and then a tint hairline
+     outside the cream border, with no extra markup and nothing to keep in sync. */
+  background: var(--print-navy);
+  color: var(--cream);
+  border: 2px solid var(--cream);
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 2px var(--print-navy),
+    0 0 0 4px var(--print-tint);
   text-align: left;
   cursor: pointer;
 }
-/* Whose frame this is, said once, in the border. */
-.dlg-coach { border-color: var(--charcoal); }
-.dlg-opponent { border-color: var(--purple); background: var(--cream-dark); }
-.dlg-player { border-color: var(--teal); }
+/* Whose frame this is, said once, in the outer ring. */
+.dlg-opponent {
+  box-shadow:
+    0 0 0 2px var(--print-navy),
+    0 0 0 4px var(--purple);
+}
+.dlg-player {
+  box-shadow:
+    0 0 0 2px var(--print-navy),
+    0 0 0 4px var(--print-teal-flow);
+}
+/* A specimen on the table is nobody's line, so it gets no ring at all, just a
+   lifted ground and the orange rule down its edge. */
 .dlg-table {
-  border-color: var(--rule);
-  border-left: 4px solid var(--orange);
+  background: #16293b;
+  border-left: 4px solid var(--print-orange);
   box-shadow: none;
 }
-/* The whistle. Orange text in an orange frame, matching .msg-call in the fight,
-   so calling Judging looks the same in training as it does against a boss. */
+/* The whistle. Orange in an orange frame, matching .msg-call in the fight, so
+   calling Judging looks the same in training as it does against a boss. */
 .dlg-call {
-  border-color: var(--orange);
-  color: var(--orange);
+  color: var(--print-orange-mast);
   font-weight: 700;
+  box-shadow:
+    0 0 0 2px var(--print-navy),
+    0 0 0 4px var(--print-orange);
 }
 
 .dlg-mute {
@@ -814,33 +1239,185 @@ p  { margin: 0 0 0.75rem; }
 }
 .dlg-mute:hover { opacity: 1; }
 
-/* The opponent's card, so "that is Verdict Victor" arrives with Verdict Victor
-   attached (Steve: "a little mug shot or baseball card"). */
-.dlg-mug {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.6rem;
-  background: var(--cream-dark);
-  border: 1px solid var(--rule);
-  border-radius: calc(var(--radius) - 0.25rem);
+/* The voice picker. Sits beside the mute, same dimmed-until-hovered chrome, so
+   the box does not grow a control strip. Open, it is a small menu of the four
+   voices in blip.ts with a one-line description of each, because "Retro" alone
+   does not tell you what you are about to hear. */
+.dlg-voice-btn {
+  position: absolute;
+  top: 0.3rem;
+  right: 1.7rem;
+  border: 0;
+  background: none;
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 0.25rem;
+  cursor: pointer;
+  opacity: 0.35;
 }
-.dlg-mug-face { font-size: 2.4rem; line-height: 1; flex: 0 0 auto; }
-.dlg-mug-said { min-width: 0; }
-.dlg-mug-name { font-weight: 700; letter-spacing: 0.02em; }
-.dlg-mug-epithet { font-size: 0.85rem; font-style: italic; color: #6d6355; }
+.dlg-voice-btn:hover,
+.dlg-voice-btn[aria-expanded='true'] { opacity: 1; }
 
-.dlg-row { display: flex; align-items: flex-start; gap: 0.7rem; }
-.dlg-face { font-size: 3rem; line-height: 1; flex: 0 0 auto; }
-.dlg-said { flex: 1; min-width: 0; }
-.dlg-name {
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
+.dlg-voices {
+  position: absolute;
+  top: 1.9rem;
+  right: 0.4rem;
+  z-index: 6;
+  width: 15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.5rem;
+  background: var(--white);
+  border: 2px solid var(--charcoal);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(45, 45, 45, 0.18);
+  cursor: default;
+}
+.dlg-voices-head {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #6d6355;
-  margin-bottom: 0.15rem;
+  padding: 0 0.3rem 0.2rem;
+}
+.dlg-voice {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  background: none;
+  padding: 0.3rem 0.4rem;
+  cursor: pointer;
+  font: inherit;
+}
+.dlg-voice:hover { background: var(--cream); }
+.dlg-voice.is-on {
+  border-color: var(--teal);
+  background: var(--cream);
+}
+.dlg-voice-name {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--charcoal);
+}
+.dlg-voice-blurb {
+  display: block;
+  font-size: 0.72rem;
+  color: #6d6355;
+  line-height: 1.3;
+}
+
+/* The opponent's card, so "that is Verdict Victor" arrives with Verdict Victor
+   attached (Steve: "a little mug shot or baseball card").
+ 
+   Rebuilt 2026-08-25: "coach shows you his card on bottom of convo box, and
+   make it baseball-card AR/style (garbage-pail kids?)." So it is a card now,
+   not the horizontal name strip it was: 2.5 by 3.5 inches, the trading-card
+   proportion, dealt at the foot of the frame under the coach's line, tilted a
+   degree and a half so it reads as an object somebody put down rather than as
+   another panel of the interface.
+
+   Its ink is the printed deck's, not the app's softened screen palette: this
+   is the card the coach is holding up. */
+.dlg-mug {
+  width: 9.5rem;
+  aspect-ratio: 2.5 / 3.5;
+  margin: auto auto 0;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--print-peach);
+  border: 2px solid var(--print-navy);
+  border-radius: 0.35rem;
+  box-shadow: 0 3px 0 rgba(13, 27, 42, 0.22);
+  transform: rotate(-1.5deg);
+}
+.dlg-mug-face {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.6rem;
+  line-height: 1;
+  background: radial-gradient(circle at 50% 42%, #fff 0%, var(--print-peach) 65%);
+}
+.dlg-mug-said {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 0.32rem 0.4rem 0.42rem;
+  background: var(--print-orange);
+  color: var(--white);
+  text-align: center;
+}
+.dlg-mug-name {
+  font-family: var(--font-cond);
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.05;
+}
+.dlg-mug-epithet {
+  font-size: 0.66rem;
+  font-style: italic;
+  color: var(--print-tint);
+  line-height: 1.25;
+}
+
+.dlg-row { flex: 0 0 auto; display: flex; align-items: flex-start; gap: 0.8rem; }
+/* The face is in a window now, not floating on the ground: a lit square of the
+   printed deck's peach, hairlined, at a fixed size so a wide emoji and a narrow
+   one leave the text starting in the same place. */
+.dlg-face {
+  flex: 0 0 auto;
+  width: 3.9rem;
+  height: 3.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.6rem;
+  line-height: 1;
+  background: var(--print-peach);
+  border: 1px solid var(--print-tint);
+  border-radius: 2px;
+}
+.dlg-said { flex: 1; min-width: 0; }
+/* Notched over the top edge, the way an arcade cabinet labels the speaker. It
+   leaves the flow to do it, which is also why the frame carries a top margin. */
+.dlg-name {
+  position: absolute;
+  top: -0.85rem;
+  left: 1rem;
+  z-index: 3;
+  padding: 0.15rem 0.6rem;
+  background: var(--print-orange);
+  color: var(--white);
+  font-family: var(--font-cond);
+  font-size: 0.8rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 .dlg-text { margin: 0; font-size: 1.05rem; white-space: pre-wrap; }
+/* The line has finished typing. Two keyframes and a slow loop: enough motion to
+   be seen at the edge of the eye, not enough to compete with the text. */
+.dlg-more {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--print-tint);
+  animation: dlg-more 900ms ease-in-out infinite;
+}
+@keyframes dlg-more {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(0.22rem); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dlg-more { animation: none; }
+}
 /* The cursor that says the line is still coming. */
 .dlg-caret {
   display: inline-block;
@@ -848,12 +1425,26 @@ p  { margin: 0 0 0.75rem; }
   height: 1.05rem;
   margin-left: 0.1rem;
   vertical-align: -0.15rem;
-  background: var(--orange);
+  background: var(--print-orange-mast);
   animation: dlg-blink 700ms steps(1, end) infinite;
 }
 @keyframes dlg-blink { 50% { opacity: 0; } }
 
-.dlg .card-full { margin: 0; }
+/* The card as the coach holds it up, at the printed proportion. Steve,
+   2026-08-25: "that card is too wide, match the AR of elements from teh
+   pdf/pptx." It used to stretch to the full 34rem of the dialogue box and come
+   out landscape, 1.45:1, where the printed card is 0.805:1. --u: 0.85rem is
+   the largest type that still lets every one of the three cards, including
+   Fake Listening with its extra procedure band, fit inside that ratio. */
+.dlg .card-full {
+  --u: 0.85rem;
+  flex: 0 0 auto;
+  width: min(100%, 21rem);
+  aspect-ratio: var(--card-ar);
+  /* auto on all four sides, so the card sits in the middle of whatever the
+     fixed box has left after the coach's line rather than jammed under it. */
+  margin: auto;
+}
 
 /* The typed-out text is decoration for the eye. A screen reader gets the whole
    line at once, and never the half-typed one. */
@@ -869,7 +1460,12 @@ p  { margin: 0 0 0.75rem; }
   border: 0;
 }
 
-.pf-meet .dlg { margin-top: 0.5rem; }
+/* The one exemption from the constant rectangle. The meet panel is a screen
+   you see once ever, it already carries the coach's portrait and name above the
+   box, and it never holds a card, so giving it the card-sized frame would put a
+   foot of empty paper under a single sentence on the first screen of the game.
+   Everything inside an actual conversation keeps the fixed height. */
+.pf-meet .dlg { height: auto; min-height: 9.5rem; margin-top: 0.5rem; }
 
 .pf-foot { flex: 0 0 auto; padding: 0.5rem 1.25rem 1.5rem; }
 .pf-dots {
@@ -905,7 +1501,8 @@ p  { margin: 0 0 0.75rem; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  /* see .pf-stage: the box is a constant rectangle, so the stage anchors it. */
+  justify-content: flex-start;
   align-items: center;
   gap: 0.6rem;
   padding: 0.5rem 1.25rem;
@@ -920,6 +1517,7 @@ p  { margin: 0 0 0.75rem; }
 .drill-table {
   width: 100%;
   max-width: 34rem;
+  min-height: 3.6rem;
   padding: 0.55rem 0.8rem;
   background: var(--white);
   border: 1px solid var(--rule);
@@ -935,6 +1533,10 @@ p  { margin: 0 0 0.75rem; }
   margin-bottom: 0.15rem;
 }
 .drill-table-text { font-style: italic; }
+/* The slot is rendered on every step, empty or not. A specimen that appears
+   between two panels used to push the dialogue box down the screen, which is
+   the same complaint as the box changing size: the frame moved. */
+.drill-table.is-empty { visibility: hidden; }
 
 .drill-foot { flex: 0 0 auto; padding: 0.5rem 1.25rem 1.5rem; }
 .drill-count { text-align: center; font-size: 0.72rem; margin: 0.5rem 0 0; }
@@ -955,23 +1557,96 @@ p  { margin: 0 0 0.75rem; }
 }
 .picker-you { font-size: 2.2rem; line-height: 1; }
 .picker-label { flex: 1; color: #6d6355; }
-.picker-grid {
+/* The roster. Smash Bros ideation B2: each tile is the printed card's face and
+   proportion, 3.985 by 4.948 inches, so the picker reads as a roster of nine
+   fighters rather than a settings widget. The lift on hover is a hard offset
+   shadow, not a soft glow, because the deck is a print object and print objects
+   have edges. The selection ring is an outline rather than a border, so it sits
+   outside the card's own hairline and cannot reflow the grid. */
+.roster {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.6rem;
+  gap: 0.7rem;
   margin-bottom: 1.5rem;
 }
-.picker-opt {
-  font-size: 3rem;
-  line-height: 1;
-  padding: 0.6rem 0;
-  border-radius: var(--radius);
-  border: 1px solid var(--rule);
+.fighter {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  aspect-ratio: 3.985 / 4.948;
+  padding: 0;
+  overflow: visible;
+  border: 1px solid var(--print-card-border);
+  border-radius: 2px;
   background: var(--white);
+  transition:
+    transform 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 140ms;
 }
-.picker-opt.is-on {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 2px var(--teal);
+.fighter:hover,
+.fighter:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 5px 5px 0 var(--charcoal);
+}
+.fighter.is-on {
+  outline: 3px solid var(--print-orange);
+  outline-offset: 3px;
+}
+.fighter-head {
+  flex: 0 0 auto;
+  background: var(--print-orange);
+  padding: 0.22rem 0.4rem;
+}
+.fighter-eyebrow {
+  font-family: var(--font-cond);
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--white);
+}
+.fighter-face {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(2.6rem, 9vw, 4.4rem);
+  line-height: 1;
+}
+.fighter-plate {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--print-card-border);
+  padding: 0.2rem 0;
+  font-family: var(--font-cond);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--print-eyebrow-grey);
+}
+/* Angled, and hanging off the corner, the way a sticker is applied after the
+   card is printed. */
+.fighter-tag {
+  position: absolute;
+  top: -0.45rem;
+  left: -0.45rem;
+  z-index: 2;
+  rotate: -6deg;
+  background: var(--print-orange);
+  color: var(--white);
+  font-family: var(--font-cond);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.4rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fighter {
+    transition: none;
+  }
+  .fighter:hover,
+  .fighter:focus-visible {
+    transform: none;
+  }
 }
 
 /* ---------- calling a foul, and the sentence frames ---------- */

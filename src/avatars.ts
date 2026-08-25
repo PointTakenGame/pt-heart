@@ -8,6 +8,11 @@
 // distinguishable from every other at picker size. Note the consequence: the
 // darkest tone is no longer offered in the picker. That was the literal shape of
 // "first eight in your list" and it is Steve's to reverse.
+//
+// 2026-08-25, later: the plain medium-dark man was reading as the coach with the
+// white hair turned off, so he is bald now. Same demographic, different face
+// (Steve: "replace redudant darker-skinned dark skin mustache guy with someone
+// else of similar demographic").
 
 /** The corner man. He has a name because you meet him before the first room
  *  (Steve, 2026-08-25); a bullhorn was standing in for a person. */
@@ -25,11 +30,31 @@ export const PLAYER_AVATARS = [
   '\u{1F9D1}\u{1F3FC}', // person, medium light
   '\u{1F468}\u{1F3FD}', // man, medium
   '\u{1F469}\u{1F3FD}', // woman, medium
-  '\u{1F468}\u{1F3FE}', // man, medium dark
+  '\u{1F468}\u{1F3FE}\u{200D}\u{1F9B2}', // bald man, medium dark
   '\u{1F469}\u{1F3FE}\u{200D}\u{1F9B1}', // woman, medium dark, curly
 ];
 
 export const DEFAULT_AVATAR = PLAYER_AVATARS[4];
+
+/** The picker deals the tiles in a different order every time it opens.
+ *
+ *  Steve, 2026-08-25: "randomize the fighter emojis choice locations." A fixed
+ *  grid teaches a position rather than a face, and the top-left tile collects
+ *  picks for being first rather than for being anybody's fighter. Shuffling the
+ *  order makes the player actually look at the nine of them.
+ *
+ *  This is the one place randomness is allowed. It touches presentation only:
+ *  the avatar the player lands on is stored as its own emoji, never as an index,
+ *  so nothing about a match replays differently. Everything else in the build
+ *  stays deterministic (see crowdRow below). */
+export function shuffledAvatars(): string[] {
+  const out = PLAYER_AVATARS.slice();
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
 
 /** The ring, between rounds and when somebody lands one. */
 export const CROWD_ROWS = [

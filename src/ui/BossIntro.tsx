@@ -5,6 +5,12 @@
 //
 // The countdown is the whole trick. It costs three seconds and it moves the
 // player from reading to playing, which is the thing the gym was missing.
+//
+// Rebuilt 2026-08-25 as the wedge (Smash Bros ideation B3, shipped on Steve's
+// "ship the 3, looks great"). Two faces side by side in a row read as a chart of
+// the matchup; two faces on their own slanted grounds read as a fight. The
+// countdown state machine below is untouched: the change is entirely in what the
+// screen looks like while it runs.
 
 import { useEffect, useState } from 'react';
 import { crowdRow } from '../avatars.ts';
@@ -42,44 +48,48 @@ export function BossIntro({
   }, [count, onStart]);
 
   return (
-    <div className="intro">
-      <div className="intro-crowd" aria-hidden="true">
-        {crowdRow(fightNumber)}
+    <div className="vs">
+      {/* The two halves are full-bleed layers cut by a clip-path, so the seam
+          between them is a single diagonal and nothing has to be measured. Each
+          one slams in from its own side, 90ms apart, which is the whole
+          Smash-Bros effect: the screen assembles itself in front of you instead
+          of fading up. */}
+      <div className="vs-half vs-you" aria-hidden="true">
+        <span className="vs-face">{playerEmoji}</span>
       </div>
+      <div className="vs-half vs-boss" aria-hidden="true">
+        <span className="vs-face">{bossEmoji}</span>
+      </div>
+      <div className="vs-flash" aria-hidden="true" />
 
-      <p className="intro-fight">Fight {fightNumber}</p>
-
-      <div className="intro-vs">
-        <div className="intro-side">
-          <span className="intro-face" aria-hidden="true">
-            {playerEmoji}
-          </span>
-          <span className="intro-label">You</span>
+      <div className="vs-front">
+        <div className="vs-top">
+          <div className="vs-crowd" aria-hidden="true">
+            {crowdRow(fightNumber)}
+          </div>
+          <p className="vs-fight">Fight {fightNumber}</p>
         </div>
-        <span className="intro-versus">VS</span>
-        <div className="intro-side">
-          <span className="intro-face intro-face-boss" aria-hidden="true">
-            {bossEmoji}
-          </span>
-          <span className="intro-label">{boss}</span>
+
+        <span className="vs-bolt" aria-hidden="true">
+          VS
+        </span>
+
+        <div className="vs-bottom">
+          <div className="vs-plate">
+            <span>{boss}</span>
+          </div>
+          <p className="vs-epithet">{epithet}</p>
+          {count === null ? (
+            <button className="btn btn-wide vs-start" onClick={() => setCount(3)}>
+              Start
+            </button>
+          ) : (
+            <p className="vs-count" aria-live="assertive">
+              {count > 0 ? count : 'FIGHT'}
+            </p>
+          )}
         </div>
       </div>
-
-      <p className="intro-epithet">{epithet}</p>
-
-      <div className="intro-crowd" aria-hidden="true">
-        {crowdRow(fightNumber + 1)}
-      </div>
-
-      {count === null ? (
-        <button className="btn btn-wide intro-start" onClick={() => setCount(3)}>
-          Start
-        </button>
-      ) : (
-        <p className="intro-count" aria-live="assertive">
-          {count > 0 ? count : 'FIGHT'}
-        </p>
-      )}
     </div>
   );
 }

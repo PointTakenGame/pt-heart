@@ -278,7 +278,12 @@ function TextComposer({
           onChange={(e) => onChange(e.target.value)}
           onBlur={() => snap(text, 'blur')}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            // Steve, 2026-08-25: "pressing return on a typed answer still
+            // needs 'next', too many 'next'". Return sends, the way it does in
+            // every chat box. Shift+Return is the escape hatch for the answer
+            // that wants a second line, and isComposing keeps an IME candidate
+            // from being mistaken for a finished sentence.
+            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault();
               send();
             }
@@ -398,7 +403,9 @@ function TemplateComposer({
               onChange={(e) => onChange(i, e.target.value)}
               onBlur={() => snap(line, 'blur')}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                // Return sends here too. See the note on the free composer
+                // above; a fill-in-the-blank never wants a line break.
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
                   e.preventDefault();
                   send();
                 }

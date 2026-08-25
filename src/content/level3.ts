@@ -29,15 +29,15 @@ export const level3: LevelDef = {
   prefight: [
     {
       kind: 'line',
-      text: 'Nodding Noemi. She will agree with you. She will nod. She will repeat your point back so smoothly you will feel heard.',
+      text: 'Nodding Noemi. She\'ll agree with you. She\'ll nod. She\'ll repeat your point back so smoothly you\'ll feel heard.',
     },
     {
       kind: 'line',
-      text: 'And she will leave out the one part of it that costs her something.',
+      text: 'And she\'ll leave out the one part of it that costs her something.',
     },
     {
       kind: 'line',
-      text: 'So we are going to practice saying somebody\'s point back to them until it is a reflex. Then you will notice when her version is short.',
+      text: 'So we\'re going to practice saying somebody\'s point back to them until it\'s a reflex. Then you\'ll notice when her version is short.',
     },
     { kind: 'card', rule: 'fake_listening' },
   ],
@@ -85,7 +85,7 @@ export const level3: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Notice what went missing: the why. It still sounds like listening. It is shorter by exactly the part you would have argued for.',
+          text: 'Notice what went missing: the why. It still sounds like listening. It\'s shorter by exactly the part you would have argued for.',
         },
 
         {
@@ -106,7 +106,7 @@ export const level3: LevelDef = {
           // the first clause is a faithful restatement, and the reason attached
           // to it is invented. That is exactly what Fake Listening sounds like
           // when it is done well, and it is why reading it is the work.
-          ask: 'Your turn, and I have done the typing. One part of this is not what I said. Find it and fix it.',
+          ask: 'Your turn, and I have done the typing. One part of this isn\'t what I said. Find it and fix it.',
           prefill:
             'So what I\'m hearing is: it bugs you that exchanges can mix customer funds in with their own, because you think crypto is too risky for regular people. Did I get that right?',
           chips: ['your own money was frozen', 'for nine weeks', 'nobody could tell you where it was'],
@@ -126,7 +126,7 @@ export const level3: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'You are arguing for working from home. You gave her three reasons: the commute costs you, you focus better, and you have childcare in the afternoon.',
+          text: 'You\'re arguing for working from home. You gave her three reasons: the commute costs you, you focus better, and you have childcare in the afternoon.',
         },
         {
           kind: 'say',
@@ -137,7 +137,7 @@ export const level3: LevelDef = {
           kind: 'say',
           lane: 'opponent',
           speaker: 'Nodding Noemi',
-          text: 'So you are saying the commute is expensive and you focus better at home. Did I get that right?',
+          text: 'So you\'re saying the commute is expensive and you focus better at home. Did I get that right?',
         },
         {
           kind: 'sort',
@@ -152,9 +152,9 @@ export const level3: LevelDef = {
           expected: 'childcare',
           feedback: {
             commute: 'She kept that one. She said it first, in fact.',
-            focus: 'She named that one. Two of your three came back; the third did not.',
+            focus: 'She named that one. Two of your three came back; the third didn\'t.',
             childcare:
-              'Childcare. The one she cannot answer cheaply, and the only one missing.',
+              'Childcare. The one she can\'t answer cheaply, and the only one missing.',
           },
         },
         {
@@ -166,12 +166,12 @@ export const level3: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'That is the whole move. Nothing she said was false. She agreed with you twice and answered nothing.',
+          text: 'That\'s the whole move. Nothing she said was false. She agreed with you twice and answered nothing.',
         },
         {
           kind: 'say',
           lane: 'coach',
-          text: 'She heard you fine. She just left out the reason that is hardest for her to argue with: childcare. She can tell you a commute is a choice. She can tell you the office has focus rooms. She has no answer for childcare, so she left it on the floor.',
+          text: 'She heard you fine. She just left out the reason that\'s hardest for her to argue with: childcare. She can tell you a commute is a choice. She can tell you the office has focus rooms. She has no answer for childcare, so she left it on the floor.',
         },
         { kind: 'continue', label: 'Finish' },
       ],

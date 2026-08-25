@@ -63,20 +63,35 @@ export function RuleCards({ enabled, live, onCall, pass }: Props) {
           const callable = on && Boolean(live?.includes(rule));
           const dim = !on || (live !== null && !callable);
           return (
-            <button
-              key={rule}
-              className={`rail-card${dim ? ' is-dim' : ''}${callable ? ' is-live' : ''}${open === rule ? ' is-open' : ''}`}
-              style={{ '--card': CARD_COLOR[rule] } as React.CSSProperties}
-              disabled={dim}
-              aria-pressed={open === rule}
-              onClick={() => press(rule)}
-            >
-              <span className="rail-emoji" aria-hidden="true">
-                {on ? card.emoji : '\u{1F512}'}
-              </span>
-              <span className="rail-name">{card.name}</span>
-              <span className="rail-cost">{card.cost}</span>
-            </button>
+            // The slot exists so the card can be previewed on hover even while
+            // the button under it is disabled: a disabled control fires no
+            // mouse events of its own, but CSS :hover still reaches its
+            // ancestors, so the preview is pure CSS on the wrapper.
+            <div key={rule} className="rail-slot">
+              <button
+                className={`rail-card${dim ? ' is-dim' : ''}${callable ? ' is-live' : ''}${open === rule ? ' is-open' : ''}`}
+                style={{ '--card': CARD_COLOR[rule] } as React.CSSProperties}
+                disabled={dim}
+                aria-pressed={open === rule}
+                onClick={() => press(rule)}
+              >
+                <span className="rail-emoji" aria-hidden="true">
+                  {on ? card.emoji : '\u{1F512}'}
+                </span>
+                <span className="rail-name">{card.name}</span>
+              </button>
+              {/* Steve, 2026-08-25: "foul cards at bottom: remove points number
+                  from bottom. on hover, tooltip entire original card." The cost
+                  was the only number on the chip and it was the least useful
+                  thing on it; what a player hovering actually wants is the card
+                  itself. A locked card has nothing to preview: the level has
+                  not taught it, so the chip stays a padlock. */}
+              {on && (
+                <div className="rail-tip" aria-hidden="true">
+                  <RuleCardFull rule={rule} />
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
@@ -85,6 +100,30 @@ export function RuleCards({ enabled, live, onCall, pass }: Props) {
           <RuleCardFull rule={open} full />
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * The short card, as page 1 of the printed deck prints it: the orange header bar
+ * with the icon and the name, then two lines of description, and nothing else.
+ *
+ * This is a different object from RuleCardFull, not a smaller copy of it. The
+ * front page's job is to say what the three fouls are before anybody has agreed
+ * to play; the full face's job is to teach one of them. Three of these sit
+ * across a phone screen. One full face does not.
+ */
+export function RuleCardMini({ rule }: { rule: FoulType }) {
+  const card = CARDS[rule];
+  return (
+    <div className="mini-card">
+      <div className="mini-head">
+        <span className="mini-emoji" aria-hidden="true">
+          {card.emoji}
+        </span>
+        <span className="mini-name">{card.name}</span>
+      </div>
+      <div className="mini-body">{card.blurb}</div>
     </div>
   );
 }

@@ -81,6 +81,27 @@ export function Drill({
     tell.current?.(behind);
   }, [behind]);
   useEffect(() => () => tell.current?.(false), []);
+
+  // You never press Next to read your own words back to yourself.
+  //
+  // Steve, 2026-08-25: "pressing return on a typed answer still needs 'next',
+  // too many 'next', that should only happens when coach says seomthign?"
+  // Right. Sending an answer used to cost two presses: one to step off the
+  // line you were judging, one to step over your own echo. So the moment the
+  // player's own line lands, the cursor jumps past it, and settles on whatever
+  // the coach says in reply the instant that exists. Next is now only ever the
+  // coach talking.
+  let lastPlayer = -1;
+  for (let n = messages.length - 1; n >= 0; n -= 1) {
+    if (messages[n]?.lane === 'player') {
+      lastPlayer = n;
+      break;
+    }
+  }
+  useEffect(() => {
+    if (lastPlayer >= 0 && cursor <= lastPlayer) setCursor(lastPlayer + 1);
+  }, [lastPlayer, cursor]);
+
   const m: Message | undefined = messages[i];
 
   // The line under judgement stays on screen while the player types about it.
@@ -134,12 +155,13 @@ export function Drill({
   return (
     <>
       <div className="drill-stage">
-        {table && (
-          <div className="drill-table">
-            <span className="drill-table-tag">on the table</span>
-            <span className="drill-table-text">{table.text}</span>
-          </div>
-        )}
+        {/* Rendered on every step, empty or not. A specimen appearing between
+            two panels used to shove the dialogue box down the screen, which is
+            the same complaint as the box changing size: the frame moved. */}
+        <div className={`drill-table${table ? '' : ' is-empty'}`}>
+          <span className="drill-table-tag">on the table</span>
+          <span className="drill-table-text">{table?.text ?? '\u00a0'}</span>
+        </div>
         <Dialogue
           key={m.id}
           face={faceless || m.lane === 'crowd' ? null : face}

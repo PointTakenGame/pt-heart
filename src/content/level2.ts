@@ -32,15 +32,15 @@ export const level2: LevelDef = {
   prefight: [
     {
       kind: 'line',
-      text: 'Obvious Olivia. She is the nicest person you will fight all week.',
+      text: 'Obvious Olivia. She\'s the nicest person you\'ll fight all week.',
     },
     {
       kind: 'line',
-      text: 'Her move is that she never says "I think". Everything is just how it is, and everybody knows it, and you are the only one being difficult.',
+      text: 'Her move is that she never says "I think". Everything is just how it is, and everybody knows it, and you\'re the only one being difficult.',
     },
     {
       kind: 'line',
-      text: 'Two minutes. One habit: saying your opinion like it is the weather.',
+      text: 'Two minutes. One habit: saying your opinion like it\'s the weather.',
     },
     { kind: 'card', rule: 'opinion_as_fact' },
   ],
@@ -51,7 +51,7 @@ export const level2: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'I am going to say four things. Some are fair. Some are me passing off my opinion as fact. Call the ones that cross the line.',
+          text: 'I\'m going to say four things. Some are fair. Some are me passing off my opinion as fact. Call the ones that cross the line.',
         },
 
         {
@@ -75,12 +75,12 @@ export const level2: LevelDef = {
           expected: 'clean',
           onCall:
             'Fair instinct, but I owned it. "My read on this is" is exactly the fix.',
-          onPass: 'Same opinion, and now it is mine to hold. That is the whole move.',
+          onPass: 'Same opinion, and now it\'s mine to hold. That\'s the whole move.',
         },
         {
           kind: 'say',
           lane: 'coach',
-          text: 'And that is the deal: once you put "in my head" on the front, you can say almost anything. Own it and it is fair game. The rule is not about what you believe, it is about pretending your belief is the weather.',
+          text: 'And that\'s the deal: once you put "in my head" on the front, you can say almost anything. Own it and it\'s fair game. The rule isn\'t about what you believe, it\'s about pretending your belief is the weather.',
         },
         {
           kind: 'call_or_pass',
@@ -90,21 +90,21 @@ export const level2: LevelDef = {
           line: "The story I'm telling myself is that crypto is obviously a scam.",
           expected: 'foul',
           onCall:
-            'Good catch. I said the magic words and then said "obviously" anyway. The phrase is not a password.',
+            'Good catch. I said the magic words and then said "obviously" anyway. The phrase isn\'t a password.',
           onPass:
-            'This one is sneaky. I used the ownership phrase and still called it obvious. The phrase is not a password.',
+            'This one is sneaky. I used the ownership phrase and still called it obvious. The phrase isn\'t a password.',
         },
         {
           kind: 'edit',
           id: 'l2-3a-i4',
           rule: 'opinion_as_fact',
-          ask: 'Your turn, but I will do the typing. Here is a line. Fix it so it is yours.',
+          ask: 'Your turn, but I\'ll do the typing. Here\'s a line. Fix it so it\'s yours.',
           prefill: 'Nuclear power is too dangerous to expand.',
           chips: ['In my head,', 'My read is that', "The story I'm telling myself is"],
           target:
             'The edit must add an ownership marker (I think, my read is, in my head, the story I am telling myself) without smuggling an assertion marker back in (obviously, clearly, everyone knows, the fact is). Adding the prefix and then saying "obviously" fails.',
           fallback:
-            'The shape is: "In my head, nuclear power is too dangerous to expand." Same claim, now it is yours to hold.',
+            'The shape is: "In my head, nuclear power is too dangerous to expand." Same claim, now it\'s yours to hold.',
         },
         { kind: 'continue', label: 'Next: the part where you say why' },
       ],
@@ -120,17 +120,17 @@ export const level2: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Owning it is the easy half. Here is the other one: the part after "because".',
+          text: 'Owning it is the easy half. Here\'s the other one: the part after "because".',
         },
         {
           kind: 'say',
           lane: 'coach',
-          text: 'A real because is something somebody could go and check. A number, a thing that happened, something you saw. "Everyone knows" is a headcount, not a reason. Saying the claim again in a louder voice is not a reason either.',
+          text: 'A real because is something somebody could go and check. A number, a thing that happened, something you saw. "Everyone knows" is a headcount, not a reason. Saying the claim again in a louder voice isn\'t a reason either.',
         },
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Four lines. Three buttons. Tell me what is missing, or tell me it is good.',
+          text: 'Four lines. Three buttons. Tell me what\'s missing, or tell me it\'s good.',
         },
 
         {
@@ -147,7 +147,7 @@ export const level2: LevelDef = {
           feedback: {
             missing_own: 'That one is owned. "In my head" is right there at the front.',
             missing_reason: 'Owned, and then nothing. "It just does" is where the reason should be.',
-            good: 'Half of it is good. There is no reason in there at all.',
+            good: 'Half of it is good. There\'s no reason in there at all.',
           },
         },
         {
@@ -180,8 +180,8 @@ export const level2: LevelDef = {
           expected: 'missing_reason',
           feedback: {
             missing_own: 'She owned this one. The problem is on the other side of "because".',
-            missing_reason: 'Right. "Everyone knows" is a headcount, and it is doing all the work here.',
-            good: 'The front half is fine. "Everyone knows" is not a reason, it is a crowd.',
+            missing_reason: 'Right. "Everyone knows" is a headcount, and it\'s doing all the work here.',
+            good: 'The front half is fine. "Everyone knows" isn\'t a reason, it\'s a crowd.',
           },
         },
         {
@@ -228,7 +228,7 @@ export const level2: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Nothing she says will be rude. That is what makes it hard.',
+          text: 'Nothing she says will be rude. That\'s what makes it hard.',
         },
         {
           kind: 'call_or_pass',
@@ -238,8 +238,8 @@ export const level2: LevelDef = {
           speaker: 'Obvious Olivia',
           line: 'Obviously the market would sort out the coins on its own. Everybody who works in this knows that.',
           expected: 'foul',
-          onCall: 'Two markers in one sentence. She did not notice either.',
-          onPass: '"Obviously" and "everybody knows", back to back. That is the move.',
+          onCall: 'Two markers in one sentence. She didn\'t notice either.',
+          onPass: '"Obviously" and "everybody knows", back to back. That\'s the move.',
         },
         {
           kind: 'call_or_pass',
@@ -247,17 +247,17 @@ export const level2: LevelDef = {
           rule: 'opinion_as_fact',
           lane: 'opponent',
           speaker: 'Obvious Olivia',
-          line: 'And of course the states that raised their wage floor lost the jobs. That is just what happens.',
+          line: 'And of course the states that raised their wage floor lost the jobs. That\'s just what happens.',
           expected: 'foul',
           onCall: 'Same shape, other side of the aisle. She does it to everyone.',
           onPass:
-            '"Of course" and "that is just what happens". A claim she could have owned, and did not.',
+            '"Of course" and "that\'s just what happens". A claim she could have owned, and didn\'t.',
         },
         {
           kind: 'say',
           lane: 'opponent',
           speaker: 'Obvious Olivia',
-          text: 'I am not being difficult. These are simply the facts.',
+          text: 'I\'m not being difficult. These are simply the facts.',
         },
         {
           kind: 'say',

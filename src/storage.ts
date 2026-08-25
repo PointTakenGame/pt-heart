@@ -6,6 +6,7 @@
 // the eventual sync has exactly one blob to reason about.
 
 import type { ItemRecord } from './types.ts';
+import { PLAYER_AVATARS } from './avatars.ts';
 
 const KEY = 'humility-showdown.v1';
 
@@ -90,7 +91,13 @@ export function isCleared(slug: string): boolean {
 }
 
 export function getAvatar(): string | null {
-  return load().avatar ?? null;
+  const saved = load().avatar ?? null;
+  // A face that was retired out of the picker (the roster was trimmed from
+  // twelve tiles to nine on 2026-08-25) would otherwise come back for returning
+  // players and sit on a picker where no tile is marked as theirs. Falling back
+  // to the default is the honest read: whatever they chose is not on offer any
+  // more, so they have not chosen.
+  return saved && PLAYER_AVATARS.includes(saved) ? saved : null;
 }
 
 export function setAvatar(emoji: string): void {

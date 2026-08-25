@@ -99,7 +99,7 @@ export const TURNS: Turn[] = [
     intro:
       'She goes first. Watch the shape: a take, then a because. Yours is going to look like that.',
     fallback:
-      'Here is where I land. I think the cost of this ends up on people who had no say in it, because the bill always finds the people with the least room to argue. That is my read, and I could be wrong about how big it is.',
+      'Here\'s where I land. I think the cost of this ends up on people who had no say in it, because the bill always finds the people with the least room to argue. That\'s my read, and I could be wrong about how big it is.',
   },
   {
     id: 'l4-r1-summary',
@@ -115,7 +115,7 @@ export const TURNS: Turn[] = [
     actor: 'player',
     kind: 'speak',
     foul: null,
-    intro: 'Now your side of it. Say what you actually think. I am watching your turns too.',
+    intro: 'Now your side of it. Say what you actually think. I\'m watching your turns too.',
   },
   {
     id: 'l4-r1-sofia-speak',
@@ -124,7 +124,7 @@ export const TURNS: Turn[] = [
     kind: 'speak',
     foul: 'opinion_as_fact',
     fallback:
-      'Here is the thing though. That approach obviously does not work. Everyone knows what happens when you try it, and we have been through this before.',
+      'Here\'s the thing though. That approach obviously doesn\'t work. Everyone knows what happens when you try it, and we have been through this before.',
   },
 
   // Round 2. The player opens, and she plays the whole round completely straight.
@@ -134,7 +134,7 @@ export const TURNS: Turn[] = [
     actor: 'player',
     kind: 'speak',
     foul: null,
-    intro: 'New round. You are up first this time.',
+    intro: 'New round. You\'re up first this time.',
   },
   {
     id: 'l4-r2-sofia-summary',
@@ -143,7 +143,7 @@ export const TURNS: Turn[] = [
     kind: 'summarize',
     foul: null,
     fallback:
-      'Let me play that back to you. It bugs you that the burden sits where it does, because you think the people carrying it did not create it. Have I got that right?',
+      'Let me play that back to you. It bugs you that the burden sits where it does, because you think the people carrying it didn\'t create it. Have I got that right?',
   },
   {
     id: 'l4-r2-sofia-speak',
@@ -152,7 +152,7 @@ export const TURNS: Turn[] = [
     kind: 'speak',
     foul: null,
     fallback:
-      'Let me put my actual reasoning on the table. I think the cost falls on people who had no say in creating it, and I would rather fix the thing that keeps generating the cost than keep moving it around after the fact. That is where I land, and I could be wrong about the size of it.',
+      'Let me put my actual reasoning on the table. I think the cost falls on people who had no say in creating it, and I would rather fix the thing that keeps generating the cost than keep moving it around after the fact. That\'s where I land, and I could be wrong about the size of it.',
   },
   {
     id: 'l4-r2-summary',
@@ -170,7 +170,7 @@ export const TURNS: Turn[] = [
     actor: 'player',
     kind: 'speak',
     foul: null,
-    intro: 'Last round. She is behind. Watch her get sloppy, and do not get sloppy with her.',
+    intro: 'Last round. She\'s behind. Watch her get sloppy, and don\'t get sloppy with her.',
   },
   {
     id: 'l4-r3-sofia-summary',
@@ -178,7 +178,7 @@ export const TURNS: Turn[] = [
     actor: 'sofia',
     kind: 'summarize',
     foul: 'fake_listening',
-    fallback: 'Right, right. I hear you, you are frustrated about the whole thing. Anyway.',
+    fallback: 'Right, right. I hear you, you\'re frustrated about the whole thing. Anyway.',
   },
   {
     id: 'l4-r3-sofia-speak',
@@ -187,7 +187,7 @@ export const TURNS: Turn[] = [
     kind: 'speak',
     foul: 'judging',
     fallback:
-      'Look, you are only arguing this because it happens to work out well for you. People in your position always land exactly here.',
+      'Look, you\'re only arguing this because it happens to work out well for you. People in your position always land exactly here.',
   },
   {
     id: 'l4-r3-summary',
@@ -195,7 +195,7 @@ export const TURNS: Turn[] = [
     actor: 'player',
     kind: 'summarize',
     foul: null,
-    intro: 'Play her back one last time. She just fouled at you; that does not buy you one.',
+    intro: 'Play her back one last time. She just fouled at you; that doesn\'t buy you one.',
   },
 ];
 
@@ -208,8 +208,8 @@ export const OPENING = {
 export const COACH = {
   intro: [
     'This is the whole thing. Three rounds, both of you on the clock, all three cards live.',
-    'Seven tokens each. A foul does not burn a token, it hands one over. Judging costs two. The other two cost one each. Let one of hers go past you and half a token crosses anyway. Empty and you are done, whatever the round says.',
-    'She is Slippery Sofia. She does not shout, she does not insult you, and she will foul you twice before you notice once. You whistle her. I whistle you.',
+    'Seven tokens each. A foul doesn\'t burn a token, it hands one over. Judging costs two. The other two cost one each. Let one of hers go past you and half a token crosses anyway. Empty and you\'re done, whatever the round says.',
+    'She\'s Slippery Sofia. She doesn\'t shout, she doesn\'t insult you, and she will foul you twice before you notice once. You whistle her. I whistle you.',
   ],
   /** The hint under the rail while a call is open. The cards are the buttons. */
   callAsk: 'Press the card to call it, or let it stand.',
@@ -218,7 +218,7 @@ export const COACH = {
     `Called it. ${RULE_LABEL[foul]}: ${RULE_GLOSS[foul]}. That is ${cost} to you.`,
   /** any card named on a clean line */
   onFalseCall:
-    'That one was clean. Coming at your position hard is not a foul, and a bad whistle costs you 1.',
+    'That one was clean. Coming at your position hard isn\'t a foul, and a bad whistle costs you 1.',
   /**
    * Called the moment the line goes past, not at the end of the round. A
    * training round has to answer fast or the answer is not attached to
@@ -244,9 +244,9 @@ export const COACH = {
     `${RULE_LABEL[foul]} does not get cheaper because it happened inside a summary. That is paid for. The summary still has not been done. Do it again.`,
   ledger: (p: number, s: number) =>
     `End of the round. You ${formatTokens(p)}, her ${formatTokens(s)}.`,
-  win: 'You took it. Not because you were right about the policy; I have no idea who was right about the policy. You took it because you stayed on the argument and she did not.',
+  win: 'You took it. Not because you were right about the policy; I have no idea who was right about the policy. You took it because you stayed on the argument and she didn\'t.',
   loss: 'She took it. Go back and drill the card she kept getting past you.',
-  draw: 'Dead even. Which, in this game, is not a bad night.',
+  draw: 'Dead even. Which, in this game, isn\'t a bad night.',
   bankrupt: 'You are empty. That ends it, whatever the round said.',
   /**
    * Unreachable by design, and kept anyway. Sofia's authored fouls total four
@@ -268,8 +268,8 @@ export const COACH = {
  * build is random: two players comparing notes have to have seen one game.
  */
 export const SOFIA_THIN = [
-  'That is not a sentence. I am not answering it.',
-  'Try that again with words in it. I will wait.',
+  'That\'s not a sentence. I\'m not answering it.',
+  'Try that again with words in it. I\'ll wait.',
   'You are wasting your own clock, not mine.',
 ];
 

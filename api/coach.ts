@@ -45,15 +45,27 @@ const PROMPTS = {
     `listening, so it must sound agreeable and be missing exactly one thing: the because. ` +
     `Reply with the sentence only, no preamble, no quotation marks.`,
 
+  // Under-calling is correct here, same as in judge_turn below. The old wording
+  // ("a passing edit must do this", "name the missing half") read as a checklist
+  // and told the model to go looking for something absent, so it failed clean
+  // edits: a target that offers three ways to fix a line got treated as three
+  // requirements, and a player who did one of them was told to go do the other
+  // two. Verified 2026-08-25 on level 1 item 4, twice in a row, with edits that
+  // committed no foul at all.
   judge_edit: (target: string, original: string, answer: string) =>
     `A player was given this line to fix:\n\n"${original}"\n\n` +
     `They submitted:\n\n"${answer}"\n\n` +
-    `A passing edit must do this:\n${target}\n\n` +
+    `Here is what the fix was for:\n${target}\n\n` +
+    `Pass it if the foul is gone and the line still disagrees with something. That is the whole ` +
+    `bar. The edit does not have to be well written, complete, or the strongest version of the ` +
+    `argument, and where the description above offers several ways to fix the line, doing any ` +
+    `one of them is a pass. Fail only if the words they actually submitted still commit the ` +
+    `foul, and if you are unsure, pass.\n\n` +
     `Reply with strict JSON and nothing else: {"pass": true|false, "text": "one or two ` +
     `sentences of coach feedback"}. The coach is warm, brief, and specific about the words on ` +
     `the page. Never say who is right about the underlying political question; you are ruling ` +
-    `on the sentence, not the position. If they passed, say what worked. If they did not, name ` +
-    `the missing half without scolding.`,
+    `on the sentence, not the position. If they passed, say what worked. If they did not, ` +
+    `point at the exact words that still commit the foul, without scolding.`,
 
   // Live play. The coach rules on the player's own turn, because a player cannot
   // whistle themselves. Under-calling is the correct bias: a marginal line is clean.
@@ -104,24 +116,38 @@ const PROMPTS = {
 const UPSTREAM_TIMEOUT_MS = 5000;
 
 /**
- * House voice, applied to every generated line. Two things kept showing up in
- * live play on 2026-08-24 and neither belongs in this game.
+ * House voice, applied to every generated line.
  *
  * The reading level: a model left to itself writes rulings like "meeting the
- * standard for listening". Steve's bar is eighth grade, the same bar the printed
- * cards are written to, and a player who has to decode the feedback is not
- * reading the feedback.
+ * standard for listening". Steve's bar is middle school, the same bar the
+ * printed cards are written to, and a player who has to decode the feedback is
+ * not reading the feedback.
  *
  * The em dash: no authored line in this game has one, so a generated line with
  * one is instantly identifiable as the machine talking.
+ *
+ * Contractions and the banned list, added 2026-08-25. Steve: "coach language is
+ * too claude, more lay/informal. everything middle-school level." The tell was
+ * never vocabulary alone, it was the missing contractions: a model writes "that
+ * is not a foul" where a person says "that's not a foul", and the result reads
+ * like a memo no matter how short the words are. The authored lines were swept
+ * the same day, so this block is what keeps the generated ones from drifting
+ * back. The banned words are the ones live play actually produced; the
+ * no-praise-opener rule kills "Good. That's the move", which reads as a grade
+ * even though the coach is not supposed to be grading.
  */
 const HOUSE =
-  '\n\nHow to write it. Eighth grade reading level. Short sentences, plain words, ' +
-  'no jargon and no words like circular, dismissive, or invalidate. Say it the way ' +
-  'a person would say it out loud. Never use an em dash; use a comma, a semicolon, ' +
-  'or two sentences. Do not grade the answer or name the standard it met; just say ' +
-  'the thing. When you are ruling on the player, talk straight at them and say ' +
-  'you, never "the summary" or "the player".';
+  '\n\nHow to write it. You are a boxing coach in a gym, not a writing teacher. ' +
+  'Middle school reading level. Use contractions every time one fits: that\'s, ' +
+  'you\'re, isn\'t, doesn\'t, didn\'t, here\'s, I\'ll. Keep sentences under ' +
+  'about fifteen words. Never use these words: circular, dismissive, invalidate, ' +
+  'validate, framing, nuance, assertion, premise, characterize, articulate, ' +
+  'acknowledge, perspective, effectively, essentially, additionally, however, ' +
+  'furthermore. Never open with praise or a label like Good, Nice, Exactly, ' +
+  'Correct, or Well done; open with the thing itself. Never use an em dash; use ' +
+  'a comma, a semicolon, or two sentences. Do not grade the answer or name the ' +
+  'standard it met. When you are ruling on the player, talk straight at them and ' +
+  'say you, never "the summary" or "the player". One or two sentences, then stop.';
 
 async function ask(key: string, prompt: string): Promise<string | null> {
   let res: Response;

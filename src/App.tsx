@@ -9,13 +9,14 @@ import { Composer } from './ui/Composer.tsx';
 import { Thread, type ThreadHandle } from './ui/Thread.tsx';
 import { Drill } from './ui/Drill.tsx';
 import { Header } from './ui/Header.tsx';
-import { RuleCards } from './ui/RuleCards.tsx';
+import { RuleCards, RuleCardMini } from './ui/RuleCards.tsx';
 import { BossIntro } from './ui/BossIntro.tsx';
 import { Prefight } from './ui/Prefight.tsx';
+import { Mast } from './ui/Mast.tsx';
 import { useShowdown } from './showdown.ts';
 import { SHOWDOWN_PREFIGHT, SHOWDOWN_SLUG, SOFIA_EMOJI } from './content/showdown.ts';
 import { CARD_ORDER } from './content/cards.ts';
-import { COACH_EMOJI, DEFAULT_AVATAR, PLAYER_AVATARS } from './avatars.ts';
+import { COACH_EMOJI, DEFAULT_AVATAR, shuffledAvatars } from './avatars.ts';
 import { getAvatar, isCleared, load, setAvatar } from './storage.ts';
 
 type Screen =
@@ -60,32 +61,86 @@ export function App() {
   );
 }
 
+// The first screen, rebuilt 2026-08-25 against page 1 of the printed deck
+// (docs/reference/print/v7/PointTaken-HumilityShowdown_2026-08-19.pdf). Steve:
+// "first page loaded from ebsite - can make it look more like the pdf front
+// page? suggest elements to harvest."
+//
+// Five things were harvested, in printed order: the masthead (letterspaced
+// POINT TAKEN eyebrow, the two-colour wordmark, the PointTaken.social pill), the
+// italic tagline under it, the quote block with the thick orange left rule, the
+// row of three short foul cards with its teal-and-orange lede, and the split
+// footer bar.
+//
+// Three things were deliberately left on paper. The vertical SET UP / PLAY tabs
+// are the deck's spine and this screen has one section, so they would be
+// decoration. The teal flow diagram is the tabletop procedure, which the app
+// runs for the player. The referee panel has no counterpart: here you are the
+// referee.
+//
+// One change of substance. The quote block is now the deck's own wording rather
+// than the reworded version that was here, because the comment on the old
+// version said "close to verbatim" and this is what verbatim actually is. The
+// tagline is rewritten, since the printed one says "3-player game" and this is
+// one player against the house.
+//
+// The masthead is navy, not the pure black page 1 prints. Pages 2 and 3 are
+// navy, and card-anatomy.md §G reads the black as drift rather than intent.
+//
 // Two clauses. Steve cut the other two on 2026-08-23. Do not reintroduce them.
-// Clause 1 is the front page of the printed deck, close to verbatim, because that
-// copy was already worked over carefully.
 function Agreement({ onIn }: { onIn: () => void }) {
   return (
-    <div className="page page-narrow">
-      <h1>Have the disagreement. Skip the fight.</h1>
-      <p>
-        When we argue to win, we feel like we&rsquo;re being persuasive. In reality, that
-        backfires. That sets up a competition, with one winner and one loser. Nobody wants to
-        lose. It doesn&rsquo;t matter if you&rsquo;re right. Committing any of three fouls means
-        nobody wins.
-      </p>
-      <p>
-        You&rsquo;re here to practice disagreeing better, not to win. What you&rsquo;re learning
-        is when your own sentences make the other person angry, because an angry person is a
-        person you will never persuade.
-      </p>
-      <h2>You can leave anytime.</h2>
-      <p>
-        Either player can end the round at any point, no explanation owed. Nothing is tracked
-        against you for leaving.
-      </p>
-      <button className="btn btn-wide" onClick={onIn}>
-        I&rsquo;m in
-      </button>
+    <div className="page page-front">
+      <Mast />
+
+      <div className="front-body">
+        <p className="front-tag">
+          A training gym that uses simple, science-backed rules to take the fight out of a
+          disagreement.
+        </p>
+
+        <blockquote className="front-quote">
+          You have a disagreement with friends or family, and you want them to understand{' '}
+          <strong>your</strong> perspective. But they fail to <strong>listen</strong> to you as
+          soon as they feel (even a hint of) <strong>anger</strong>. Humility Showdown teaches
+          you how to contain their anger, allowing them to{' '}
+          <strong>actually listen to you</strong>.
+        </blockquote>
+
+        <div className="front-fouls">
+          <p className="front-fouls-lede">
+            <span className="lede-humility">Humility</span>{' '}
+            <span className="lede-showdown">Showdown</span> will train your reflexes to avoid
+            the <span className="lede-showdown">three fouls</span> that raise anger during a
+            discussion:
+          </p>
+          <div className="mini-row">
+            {CARD_ORDER.map((rule) => (
+              <RuleCardMini key={rule} rule={rule} />
+            ))}
+          </div>
+        </div>
+
+        <p className="front-clause">
+          You are here to practice disagreeing better, not to win. What you are learning is
+          when your own sentences make the other person angry, because an angry person is a
+          person you will never persuade.
+        </p>
+
+        <p className="front-clause">
+          <strong>You can leave anytime.</strong> End a round at any point, no explanation
+          owed. Nothing is tracked against you for leaving.
+        </p>
+
+        <button className="btn btn-wide btn-in" onClick={onIn}>
+          I&rsquo;m in
+        </button>
+      </div>
+
+      <footer className="front-foot">
+        <div className="front-foot-left">Humility Showdown &middot; &copy; 2026 Experception LLC</div>
+        <div className="front-foot-right">Internal playtest. Do not post or distribute.</div>
+      </footer>
     </div>
   );
 }
@@ -105,22 +160,39 @@ function Select({
   // then hit done and then show the levels. Don't show them both at once." So
   // picking is a full screen of its own, and Change goes back to it.
   const [picking, setPicking] = useState(getAvatar() === null);
+  // Dealt once, when the screen mounts, so the grid does not reshuffle under the
+  // player's finger every time they try a face on.
+  const [tiles] = useState(shuffledAvatars);
 
   if (picking) {
     return (
       <div className="page page-narrow page-picker">
+        <Mast slim />
         <h1>Choose your fighter</h1>
         <p className="muted">This is the face you wear in the room. You can change it later.</p>
-        <div className="picker-grid" role="group" aria-label="Pick your fighter">
-          {PLAYER_AVATARS.map((e) => (
+        {/* Smash Bros ideation B2, shipped 2026-08-25: nine buttons with emoji in
+            them read as a settings control, so they are nine cards built on the
+            print template instead. Same 4:5 face as the printed deck, an orange
+            CHALLENGER strip, a roster number at the foot. The number is the
+            position in the deal, which is shuffled per visit, so it is a plate
+            on a locker rather than a claim about the character. */}
+        <div className="roster" role="group" aria-label="Pick your fighter">
+          {tiles.map((e, i) => (
             <button
               key={e}
-              className={`picker-opt${e === avatar ? ' is-on' : ''}`}
+              className={`fighter${e === avatar ? ' is-on' : ''}`}
               aria-label={`fighter ${e}`}
               aria-pressed={e === avatar}
               onClick={() => onAvatar(e)}
             >
-              {e}
+              {e === avatar && <span className="fighter-tag">You</span>}
+              <span className="fighter-head">
+                <span className="fighter-eyebrow">Challenger</span>
+              </span>
+              <span className="fighter-face" aria-hidden="true">
+                {e}
+              </span>
+              <span className="fighter-plate">{String(i + 1).padStart(2, '0')}</span>
             </button>
           ))}
         </div>
@@ -139,6 +211,7 @@ function Select({
 
   return (
     <div className="page page-narrow">
+      <Mast slim />
       <h1>The gym</h1>
       <p className="muted">
         Three levels, each one habit and one opponent. Then all three at once, for tokens.
@@ -298,11 +371,14 @@ function Room({
 
   return (
     <div className={`page page-level${inBoss ? '' : ' page-drill'}`}>
-      <div className="page-topbar">
-        <button className="link" onClick={onExit}>
-          Leave
-        </button>
-      </div>
+      <Mast
+        slim
+        right={
+          <button className="link" onClick={onExit}>
+            Leave
+          </button>
+        }
+      />
       <Header
         title={level.title}
         teaches={level.teaches}
@@ -395,11 +471,14 @@ function Match({ avatar, onExit }: { avatar: string; onExit: () => void }) {
 
   return (
     <div className="page page-level">
-      <div className="page-topbar">
-        <button className="link" onClick={onExit}>
-          Leave
-        </button>
-      </div>
+      <Mast
+        slim
+        right={
+          <button className="link" onClick={onExit}>
+            Leave
+          </button>
+        }
+      />
       <Header
         title="The Showdown"
         teaches="All three cards"

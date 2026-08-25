@@ -68,6 +68,10 @@ export interface RuleCard {
   cost: number;
   /** one line: what the foul actually is */
   what: string;
+  /** the two-line description the printed front page uses, verbatim (page 1 of
+   *  v7). Shorter than `what` on purpose: it is the size that fits a card small
+   *  enough to sit three across before a player has clicked anything. */
+  blurb: string;
   /** the shortcut for spotting it */
   tell: string;
   deltas: Delta[];
@@ -82,6 +86,7 @@ export const CARDS: Record<FoulType, RuleCard> = {
     rule: 'judging',
     emoji: '\u{1F612}',
     name: 'Judging',
+    blurb: 'Verdicts on who they are, or their motives',
     cost: 2,
     what: 'A verdict on who the person is, or a claim about what they secretly want, instead of an answer to what they said.',
     tell: '"You" statements are the smoke alarm. If the sentence is about them rather than about the argument, it is this card.',
@@ -136,6 +141,7 @@ export const CARDS: Record<FoulType, RuleCard> = {
     rule: 'opinion_as_fact',
     emoji: '\u{1F9D0}',
     name: 'Opinions as Facts',
+    blurb: 'Framing your opinion as the one truth',
     cost: 1,
     what: 'A contested opinion delivered as settled truth, with nobody named as the one who holds it.',
     // The fair-game half of the rule, added 2026-08-24 (HEART-T260824-21): players
@@ -196,6 +202,7 @@ export const CARDS: Record<FoulType, RuleCard> = {
     rule: 'fake_listening',
     emoji: '\u{1F643}',
     name: 'Fake Listening',
+    blurb: 'Pretending to listen, actually reloading',
     cost: 1,
     what: 'Reloading your rebuttal while they talk, then playing back a version of it that leaves out the part you cannot answer.',
     tell: 'The hinge words: "I hear you, but", "Sure, but my point is", "Respectfully", "First of all". Anything after the comma is the rebuttal you already had loaded.',

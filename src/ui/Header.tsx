@@ -23,7 +23,10 @@ import { useLayoutEffect, useRef } from 'react';
 import { formatTokens } from '../content/showdown.ts';
 
 const TOKEN = '\u{1F64F}';
-const FLIGHT_MS = 520;
+// Steve, 2026-08-25: "move the closest gratitude from end end to the end of the
+// other stack, and do so over 1.5 animation, too fast now." Long enough that you
+// can follow the thing with your eyes and know which pile lost it.
+const FLIGHT_MS = 1500;
 
 interface Purses {
   player: number;
@@ -102,7 +105,9 @@ function fly(from: HTMLElement | null, to: HTMLElement | null) {
       { transform: `translate(${dx / 2}px, ${dy - 34}px) scale(1.5)`, opacity: 1, offset: 0.5 },
       { transform: `translate(${dx}px, ${dy}px) scale(1)`, opacity: 0.9 },
     ],
-    { duration: FLIGHT_MS, easing: 'cubic-bezier(.34,.9,.4,1)' },
+    // Eased at both ends rather than thrown: over a second and a half a
+    // front-loaded curve reads as a glitch followed by a wait.
+    { duration: FLIGHT_MS, easing: 'cubic-bezier(.45,.05,.35,1)' },
   );
   anim.onfinish = () => el.remove();
   anim.oncancel = () => el.remove();

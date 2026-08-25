@@ -23,6 +23,7 @@ import type { PrefightStep } from '../types.ts';
 import { COACH_EMOJI, COACH_NAME, COACH_LINE } from '../avatars.ts';
 import { hasMetCoach, markMetCoach } from '../storage.ts';
 import { Dialogue, type Mug } from './Dialogue.tsx';
+import { Mast } from './Mast.tsx';
 
 interface Props {
   steps: PrefightStep[];
@@ -67,11 +68,14 @@ export function Prefight({ steps, enterLabel, onEnter, onExit, opponent }: Props
 
   return (
     <div className="page page-prefight">
-      <div className="page-topbar">
-        <button className="link" onClick={onExit}>
-          Leave
-        </button>
-      </div>
+      <Mast
+        slim
+        right={
+          <button className="link" onClick={onExit}>
+            Leave
+          </button>
+        }
+      />
 
       <div className="pf-stage">
         {panel.kind === 'meet' ? (
@@ -87,7 +91,11 @@ export function Prefight({ steps, enterLabel, onEnter, onExit, opponent }: Props
           <Dialogue
             face={COACH_EMOJI}
             name={COACH_NAME}
-            text="This is the card. It stays on the wall all night."
+            // The card lands after the coach has named the man and his move,
+            // so it arrives as the answer to a problem the player already has.
+            // Steve, 2026-08-25: "show the card that is your defense against
+            // his attack."
+            text="That's his attack. This card is your defense. It stays on the wall all night."
             card={panel.rule}
             tone="coach"
           />

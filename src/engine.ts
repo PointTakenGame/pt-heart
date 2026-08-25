@@ -41,6 +41,11 @@ export function tooThin(value: string): boolean {
   return v.length < 10 || v.split(/\s+/).filter(Boolean).length < 3;
 }
 
+/** How long the foul card sits on the table alone before the coach speaks and
+ *  the token flies. Long enough to read the card's name, short enough that it
+ *  does not feel like the game stalled. */
+const CARD_BEFORE_PAY_MS = 950;
+
 export const THIN_REPLY =
   'That is not an answer yet. Give me a real sentence, in your own words, and I will read it properly.';
 
@@ -93,6 +98,7 @@ export function useGym(level: LevelDef): Gym {
   const uid = useRef(0);
   const purse = useRef({ player: START_TOKENS, opponent: START_TOKENS });
   const bossShown = useRef(false);
+  const live = useRef(true);
   // Per-item state, reset whenever the cursor moves.
   const attempts = useRef(0);
   const paidThisItem = useRef(false);
@@ -154,13 +160,36 @@ export function useGym(level: LevelDef): Gym {
     [push, dwell],
   );
 
-  /** The boss walks out: the drill thread clears and the match starts fresh. */
+  /** The boss walks out. The thread does NOT clear.
+   *
+   *  Steve, 2026-08-25: "the scroll is gone? just decontrast old/done material,
+   *  don't delete it, one big scroll in teh match." The drill lines stay where
+   *  they were, the crowd row lands under them as the door opens, and the
+   *  thread's own age fade (Thread.tsx, data-age) is what pushes the finished
+   *  work back rather than deleting it. Everything the coach taught you is
+   *  still scrollable while you are getting hit. */
   const beginBoss = useCallback(() => {
     bossShown.current = true;
-    setMessages([]);
     uid.current += 1;
-    setMessages([{ id: `m${uid.current}`, lane: 'crowd', text: crowdRow(0) }]);
+    const id = `m${uid.current}`;
+    setMessages((ms) => [...ms, { id, lane: 'crowd', text: crowdRow(0) }]);
     setBossPending(false);
+  }, []);
+
+  useEffect(
+    () => () => {
+      live.current = false;
+    },
+    [],
+  );
+
+  /** A delayed push out of an event handler, dropped if the level unmounts.
+   *  The scripted loop has `alive` for this; submit() does not, and item 13
+   *  (the card lands before the tokens move) needs a real pause. */
+  const after = useCallback((ms: number, fn: () => void) => {
+    window.setTimeout(() => {
+      if (live.current) fn();
+    }, ms);
   }, []);
 
   // Run the step under the cursor. Scripted steps advance themselves; interactive
@@ -297,9 +326,14 @@ export function useGym(level: LevelDef): Gym {
         });
       };
 
-      /** Score the item the player just finished, then move on. */
-      const settle = (correct: boolean | null) => {
-        if (correct === true && attempts.current === 0) transfer('opponent', 1);
+      /** Score the item the player just finished, then move on.
+       *
+       *  No tokens here. Steve, 2026-08-25: "player does not get points for
+       *  'let it stand', points are only given as comppensation for fouls."
+       *  A token is compensation for something that was done to you, so the
+       *  only thing that pays is a foul the player actually called, and that
+       *  payment is made at the call site below, after the card lands. */
+      const settle = () => {
         setItemsDone((n) => n + 1);
         advance();
       };
@@ -332,8 +366,23 @@ export function useGym(level: LevelDef): Gym {
           record(correct, attempts.current === 0 ? '' : `-redo${attempts.current}`);
 
           if (correct) {
-            push({ lane: 'coach', text: called ? step.onCall : step.onPass });
-            settle(true);
+            // Letting a clean line stand is right, and it is worth nothing.
+            if (!called) {
+              push({ lane: 'coach', text: step.onPass });
+              settle();
+              return;
+            }
+            // A good call: the card comes down on the table first, then the
+            // coach, then the token flies. Steve, 2026-08-25: "thorw the foul
+            // card in teh chat BEFORE the points move." Reading it in that
+            // order tells you what you were paid for.
+            push({ lane: 'coach', text: CARDS[step.rule].name, card: step.rule });
+            const clean = attempts.current === 0;
+            after(CARD_BEFORE_PAY_MS, () => {
+              push({ lane: 'coach', text: step.onCall });
+              if (clean) transfer('opponent', 1);
+              settle();
+            });
             return;
           }
 
@@ -368,7 +417,7 @@ export function useGym(level: LevelDef): Gym {
           record(correct, attempts.current === 0 ? '' : `-redo${attempts.current}`);
 
           if (correct) {
-            settle(true);
+            settle();
             return;
           }
 
@@ -446,7 +495,7 @@ export function useGym(level: LevelDef): Gym {
               });
               return;
             }
-            settle(out.pass);
+            settle();
           })();
           return;
         }
