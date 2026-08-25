@@ -1,5 +1,12 @@
 import { useEffect, useImperativeHandle, useRef } from 'react';
 import type { Message } from '../types.ts';
+import { RuleCardFull } from './RuleCards.tsx';
+
+export interface Avatars {
+  coach: string;
+  opponent: string;
+  player: string;
+}
 
 export interface ThreadHandle {
   /** Land on the bottom, unless the player has scrolled up to reread. */
@@ -8,12 +15,13 @@ export interface ThreadHandle {
 
 interface Props {
   messages: Message[];
+  avatars: Avatars;
   waiting: boolean;
   onSkip: () => void;
   ref?: React.Ref<ThreadHandle>;
 }
 
-export function Thread({ messages, waiting, onSkip, ref }: Props) {
+export function Thread({ messages, avatars, waiting, onSkip, ref }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const pinned = useRef(true);
   const byPlayer = useRef(false);
@@ -95,12 +103,45 @@ export function Thread({ messages, waiting, onSkip, ref }: Props) {
       onTouchMove={() => { byPlayer.current = true; }}
       onClick={() => waiting && onSkip()}
     >
-      {messages.map((m) => (
-        <div key={m.id} className={`msg msg-${m.lane}${m.isSpecimen ? ' msg-specimen' : ''}`}>
-          {m.speaker && <div className="msg-speaker">{m.speaker}</div>}
-          <div className="msg-body">{m.text}</div>
-        </div>
-      ))}
+      {messages.map((m) => {
+        // The crowd is not a speaker. No bubble, no face, no name.
+        if (m.lane === 'crowd') {
+          return (
+            <div key={m.id} className="msg-row row-crowd">
+              <div className="crowd" aria-hidden="true">{m.text}</div>
+            </div>
+          );
+        }
+        // Big faces, and the player's own on the right. Steve, 2026-08-24: it
+        // "should feel liek mortal kombat", which starts with knowing at a glance
+        // who is talking. The coach is centered, in neither lane, because he is
+        // not in the argument (ruling of the same day).
+        const face =
+          m.lane === 'coach' ? avatars.coach : m.lane === 'player' ? avatars.player : avatars.opponent;
+        const cls = [
+          'msg',
+          `msg-${m.lane}`,
+          m.isSpecimen ? 'msg-specimen' : '',
+          m.isTake ? 'msg-take' : '',
+          m.card ? 'msg-card' : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+        return (
+          <div key={m.id} className={`msg-row row-${m.lane}`}>
+            {m.lane !== 'player' && (
+              <div className="face" aria-hidden="true">{face}</div>
+            )}
+            <div className={cls}>
+              {m.speaker && <div className="msg-speaker">{m.speaker}</div>}
+              {m.card ? <RuleCardFull rule={m.card} /> : <div className="msg-body">{m.text}</div>}
+            </div>
+            {m.lane === 'player' && (
+              <div className="face" aria-hidden="true">{face}</div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -115,32 +115,25 @@ p  { margin: 0 0 0.75rem; }
   text-decoration: underline;
 }
 
-.pips { display: flex; gap: 3px; min-width: 3.5rem; justify-content: flex-end; }
-.pip {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--rule);
+/* Two purses in the header, seven icons a side, opponent left and player right.
+   The printed game pays in these, so the screen pays in these; a bare number
+   does not give a player who is bleeding half a token at a time anything to
+   watch. Spent slots stay in place and go pale rather than disappearing, so the
+   pile reads as spent rather than as a shorter purse. */
+.purse { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; }
+.purse-icons {
+  display: grid;
+  grid-template-columns: repeat(4, 0.78rem);
+  gap: 1px;
+  justify-items: center;
 }
-.pip-on { background: var(--teal); }
-
-/* Live play shows two purses instead of pips. Numbers, not fourteen dots: a
-   number that drops by two when you get Judged is legible at phone width. */
-.ledger {
-  display: flex;
-  gap: 0.55rem;
-  align-items: baseline;
-  min-width: 3.5rem;
-  justify-content: flex-end;
-}
-.ledger-side { display: flex; flex-direction: column; align-items: center; }
-.ledger-n {
-  font-size: 1.15rem;
-  line-height: 1;
-  color: var(--teal);
-}
-.ledger-them .ledger-n { color: var(--purple); }
-.ledger-who {
-  font-size: 0.62rem;
+.tok { font-size: 0.7rem; line-height: 1; }
+/* A half token is a half token, drawn as one. Clipping the right half keeps the
+   glyph in its slot, so the row never reflows when a miss costs 0.5. */
+.tok-half { clip-path: inset(0 50% 0 0); }
+.tok-empty { opacity: 0.18; filter: grayscale(1); }
+.purse-who {
+  font-size: 0.6rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #6d6355;
@@ -161,19 +154,37 @@ p  { margin: 0 0 0.75rem; }
    sits just above the composer instead of the first line sitting alone at the
    top of an empty screen. auto on the first child rather than
    justify-content: flex-end, which clips the overflowing top of a scroll
-   container and makes the earliest messages unreachable. */
-.thread > .msg:first-child { margin-top: auto; }
+   container and makes the earliest messages unreachable.
+   Untyped selector on purpose: the children are rows now, not bubbles. */
+.thread > :first-child { margin-top: auto; }
 
-.msg { max-width: 84%; }
+/* A row is a face and a bubble. Steve, 2026-08-24: it "should feel liek mortal
+   kombat", and that starts with knowing at a glance who is talking, so the faces
+   are large and the two fighters sit on opposite sides. The coach is centered in
+   neither lane, because he is not in the argument. */
+.msg-row { display: flex; align-items: flex-end; gap: 0.5rem; }
+.row-opponent { justify-content: flex-start; }
+.row-player { justify-content: flex-end; }
+.row-coach { justify-content: center; }
+.row-crowd { justify-content: center; }
+
+.face { font-size: 2rem; line-height: 1; flex: 0 0 auto; }
+/* The two people in the fight are bigger than the man holding the whistle. */
+.row-opponent .face, .row-player .face { font-size: 2.5rem; }
+
+/* The crowd is scenery: no bubble, no name, and it never reads as speech. */
+.crowd { font-size: 1.1rem; letter-spacing: 0.1em; opacity: 0.45; }
+
+.msg { max-width: 78%; }
 .msg-body {
   padding: 0.6rem 0.85rem;
   border-radius: var(--radius);
   white-space: pre-wrap;
 }
 
+.msg-coach { max-width: 88%; }
 .msg-coach .msg-body { background: var(--white); border: 1px solid var(--rule); }
 
-.msg-opponent { align-self: flex-start; }
 .msg-opponent .msg-body {
   background: var(--cream-dark);
   border: 1px solid var(--rule);
@@ -187,7 +198,6 @@ p  { margin: 0 0 0.75rem; }
   padding-left: 0.15rem;
 }
 
-.msg-player { align-self: flex-end; }
 .msg-player .msg-body {
   background: var(--charcoal);
   color: var(--cream);
@@ -202,6 +212,20 @@ p  { margin: 0 0 0.75rem; }
   font-style: italic;
   font-size: 1.05rem;
 }
+
+/* The take on the table: the one line the player is being asked to judge or play
+   back right now (Steve's ruling of 2026-08-24). Italic and marked in the card
+   palette, so it is findable at a glance in a thread of similar-looking bubbles. */
+.msg-take .msg-body {
+  font-style: italic;
+  font-size: 1.05rem;
+  border-left: 4px solid var(--purple);
+  box-shadow: 0 1px 6px rgba(45, 45, 45, 0.08);
+}
+
+/* A dealt rule card is the card, not a bubble around one. */
+.msg-card { max-width: 100%; }
+.msg-card .card-full { margin: 0; }
 
 /* ---------- composer ---------- */
 
@@ -283,3 +307,287 @@ p  { margin: 0 0 0.75rem; }
   overflow-y: auto;
 }
 .composer-row textarea:focus { outline: 2px solid var(--teal); outline-offset: -1px; }
+
+/* ---------- the level page ---------- */
+
+/* Header, rail, thread, composer. Only the thread and the open card scroll; the
+   page itself never does, so the composer stays put while a level runs. */
+.page-level { overflow: hidden; }
+
+.level-card.is-locked {
+  opacity: 0.45;
+  cursor: default;
+}
+.level-card.is-locked:hover { border-color: var(--rule); }
+
+/* ---------- the rule card rail ---------- */
+
+/* The cards sit pinned above the thread for the whole level (Steve, 2026-08-24),
+   in the printed deck's colors, because the printed deck is the thing the player
+   is being trained to use. Pressing one is how a foul gets called: the card is
+   the whistle, so there is nothing else on screen to learn. */
+.rail-wrap {
+  border-bottom: 1px solid var(--rule);
+  background: var(--cream);
+  flex: 0 0 auto;
+}
+.rail {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+.rail-card {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.4rem 0.3rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--card);
+  background: var(--white);
+  color: inherit;
+  text-align: center;
+}
+/* A card that is not in play this level, or not callable at this moment, is
+   visibly out rather than quietly inert. A player who presses a dead card should
+   be able to see beforehand that it was dead. */
+.rail-card.is-dim {
+  opacity: 0.3;
+  cursor: default;
+  border-top-color: var(--rule);
+}
+/* A call is open: these are the buttons now. */
+.rail-card.is-live {
+  border-color: var(--card);
+  box-shadow: 0 0 0 2px var(--card);
+}
+.rail-card.is-open {
+  background: var(--cream-dark);
+  border-color: var(--card);
+}
+.rail-emoji { font-size: 1.3rem; line-height: 1.1; }
+.rail-name {
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.rail-cost { font-size: 0.66rem; color: #6d6355; }
+
+/* The opened card pushes the thread up instead of covering it, and scrolls
+   inside its own box if it runs long on a phone. */
+.rail-open {
+  padding: 0 1rem 0.75rem;
+  max-height: 44vh;
+  overflow-y: auto;
+}
+
+/* ---------- the printed card face ---------- */
+
+/* This is the physical card, on screen: same head, same tell, same deltas. Steve,
+   2026-08-24: teach the rule off the card the player will hold in their hand. */
+.card-full {
+  border: 1px solid var(--rule);
+  border-left: 5px solid var(--card);
+  border-radius: var(--radius);
+  background: var(--white);
+  padding: 0.8rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.card-emoji { font-size: 1.5rem; line-height: 1; }
+.card-title {
+  flex: 1;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--card);
+}
+.card-cost {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6d6355;
+}
+.card-what { margin: 0; }
+.card-tell { margin: 0; font-style: italic; color: #6d6355; }
+
+/* The direct deltas Steve asked for: the bad line and its fix, side by side, no
+   theory in between. */
+.card-deltas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.card-deltas li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--rule);
+}
+.delta-bad { color: var(--orange); }
+.delta-fix { color: #2f7f68; }
+.card-fix {
+  margin: 0;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius);
+  background: var(--cream-dark);
+  font-size: 0.95rem;
+}
+
+/* ---------- the walk-out ---------- */
+
+/* Punch-Out, in a browser. The boss gets an entrance, a name, an epithet, and a
+   countdown, because a fight you walked into is a fight you remember (Steve,
+   2026-08-24: it "should feel liek mortal kombat"). */
+.intro {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 1.5rem 1.25rem;
+  text-align: center;
+  background: var(--cream-dark);
+}
+.intro-crowd {
+  font-size: 1.4rem;
+  letter-spacing: 0.2em;
+  opacity: 0.4;
+}
+.intro-fight {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #6d6355;
+}
+.intro-vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+}
+.intro-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+.intro-face { font-size: 4rem; line-height: 1; }
+/* The boss is bigger than you are. That is the point of a boss. */
+.intro-face-boss { font-size: 5.2rem; }
+.intro-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6d6355;
+}
+.intro-versus {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--orange);
+}
+.intro-epithet {
+  margin: 0;
+  max-width: 26rem;
+  font-style: italic;
+}
+.intro-start { max-width: 18rem; }
+.intro-count {
+  margin: 0;
+  font-size: 3.4rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--orange);
+  line-height: 1;
+}
+
+/* ---------- picking your fighter ---------- */
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+.picker-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.picker-you { font-size: 2.2rem; line-height: 1; }
+.picker-label { flex: 1; color: #6d6355; }
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(3.2rem, 1fr));
+  gap: 0.4rem;
+}
+.picker-opt {
+  font-size: 1.7rem;
+  line-height: 1;
+  padding: 0.35rem 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  background: var(--white);
+}
+.picker-opt.is-on {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 2px var(--teal);
+}
+
+/* ---------- calling a foul, and the sentence frames ---------- */
+
+/* No buttons here on purpose: the rule cards in the rail are the buttons. */
+.composer-call { align-items: stretch; }
+.composer-hint { margin: 0; text-align: center; color: #6d6355; }
+
+/* Steve, 2026-08-24: put the sentence frame inside the box the player types in,
+   not above it as an instruction they have to hold in their head and retype. The
+   fixed words are printed; the blanks are the only things they touch. */
+.composer-template { gap: 0.7rem; }
+.frame {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  background: var(--white);
+  line-height: 2.1;
+}
+.frame-fixed { white-space: pre-wrap; }
+.frame-blank {
+  /* Wide enough that a real clause gets a line of its own rather than a
+     two-word column. At 44rem the second blank wraps below the first, which is
+     the intended shape: printed words, then room to write. */
+  flex: 1 1 16rem;
+  min-width: 14rem;
+  font: inherit;
+  resize: none;
+  padding: 0.1rem 0.3rem;
+  border: none;
+  border-bottom: 2px solid var(--orange);
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  overflow: hidden;
+}
+.frame-blank:focus {
+  outline: none;
+  border-bottom-color: var(--teal);
+  background: var(--cream);
+}

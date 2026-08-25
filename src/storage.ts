@@ -17,6 +17,8 @@ export interface SaveFile {
   cleared: Record<string, string>;
   /** every answered item, in order, including the revision trace */
   items: ItemRecord[];
+  /** the emoji the player picked as their face. Absent until they pick one. */
+  avatar?: string;
 }
 
 function blank(): SaveFile {
@@ -74,6 +76,16 @@ export function markCleared(slug: string): void {
 
 export function isCleared(slug: string): boolean {
   return Boolean(load().cleared[slug]);
+}
+
+export function getAvatar(): string | null {
+  return load().avatar ?? null;
+}
+
+export function setAvatar(emoji: string): void {
+  const file = load();
+  file.avatar = emoji;
+  save(file);
 }
 
 export function reset(): void {

@@ -24,6 +24,8 @@ export const level3: LevelDef = {
   teaches: 'Fake Listening',
   rule: 'fake_listening',
   boss: 'Nodding Noemi',
+  bossEmoji: '\u{1F469}\u{1F3FD}',
+  bossEpithet: 'Agrees with everything. Heard none of it.',
   beats: [
     {
       name: 'Say it back',
@@ -43,6 +45,7 @@ export const level3: LevelDef = {
           lane: 'coach',
           text: 'So we are going to practice saying somebody\'s point back to them until it is a reflex. Then you will notice when her version is short.',
         },
+        { kind: 'card', rule: 'fake_listening' },
 
         {
           kind: 'say',
@@ -90,6 +93,7 @@ export const level3: LevelDef = {
           kind: 'say',
           lane: 'coach',
           text: 'My turn to have a take. Crypto exchanges should have to hold customer funds separately, because I had money frozen for nine weeks in a collapse and nobody could tell me where it was.',
+          isTake: true,
         },
         {
           kind: 'edit',
@@ -118,6 +122,7 @@ export const level3: LevelDef = {
 
     {
       name: 'Nodding Noemi',
+      boss: true,
       steps: [
         {
           kind: 'say',
@@ -162,7 +167,12 @@ export const level3: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'She did not mishear you. She dropped the one you cannot answer cheaply. Notice that this is an absence, not a mistake, which is why it is the hardest one to catch.',
+          text: 'That is the whole move. Nothing she said was false. She agreed with you twice and answered nothing.',
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'She heard you fine. She just left out the reason that is hardest for her to argue with: childcare. She can tell you a commute is a choice. She can tell you the office has focus rooms. She has no answer for childcare, so she left it on the floor.',
         },
         { kind: 'continue', label: 'Finish' },
       ],

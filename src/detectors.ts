@@ -103,11 +103,18 @@ export interface PhraseHit {
   reason: string;
 }
 
+// "Look," at the front of a line. Steve, 2026-08-24: "starting with 'look...' is
+// a flag for opinions as facts". Anchored to the start and followed by a comma or
+// a space, because the bare word is innocent everywhere else in a sentence
+// ("look at the numbers", "looking into it").
+const LOOK_OPENER = /^look[,.]?\s/;
+
 // Returns the assertion marker(s) present, if any.
 function findAssertionMarker(norm: string): string | null {
   for (const m of ASSERTION_MARKERS) {
     if (norm.includes(m.replace(/[’']/g, "'"))) return m;
   }
+  if (LOOK_OPENER.test(norm)) return 'look,';
   return null;
 }
 

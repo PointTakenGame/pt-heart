@@ -5,15 +5,26 @@
 // 2500ms, then the next one lands 400ms later. A tap anywhere skips the current
 // dwell, so a fast reader never waits and a slow one never gets buried.
 //
-// There is no accuracy gate. Every answer advances. Completing the authored steps
-// clears the level whether the player got everything right or everything wrong.
+// The gym is gated (ruling of 2026-08-24, "don't let the game move on when the
+// player doesn't engage properly"). A wrong call, a wrong sort, an unedited
+// prefill, or a one-character answer loops back to the same step with the coach
+// saying why. Nothing advances until the item is actually done. The edit steps
+// keep a three-attempt ceiling, the same ceiling live play uses, so a player the
+// model keeps failing is never stuck in the drill forever.
+//
+// Both purses run from level 1, seven tokens a side, same as the printed game.
+// Right on the first try takes one off the opponent; a wrong first try hands one
+// over, once per item, however many attempts it then takes to get it right.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ComposerState, Message, Revision, Step } from './types.ts';
+import type { ComposerState, FoulType, Message, Revision, Step } from './types.ts';
 import type { LevelDef } from './types.ts';
 import { judgeEdit, restate } from './coach.ts';
 import { markCleared, recordItem } from './storage.ts';
 import { BEAT_GAP, dwellMs } from './pacing.ts';
+import { CARDS } from './content/cards.ts';
+import { START_TOKENS } from './content/showdown.ts';
+import { crowdRow } from './avatars.ts';
 
 function isItem(step: Step): boolean {
   return (
@@ -23,6 +34,15 @@ function isItem(step: Step): boolean {
     step.kind === 'free'
   );
 }
+
+/** Too thin to be an answer. Kills the one-letter and empty-box exploits. */
+export function tooThin(value: string): boolean {
+  const v = value.trim();
+  return v.length < 10 || v.split(/\s+/).filter(Boolean).length < 3;
+}
+
+export const THIN_REPLY =
+  'That is not an answer yet. Give me a real sentence, in your own words, and I will read it properly.';
 
 export interface Gym {
   messages: Message[];
@@ -35,8 +55,13 @@ export interface Gym {
   finished: boolean;
   /** true while a message is dwelling, so the thread can offer tap-to-skip */
   waiting: boolean;
+  playerTokens: number;
+  opponentTokens: number;
+  /** the boss is about to walk out; the entrance screen owns the display */
+  bossPending: boolean;
+  beginBoss: () => void;
   skip: () => void;
-  /** button value, or the text the player sent */
+  /** button value, card pressed, or the text the player sent */
   submit: (value: string, revisions?: Revision[]) => void;
 }
 
@@ -47,6 +72,9 @@ export function useGym(level: LevelDef): Gym {
   const [itemsDone, setItemsDone] = useState(0);
   const [finished, setFinished] = useState(false);
   const [waiting, setWaiting] = useState(false);
+  const [playerTokens, setPlayerTokens] = useState(START_TOKENS);
+  const [opponentTokens, setOpponentTokens] = useState(START_TOKENS);
+  const [bossPending, setBossPending] = useState(false);
 
   // flat walk over (beat, step), so a beat boundary is just a step whose beat
   // index differs from the previous one.
@@ -63,6 +91,12 @@ export function useGym(level: LevelDef): Gym {
   const captured = useRef<Record<string, string>>({});
   const skipper = useRef<(() => void) | null>(null);
   const uid = useRef(0);
+  const purse = useRef({ player: START_TOKENS, opponent: START_TOKENS });
+  const bossShown = useRef(false);
+  // Per-item state, reset whenever the cursor moves.
+  const attempts = useRef(0);
+  const paidThisItem = useRef(false);
+  const nonce = useRef(0);
 
   // Stamp the id here, not inside the updater. React runs updaters later, so a
   // lazily-read uid.current gives two messages pushed in the same tick the same
@@ -71,6 +105,18 @@ export function useGym(level: LevelDef): Gym {
     uid.current += 1;
     const msg: Message = { ...m, id: `m${uid.current}` };
     setMessages((prev) => [...prev, msg]);
+  }, []);
+
+  // Fouls never burn a token, they move one. Clamped, so a purse cannot go
+  // negative and the two sides always add to fourteen.
+  const transfer = useCallback((from: 'player' | 'opponent', n: number) => {
+    const moved = Math.min(n, purse.current[from]);
+    if (moved <= 0) return;
+    const to = from === 'player' ? 'opponent' : 'player';
+    purse.current[from] -= moved;
+    purse.current[to] += moved;
+    setPlayerTokens(purse.current.player);
+    setOpponentTokens(purse.current.opponent);
   }, []);
 
   const skip = useCallback(() => {
@@ -108,6 +154,15 @@ export function useGym(level: LevelDef): Gym {
     [push, dwell],
   );
 
+  /** The boss walks out: the drill thread clears and the match starts fresh. */
+  const beginBoss = useCallback(() => {
+    bossShown.current = true;
+    setMessages([]);
+    uid.current += 1;
+    setMessages([{ id: `m${uid.current}`, lane: 'crowd', text: crowdRow(0) }]);
+    setBossPending(false);
+  }, []);
+
   // Run the step under the cursor. Scripted steps advance themselves; interactive
   // ones open the composer and wait for submit().
   useEffect(() => {
@@ -124,6 +179,19 @@ export function useGym(level: LevelDef): Gym {
       return;
     }
 
+    // Boss gate. The entrance screen sits between the last drill and the first
+    // line of the match, and it only ever runs once per visit to the level.
+    const beat = level.beats[entry.beat];
+    const firstOfBeat = seq.findIndex((s) => s.beat === entry.beat);
+    if (beat?.boss && cursor === firstOfBeat && !bossShown.current) {
+      setComposer({ kind: 'locked' });
+      setBossPending(true);
+      return;
+    }
+
+    attempts.current = 0;
+    paidThisItem.current = false;
+
     const step = entry.step;
 
     (async () => {
@@ -131,9 +199,22 @@ export function useGym(level: LevelDef): Gym {
         case 'say':
           setComposer({ kind: 'locked' });
           await say(
-            { lane: step.lane, speaker: step.speaker, text: step.text, isSpecimen: step.isSpecimen },
+            {
+              lane: step.lane,
+              speaker: step.speaker,
+              text: step.text,
+              isSpecimen: step.isSpecimen,
+              isTake: step.isTake,
+            },
             aliveFn,
           );
+          if (alive) setCursor((c) => c + 1);
+          return;
+
+        case 'card':
+          setComposer({ kind: 'locked' });
+          push({ lane: 'coach', text: CARDS[step.rule].name, card: step.rule });
+          await dwell(2200, aliveFn);
           if (alive) setCursor((c) => c + 1);
           return;
 
@@ -156,11 +237,10 @@ export function useGym(level: LevelDef): Gym {
           );
           if (!alive) return;
           setComposer({
-            kind: 'buttons',
-            options: [
-              { value: 'foul', label: 'Foul' },
-              { value: 'clean', label: 'Clean' },
-            ],
+            kind: 'call',
+            hint: 'Press the card to call it, or let it stand.',
+            pass: { value: 'clean', label: 'Let it stand' },
+            callable: [step.rule],
           });
           return;
 
@@ -195,7 +275,7 @@ export function useGym(level: LevelDef): Gym {
       skipper.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursor, level.slug]);
+  }, [cursor, level.slug, bossPending]);
 
   const submit = useCallback(
     (value: string, revisions: Revision[] = []) => {
@@ -204,18 +284,31 @@ export function useGym(level: LevelDef): Gym {
       const step = entry.step;
       const advance = () => setCursor((c) => c + 1);
 
-      const store = (correct: boolean | null) => {
+      const record = (correct: boolean | null, suffix = '') => {
         if (!isItem(step)) return;
         recordItem({
-          itemId: (step as { id: string }).id,
+          itemId: `${(step as { id: string }).id}${suffix}`,
           levelSlug: level.slug,
-          rule: (step as { rule: import('./types.ts').FoulType }).rule,
+          rule: (step as { rule: FoulType }).rule,
           answer: value,
           correct,
           revisions,
           answeredAt: new Date().toISOString(),
         });
+      };
+
+      /** Score the item the player just finished, then move on. */
+      const settle = (correct: boolean | null) => {
+        if (correct === true && attempts.current === 0) transfer('opponent', 1);
         setItemsDone((n) => n + 1);
+        advance();
+      };
+
+      /** A wrong answer costs one token, once, however many tries it then takes. */
+      const chargeMiss = () => {
+        if (paidThisItem.current) return;
+        paidThisItem.current = true;
+        transfer('player', 1);
       };
 
       switch (step.kind) {
@@ -225,42 +318,131 @@ export function useGym(level: LevelDef): Gym {
           return;
 
         case 'call_or_pass': {
-          const correct = value === step.expected;
-          store(correct);
+          const called = value !== 'clean';
+          const correct = step.expected === 'foul' ? value === step.rule : !called;
           setComposer({ kind: 'locked' });
-          push({ lane: 'player', text: value === 'foul' ? 'Foul' : 'Clean' });
-          push({ lane: 'coach', text: value === 'foul' ? step.onCall : step.onPass });
-          advance();
+          push({
+            lane: 'player',
+            text: called ? `Foul: ${CARDS[value as FoulType]?.name ?? value}` : 'Let it stand',
+          });
+          record(correct, attempts.current === 0 ? '' : `-redo${attempts.current}`);
+
+          if (correct) {
+            push({ lane: 'coach', text: called ? step.onCall : step.onPass });
+            settle(true);
+            return;
+          }
+
+          chargeMiss();
+          push({
+            lane: 'coach',
+            text:
+              step.onWrong ??
+              (step.expected === 'foul'
+                ? `That one was not clean. Read it again: ${CARDS[step.rule].tell}`
+                : 'That line was clean. A bad whistle costs you one. Read it again.'),
+          });
+          push({ lane: 'coach', text: 'Again. Call it or let it stand.' });
+          attempts.current += 1;
+          nonce.current += 1;
+          setComposer({
+            kind: 'call',
+            hint: 'Press the card to call it, or let it stand.',
+            pass: { value: 'clean', label: 'Let it stand' },
+            callable: [step.rule],
+            nonce: nonce.current,
+          });
           return;
         }
 
         case 'sort': {
           const picked = step.options.find((o) => o.value === value);
-          store(value === step.expected);
+          const correct = value === step.expected;
           setComposer({ kind: 'locked' });
           push({ lane: 'player', text: picked?.label ?? value });
           push({ lane: 'coach', text: step.feedback[value] ?? '' });
-          advance();
+          record(correct, attempts.current === 0 ? '' : `-redo${attempts.current}`);
+
+          if (correct) {
+            settle(true);
+            return;
+          }
+
+          chargeMiss();
+          push({ lane: 'coach', text: 'Not that one. Look at the line again and pick.' });
+          attempts.current += 1;
+          setComposer({ kind: 'buttons', options: step.options });
           return;
         }
 
         case 'free': {
+          if (tooThin(value)) {
+            push({ lane: 'coach', text: THIN_REPLY });
+            nonce.current += 1;
+            setComposer({
+              kind: 'free',
+              placeholder: step.placeholder,
+              chips: step.chips,
+              nonce: nonce.current,
+            });
+            return;
+          }
           captured.current[step.capture] = value;
-          store(null);
+          record(null);
           setComposer({ kind: 'locked' });
           push({ lane: 'player', text: value });
+          setItemsDone((n) => n + 1);
           advance();
           return;
         }
 
         case 'edit': {
+          // Handing the line straight back is the commonest way to skip an edit
+          // step. It is a local fail: no model call, no ruling, no token.
+          const unchanged = value.trim() === step.prefill.trim();
+          if (unchanged || tooThin(value)) {
+            push({
+              lane: 'coach',
+              text: unchanged
+                ? 'That is the same line I gave you. Change it, then send it.'
+                : THIN_REPLY,
+            });
+            nonce.current += 1;
+            setComposer({
+              kind: 'prefilled',
+              prefill: step.prefill,
+              chips: step.chips,
+              nonce: nonce.current,
+            });
+            return;
+          }
+
           setComposer({ kind: 'locked' });
           push({ lane: 'player', text: value });
+          const tryNo = attempts.current;
           void (async () => {
             const out = await judgeEdit(step.target, step.prefill, value, step.fallback);
-            store(out.pass);
+            record(out.pass, tryNo === 0 ? '' : `-redo${tryNo}`);
             push({ lane: 'coach', text: out.text });
-            advance();
+
+            // pass === null means the coach could not reach the model, so there
+            // is no ruling to hold anybody to. Take it and move on.
+            if (out.pass === false && tryNo < 2) {
+              chargeMiss();
+              push({ lane: 'coach', text: 'Try that again. Fix the part I just named.' });
+              attempts.current = tryNo + 1;
+              nonce.current += 1;
+              setComposer({
+                kind: 'prefilled',
+                // Their own attempt, not the original: nobody should have to
+                // retype the half of it that was already right.
+                prefill: value,
+                chips: step.chips,
+                nonce: nonce.current,
+              });
+              return;
+            }
+            settle(out.pass);
           })();
           return;
         }
@@ -269,7 +451,7 @@ export function useGym(level: LevelDef): Gym {
           return;
       }
     },
-    [cursor, seq, level.slug, push],
+    [cursor, seq, level.slug, push, transfer],
   );
 
   return {
@@ -282,6 +464,10 @@ export function useGym(level: LevelDef): Gym {
     itemsTotal,
     finished,
     waiting,
+    playerTokens,
+    opponentTokens,
+    bossPending,
+    beginBoss,
     skip,
     submit,
   };

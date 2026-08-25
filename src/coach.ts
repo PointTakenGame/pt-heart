@@ -95,10 +95,14 @@ export async function judgeTurn(
   target: string,
 ): Promise<TurnRuling | null> {
   const out = await callCoach({ task: 'judge_turn', topic, kind, playerText, target });
-  if (!out || typeof out.text !== 'string') return null;
-  const foul = out.foul;
+  // A blank ruling is a failed call, not a silent ruling. Without this the
+  // caller's `ruled?.text ?? authored` keeps the empty string, because '' is not
+  // nullish, and the player gets an empty coach bubble.
+  const text = typeof out?.text === 'string' ? out.text.trim() : '';
+  if (!text) return null;
+  const foul = out?.foul;
   const valid = foul === 'judging' || foul === 'opinion_as_fact' || foul === 'fake_listening';
-  return { foul: valid ? foul : null, text: out.text.trim(), fromModel: true };
+  return { foul: valid ? foul : null, text, fromModel: true };
 }
 
 /**

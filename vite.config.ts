@@ -14,8 +14,11 @@ import react from '@vitejs/plugin-react';
 // If none of those resolve, the handler returns 503 and the client falls back
 // to authored coach lines, so the gym stays playable with no key at all.
 
+// The _secrets/anthropic.env copy of this key is dead (401, confirmed
+// 2026-08-24). The live operator key sits with the other Point Taken service
+// keys. Read only, never printed, never committed.
 const DEFAULT_KEY_FILE =
-  '/Users/stevefranconeri/Documents/Claude/Projects/_secrets/anthropic.env';
+  '/Users/stevefranconeri/Documents/Claude/Projects/point-taken-biz/api-keys/claude-api-key.env';
 
 function loadKey(): string | undefined {
   if (process.env.ANTHROPIC_API_KEY) return process.env.ANTHROPIC_API_KEY;
@@ -76,5 +79,7 @@ function coachDevApi(): Plugin {
 
 export default defineConfig({
   plugins: [react(), coachDevApi()],
-  server: { port: 5273 },
+  // 5273 by default, but the harness that runs this preview assigns a port when
+  // another session already holds that one, and it passes it in PORT.
+  server: { port: Number(process.env.PORT) || 5273 },
 });

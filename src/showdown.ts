@@ -18,17 +18,25 @@
 // Design of record: docs/design/2026-08-23_showdown-live-play.md (HEART-T260823-30).
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ComposerState, FoulType, Message, Revision } from './types.ts';
+import type {
+  ComposerState,
+  FoulType,
+  Message,
+  Revision,
+  TemplateSegment,
+} from './types.ts';
 import { BEAT_GAP, dwellMs } from './pacing.ts';
+import { crowdRow } from './avatars.ts';
 import { judgeTurn, sofiaLine } from './coach.ts';
 import { runPhraseDetectors } from './detectors.ts';
+import { THIN_REPLY, tooThin } from './engine.ts';
 import { markCleared, recordItem } from './storage.ts';
 import {
   COACH,
   OPENING,
-  RULE_GLOSS,
   RULE_LABEL,
   SHOWDOWN_SLUG,
+  SOFIA_THIN,
   START_TOKENS,
   TURNS,
   foulCost,
@@ -47,31 +55,32 @@ const SOFIA = 'Slippery Sofia';
  */
 const MISS_COST = 0.5;
 
-/** The four buttons after one of her turns. Naming the card is the answer. */
-const CALL_OPTIONS = [
-  { value: 'judging', label: RULE_LABEL.judging },
-  { value: 'opinion_as_fact', label: RULE_LABEL.opinion_as_fact },
-  { value: 'fake_listening', label: RULE_LABEL.fake_listening },
-  { value: 'stand', label: 'Let it stand' },
+/**
+ * The player's turns are sentence frames, not a blank box with hints above it.
+ * Steve's ruling of 2026-08-24: a hint sitting outside the box is advice, and a
+ * player under pressure types past advice. Inside the box it is the turn.
+ *
+ * A consequence worth knowing about: because "because" is now part of the frame,
+ * offlineRuling's hasWhy test can no longer fail on a summarize turn. That is
+ * fine, and not a hole. The frame enforces the structure the test was policing,
+ * which is a better guarantee than a regex over free text. The test stays for
+ * the turns that arrive by other routes, and hasCheck still earns its keep.
+ */
+const SPEAK_FRAME: TemplateSegment[] = [
+  { text: 'The way I see it,' },
+  { input: { placeholder: 'your take' } },
+  { text: 'because' },
+  { input: { placeholder: 'your reason' } },
+  { text: '.' },
 ];
 
-/**
- * The three cards, on demand, at the moment the player has to name one. Closed
- * until asked for. Levels 1 to 3 teach one card each, but a player can walk
- * straight into the showdown, and losing two tokens because you could not
- * remember which name goes with which tell teaches nothing.
- */
-const CALL_HELP = {
-  label: 'What are the three cards?',
-  lines: (['judging', 'opinion_as_fact', 'fake_listening'] as FoulType[]).map(
-    (f) => `${RULE_LABEL[f]}, worth ${foulCost(f)}: ${RULE_GLOSS[f]}.`,
-  ),
-};
-
-/** Prefill for the player's summarizing turns. They never type the scaffolding. */
-const SUMMARY_PREFILL = 'So what I am hearing is: it bugs you that ';
-const SUMMARY_CHIPS = ['because', 'Did I get that right?', 'and the part that matters to you is'];
-const SPEAK_CHIPS = ['The part I disagree with is', 'What that costs is', "What I'd rather see is"];
+const SUMMARY_FRAME: TemplateSegment[] = [
+  { text: 'What I heard was' },
+  { input: { placeholder: 'her point, in your words' } },
+  { text: ', because' },
+  { input: { placeholder: 'her reason' } },
+  { text: '. Did I miss anything?' },
+];
 
 export type Outcome = 'win' | 'loss' | 'draw';
 
@@ -132,6 +141,8 @@ export function useShowdown(): Match {
   const skipper = useRef<(() => void) | null>(null);
   const pending = useRef<((v: { value: string; revisions: Revision[] }) => void) | null>(null);
   const started = useRef(false);
+  /** Bumped on every re-ask, so the composer remounts and clears itself. */
+  const nonce = useRef(0);
 
   // The ledgers live in refs as well as state. State is what the header renders;
   // the refs are what the match script reads mid-turn, because a setState from
@@ -161,34 +172,61 @@ export function useShowdown(): Match {
     if (started.current) return;
     started.current = true;
 
+    // Cancellation. A three round match is one long async script with a dozen
+    // await points in it, and the player can press Leave at any one of them.
+    // Without this flag the pending dwell timer still fires and the in-flight
+    // model call still lands, both of them writing state into a component that
+    // is gone. engine.ts solves the same problem the same way.
+    //
+    // A cancelled await never resolves, on purpose: the script parks where it
+    // stands instead of running the rest of the match against dead state.
+    let alive = true;
+    const timers = new Set<ReturnType<typeof setTimeout>>();
+    const after = (ms: number, fn: () => void) => {
+      const t = setTimeout(() => {
+        timers.delete(t);
+        fn();
+      }, ms);
+      timers.add(t);
+      return t;
+    };
+
     const dwell = (ms: number) =>
       new Promise<void>((resolve) => {
+        if (!alive) return;
         setWaiting(true);
         let done = false;
         const finish = () => {
           if (done) return;
           done = true;
           skipper.current = null;
+          if (!alive) return;
           setWaiting(false);
           resolve();
         };
-        const t = setTimeout(finish, ms);
+        const t = after(ms, finish);
         skipper.current = () => {
           clearTimeout(t);
+          timers.delete(t);
           finish();
         };
       });
 
     const say = async (m: Omit<Message, 'id'>) => {
+      if (!alive) return;
       push(m);
       await dwell(dwellMs(m.text));
-      await new Promise((r) => setTimeout(r, BEAT_GAP));
+      await new Promise<void>((r) => {
+        if (!alive) return;
+        after(BEAT_GAP, r);
+      });
     };
 
     const coach = (text: string) => say({ lane: 'coach', text });
 
     const ask = (state: ComposerState) =>
       new Promise<{ value: string; revisions: Revision[] }>((resolve) => {
+        if (!alive) return;
         pending.current = resolve;
         setComposer(state);
       });
@@ -239,6 +277,8 @@ export function useShowdown(): Match {
     // count survives to the end of the round only so the coach knows whether to
     // say the round was clean.
     let missedCount = 0;
+    /** Walks SOFIA_THIN in order, across the whole match. Never random. */
+    let thinCount = 0;
 
     const end = async (result: Outcome, why: string) => {
       await coach(why);
@@ -279,24 +319,39 @@ export function useShowdown(): Match {
     };
 
     void (async () => {
+      // The room, before anybody speaks. Steve, 2026-08-24: the boss levels
+      // "should feel liek mortal kombat", and a fight happens in front of people.
+      push({ lane: 'crowd', text: crowdRow(0) });
       for (const line of COACH.intro) await coach(line);
 
       // The opening. Whatever the player names here is the topic, and Sofia takes
       // the other side of it, which is how this level stays politically balanced
       // without anybody authoring a position.
       await coach(OPENING.ask);
-      const opening = await ask({
-        kind: 'free',
-        placeholder: OPENING.placeholder,
-        chips: OPENING.chips,
-      });
-      const topic = opening.value;
+      let topic = '';
+      for (;;) {
+        nonce.current += 1;
+        const opening = await ask({
+          kind: 'free',
+          placeholder: OPENING.placeholder,
+          chips: OPENING.chips,
+          nonce: nonce.current,
+        });
+        topic = opening.value.trim();
+        // Lighter than the guard on the turns themselves, on purpose: "nuclear
+        // power" is a whole topic in two words, and the offered chips are two and
+        // three words long. All this has to stop is an empty box and a stray
+        // keystroke.
+        if (topic.length >= 3 && /[a-z]/i.test(topic)) break;
+        await coach('That is not a topic yet. Name the thing you two disagree about.');
+      }
       push({ lane: 'player', text: topic });
       await coach('Good. She will take the other side of that, whichever side you are on.');
 
       // `lastPlayer` is what Sofia answers and summarizes. `lastSofia` is what the
-      // player answers and summarizes. Both start empty and are filled before
-      // anything reads them, because round 1 opens on the player.
+      // player answers and summarizes. Round 1 opens on her, so `lastSofia` is
+      // filled before anything reads it; `lastPlayer` starts as the topic itself,
+      // which is the only thing she has to go on for her opening take.
       let lastPlayer = topic;
       let lastSofia = '';
       let currentRound = 0;
@@ -317,7 +372,22 @@ export function useShowdown(): Match {
           lastSofia = out.text;
           await say({ lane: 'opponent', speaker: SOFIA, text: out.text, isSpecimen: true });
 
-          const call = await ask({ kind: 'buttons', options: CALL_OPTIONS, help: CALL_HELP });
+          // Calling a foul is pressing the card itself, not picking its name off
+          // a button row (Steve's ruling of 2026-08-24). Cards that cannot apply
+          // to this kind of turn grey out: Fake Listening is a summary's foul, so
+          // it is not live on a speaking turn.
+          const callable: FoulType[] =
+            turn.kind === 'summarize'
+              ? ['judging', 'opinion_as_fact', 'fake_listening']
+              : ['judging', 'opinion_as_fact'];
+          nonce.current += 1;
+          const call = await ask({
+            kind: 'call',
+            hint: COACH.callAsk,
+            pass: { value: 'stand', label: 'Let it stand' },
+            callable,
+            nonce: nonce.current,
+          });
           const called = call.value;
           push({
             lane: 'player',
@@ -354,17 +424,37 @@ export function useShowdown(): Match {
           // the summary was never delivered. Three attempts is the ceiling, so a
           // player who cannot get there does not sit in the loop; the token cost
           // has already made the point by then.
-          for (let attempt = 1; attempt <= 3; attempt += 1) {
-            const answer =
-              turn.kind === 'summarize'
-                ? await ask({ kind: 'prefilled', prefill: SUMMARY_PREFILL, chips: SUMMARY_CHIPS })
-                : await ask({
-                    kind: 'free',
-                    placeholder: 'say it in your own words...',
-                    chips: SPEAK_CHIPS,
-                  });
+          //
+          // A while loop rather than a for, because a non-answer does not spend an
+          // attempt. The three attempts are for real tries at a real summary.
+          let attempt = 1;
+          while (attempt <= 3) {
+            nonce.current += 1;
+            const answer = await ask({
+              kind: 'template',
+              segments: turn.kind === 'summarize' ? SUMMARY_FRAME : SPEAK_FRAME,
+              nonce: nonce.current,
+            });
 
             const text = answer.value;
+
+            // Nothing gets judged, no model call goes out, and no token moves.
+            // Steve's ruling of 2026-08-24: the game does not move on when the
+            // player does not engage. She refuses it as well as the coach, because
+            // a coach-only refusal reads as a form error, and somebody across the
+            // table declining to answer noise reads as the game.
+            if (tooThin(text)) {
+              push({ lane: 'player', text });
+              await say({
+                lane: 'opponent',
+                speaker: SOFIA,
+                text: SOFIA_THIN[thinCount % SOFIA_THIN.length],
+              });
+              thinCount += 1;
+              await coach(THIN_REPLY);
+              continue;
+            }
+
             lastPlayer = text;
             push({ lane: 'player', text });
 
@@ -400,6 +490,7 @@ export function useShowdown(): Match {
               turn.kind === 'summarize' && (foul === 'judging' || foul === 'opinion_as_fact');
             if (!owesRedo || attempt === 3) break;
             await coach(COACH.redoSummary(foul));
+            attempt += 1;
           }
         }
 
@@ -415,6 +506,7 @@ export function useShowdown(): Match {
           missedCount = 0;
           if (next) {
             await coach(COACH.ledger(purse.current.player, purse.current.sofia));
+            push({ lane: 'crowd', text: crowdRow(next.round) });
             await ask({ kind: 'continue', label: `Round ${next.round}` });
           }
         }
@@ -427,6 +519,14 @@ export function useShowdown(): Match {
         `Three rounds. You ${formatTokens(p)}, her ${formatTokens(s)}.`,
       );
     })();
+
+    return () => {
+      alive = false;
+      for (const t of timers) clearTimeout(t);
+      timers.clear();
+      skipper.current = null;
+      pending.current = null;
+    };
     // The match script runs once, on mount. There is nothing to re-run it for.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

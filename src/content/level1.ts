@@ -26,6 +26,8 @@ export const level1: LevelDef = {
   teaches: 'Judging',
   rule: 'judging',
   boss: 'Verdict Victor',
+  bossEmoji: '\u{1F468}\u{1F3FB}\u{200D}\u{2696}\u{FE0F}',
+  bossEpithet: 'Has already decided what kind of person you are. Says so.',
   beats: [
     {
       // Not the level title again. The header prints the title and the beat
@@ -33,8 +35,27 @@ export const level1: LevelDef = {
       // nothing twice. The sibling levels name this beat with a verb.
       name: 'Spot it',
       steps: [
-        // Cold open. The boss is named and on screen before the drill starts, so
-        // the level reads as training for a fight you can already see coming.
+        // Cold open. Steve's ruling of 2026-08-24: name the argument and both
+        // sides of it before anything else, because a player who does not know
+        // what is being argued cannot tell a hard argument from a foul, and that
+        // distinction is the whole level.
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'Tonight\u2019s argument: should the government forgive student loan debt?',
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'One side says the debt is crushing a generation over a price nobody warned them about. The other side says a write-off sends the bill to people who never went, and does nothing about the prices. Both of those are real arguments. Neither one is a foul.',
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'You can take either side in here. I do not care which. I care about one rule.',
+        },
+        // The card itself, before the drill. Pinned in the rail from here on.
+        { kind: 'card', rule: 'judging' },
         {
           kind: 'say',
           lane: 'coach',
@@ -112,6 +133,7 @@ export const level1: LevelDef = {
     },
     {
       name: 'Verdict Victor',
+      boss: true,
       steps: [
         { kind: 'say', lane: 'coach', text: 'Here he comes. You know his move.' },
         {

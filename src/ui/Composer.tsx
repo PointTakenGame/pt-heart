@@ -1,4 +1,4 @@
-// The four composer states, plus the revision trace.
+// The composer states, plus the revision trace.
 //
 // Revision capture is boundary snapshots, not keypresses (Steve's ruling B1,
 // 2026-08-23). A keypress log is mostly noise; what is worth knowing later is
@@ -6,11 +6,23 @@
 // 900ms after typing stops, on blur, on chip insert, and always on send.
 // Consecutive identical snapshots are dropped, so an idle field records nothing.
 // Expect three to six snapshots on a pre-filled item.
+//
+// Two states carry no text box of their own. 'call' is a foul call: the rule
+// cards above the thread are the buttons, so all that is left down here is the
+// decline. 'template' is a sentence frame with the blanks inside the box
+// (ruling of 2026-08-24), which replaces the loose chips on the turns where the
+// shape of the answer is the thing being taught.
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { ComposerState, Revision } from '../types.ts';
+import type { ComposerState, Revision, TemplateSegment } from '../types.ts';
 
 const PAUSE_MS = 900;
+
+/** A blank counts as filled at two words, or eight characters of one word. */
+function filled(value: string): boolean {
+  const v = value.trim();
+  return v.length >= 8 || v.split(/\s+/).filter(Boolean).length >= 2;
+}
 
 interface Props {
   state: ComposerState;
@@ -45,8 +57,23 @@ export function Composer({ state, onSubmit, onResize }: Props) {
     );
   }
 
+  if (state.kind === 'call') {
+    return (
+      <div className="composer composer-call">
+        <p className="composer-hint">{state.hint}</p>
+        <button className="btn btn-wide" onClick={() => onSubmit(state.pass.value, [])}>
+          {state.pass.label}
+        </button>
+      </div>
+    );
+  }
+
   if (state.kind === 'buttons') {
     return <ButtonComposer key={key} state={state} onSubmit={onSubmit} onResize={onResize} />;
+  }
+
+  if (state.kind === 'template') {
+    return <TemplateComposer key={key} state={state} onSubmit={onSubmit} onResize={onResize} />;
   }
 
   return <TextComposer key={key} state={state} onSubmit={onSubmit} onResize={onResize} />;
@@ -103,9 +130,15 @@ function ButtonComposer({
   );
 }
 
+// The key remounts the text states so a new item never inherits the last one's
+// draft. nonce is what makes a retry of the same item remount too: the player is
+// being sent back to a line they already typed, and the box has to come back
+// clean rather than holding the answer that just failed.
 function composerKey(state: ComposerState): string {
-  if (state.kind === 'prefilled') return `p:${state.prefill}`;
-  if (state.kind === 'free') return `f:${state.placeholder}`;
+  if (state.kind === 'prefilled') return `p:${state.prefill}:${state.nonce ?? 0}`;
+  if (state.kind === 'free') return `f:${state.placeholder}:${state.nonce ?? 0}`;
+  if (state.kind === 'template') return `t:${state.segments.length}:${state.nonce ?? 0}`;
+  if (state.kind === 'call') return `c:${state.nonce ?? 0}`;
   return state.kind;
 }
 
@@ -163,9 +196,37 @@ function TextComposer({
     pauseTimer.current = setTimeout(() => snap(value, 'pause'), PAUSE_MS);
   };
 
-  // Chips drop in at the caret, not at the end. A player who has put the cursor
-  // mid-sentence meant to put the fragment there.
+  // A chip that starts with a capital letter is a sentence opener, and an opener
+  // goes on the front of the line and nowhere else. That is Steve's level 2 bug:
+  // pressing "In my head," dropped the phrase on the END of the line he had been
+  // asked to fix. Pressing a second opener swaps it for the first, because the
+  // line only has one front.
+  //
+  // A chip that starts lowercase is a mid-sentence fragment ("because I
+  // noticed"), and those drop in at the caret, because a player who moved the
+  // cursor meant to put it there. Capitalisation already encodes the difference
+  // in the authored chip lists, so nothing in the content files has to change.
+  const isOpener = (c: string) => /^[A-Z]/.test(c);
+
   const insertChip = (chip: string) => {
+    if (isOpener(chip)) {
+      const head0 = text.replace(/^\s+/, '');
+      const existing = state.chips
+        .filter(isOpener)
+        .find((c) => head0.toLowerCase().startsWith(c.toLowerCase()));
+      if (existing === chip) return;
+      const rest = existing ? head0.slice(existing.length).replace(/^\s+/, '') : head0;
+      const joined = rest.length === 0 ? `${chip} ` : `${chip} ${rest}`;
+      setText(joined);
+      snap(joined, 'chip');
+      const caret = chip.length + 1;
+      requestAnimationFrame(() => {
+        ref.current?.focus();
+        ref.current?.setSelectionRange(caret, caret);
+      });
+      return;
+    }
+
     const el = ref.current;
     const at = el ? el.selectionStart : text.length;
     const before = text.slice(0, at).replace(/\s+$/, '');
@@ -226,6 +287,128 @@ function TextComposer({
           Send
         </button>
       </div>
+    </div>
+  );
+}
+
+/** Fixed words are labels, blanks are inputs, and the assembled line is what the
+ *  coach reads. A fixed run that opens with punctuation closes up against the
+ *  blank before it, so "... . Did I miss anything?" reads as a sentence. */
+function assemble(segments: TemplateSegment[], values: string[]): string {
+  let out = '';
+  segments.forEach((seg, i) => {
+    const piece = 'text' in seg ? seg.text : values[i].trim();
+    if (!piece) return;
+    if (out.length === 0) {
+      out = piece;
+      return;
+    }
+    out += /^[.,;:!?]/.test(piece) ? piece : ` ${piece}`;
+  });
+  return out;
+}
+
+// A sentence frame with the blanks in it. Steve's ruling of 2026-08-24: the shape
+// belongs inside the box, not in a row of chips above it that the player has to
+// assemble themselves. Send stays disabled until every blank has something real
+// in it, which is also what closes the one-letter hole.
+function TemplateComposer({
+  state,
+  onSubmit,
+  onResize,
+}: {
+  state: Extract<ComposerState, { kind: 'template' }>;
+  onSubmit: (value: string, revisions: Revision[]) => void;
+  onResize?: () => void;
+}) {
+  const [values, setValues] = useState<string[]>(() => state.segments.map(() => ''));
+  const refs = useRef<(HTMLTextAreaElement | null)[]>([]);
+  const opened = useRef(Date.now());
+  const trace = useRef<Revision[]>([{ t: 0, text: '', reason: 'pause' }]);
+  const pauseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const line = assemble(state.segments, values);
+  const blanks = state.segments
+    .map((seg, i) => ('input' in seg ? i : -1))
+    .filter((i) => i >= 0);
+  const ready = blanks.every((i) => filled(values[i]));
+
+  const snap = (value: string, reason: Revision['reason']) => {
+    const last = trace.current[trace.current.length - 1];
+    if (last && last.text === value) return;
+    trace.current.push({ t: Date.now() - opened.current, text: value, reason });
+  };
+
+  useEffect(() => {
+    const first = blanks[0];
+    if (first !== undefined) refs.current[first]?.focus();
+    return () => {
+      if (pauseTimer.current) clearTimeout(pauseTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useLayoutEffect(() => {
+    for (const i of blanks) {
+      const el = refs.current[i];
+      if (!el) continue;
+      el.style.height = 'auto';
+      const border = el.offsetHeight - el.clientHeight;
+      el.style.height = `${el.scrollHeight + border}px`;
+    }
+    onResize?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values, onResize]);
+
+  const onChange = (i: number, value: string) => {
+    const next = values.slice();
+    next[i] = value;
+    setValues(next);
+    if (pauseTimer.current) clearTimeout(pauseTimer.current);
+    const assembled = assemble(state.segments, next);
+    pauseTimer.current = setTimeout(() => snap(assembled, 'pause'), PAUSE_MS);
+  };
+
+  const send = () => {
+    if (!ready) return;
+    if (pauseTimer.current) clearTimeout(pauseTimer.current);
+    snap(line, 'send');
+    onSubmit(line, trace.current);
+  };
+
+  return (
+    <div className="composer composer-template">
+      <div className="frame">
+        {state.segments.map((seg, i) =>
+          'text' in seg ? (
+            <span key={i} className="frame-fixed">
+              {seg.text}
+            </span>
+          ) : (
+            <textarea
+              key={i}
+              ref={(el) => {
+                refs.current[i] = el;
+              }}
+              className="frame-blank"
+              value={values[i]}
+              rows={1}
+              placeholder={seg.input.placeholder}
+              onChange={(e) => onChange(i, e.target.value)}
+              onBlur={() => snap(line, 'blur')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+            />
+          ),
+        )}
+      </div>
+      <button className="btn btn-send btn-wide" onClick={send} disabled={!ready}>
+        Send
+      </button>
     </div>
   );
 }

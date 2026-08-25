@@ -103,6 +103,26 @@ const PROMPTS = {
 // fallback, rather than the client giving up on a request still in flight.
 const UPSTREAM_TIMEOUT_MS = 5000;
 
+/**
+ * House voice, applied to every generated line. Two things kept showing up in
+ * live play on 2026-08-24 and neither belongs in this game.
+ *
+ * The reading level: a model left to itself writes rulings like "meeting the
+ * standard for listening". Steve's bar is eighth grade, the same bar the printed
+ * cards are written to, and a player who has to decode the feedback is not
+ * reading the feedback.
+ *
+ * The em dash: no authored line in this game has one, so a generated line with
+ * one is instantly identifiable as the machine talking.
+ */
+const HOUSE =
+  '\n\nHow to write it. Eighth grade reading level. Short sentences, plain words, ' +
+  'no jargon and no words like circular, dismissive, or invalidate. Say it the way ' +
+  'a person would say it out loud. Never use an em dash; use a comma, a semicolon, ' +
+  'or two sentences. Do not grade the answer or name the standard it met; just say ' +
+  'the thing. When you are ruling on the player, talk straight at them and say ' +
+  'you, never "the summary" or "the player".';
+
 async function ask(key: string, prompt: string): Promise<string | null> {
   let res: Response;
   try {
@@ -116,7 +136,7 @@ async function ask(key: string, prompt: string): Promise<string | null> {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 300,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content: prompt + HOUSE }],
       }),
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });

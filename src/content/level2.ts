@@ -2,12 +2,22 @@
 // Source: docs/design/2026-08-23_mvp-build-plan.md §4, beats 3A / 3B / 3C, plus
 // the cold open and boss from 2026-08-23_full-game-scripts.md §2.
 //
+// Restructured 2026-08-24 on Steve's playtest ruling: three teaching beats (own
+// it / because / both halves) compressed to two (own it / both halves at once).
+// The four-way verdict became three buttons, because "Owned only" and "Reason
+// only" made the player name a taxonomy instead of a fault. The ownership prefix
+// now rides every item in beat 2 except the last one, which drops it as the
+// final test.
+//
 // Political balance ledger, keep accurate if you touch the lines:
-//   3A items 1 and 2 voice a fiscally conservative objection to loan forgiveness.
-//   3A items 3 and 4 voice a pro-regulation and an anti-nuclear position.
-//   3B items 1 and 2 sit on the pro-regulation side, items 3 and 4 on the
-//   conservative side. 3C holds a single left-leaning claim constant, which is
-//   the mechanic, and is counterweighted by 3A opening on the right.
+//   Beat 1 items 1 and 2 voice a fiscally conservative objection to loan
+//   forgiveness. Items 3 and 4 voice a pro-regulation and an anti-nuclear
+//   position.
+//   Beat 2 items 1 and 2 sit on the pro-regulation side of crypto, item 3 on the
+//   conservative side of loans, item 4 on the pro-raise side of the minimum wage,
+//   and the closing edit puts a pro-return-to-office line in the player's own
+//   mouth. Two left, two right, and the one the player has to author is the
+//   right-leaning one.
 
 import type { LevelDef } from '../types.ts';
 
@@ -17,6 +27,8 @@ export const level2: LevelDef = {
   teaches: 'Opinions as Facts',
   rule: 'opinion_as_fact',
   boss: 'Obvious Olivia',
+  bossEmoji: '\u{1F469}\u{1F3FF}',
+  bossEpithet: 'Never says "I think." Everything she believes is simply a fact.',
   beats: [
     {
       name: 'Own it',
@@ -36,6 +48,7 @@ export const level2: LevelDef = {
           lane: 'coach',
           text: 'Two minutes. One habit: saying your opinion like it is the weather.',
         },
+        { kind: 'card', rule: 'opinion_as_fact' },
         {
           kind: 'say',
           lane: 'coach',
@@ -66,6 +79,11 @@ export const level2: LevelDef = {
           onPass: 'Same opinion, and now it is mine to hold. That is the whole move.',
         },
         {
+          kind: 'say',
+          lane: 'coach',
+          text: 'And that is the deal: once you put "in my head" on the front, you can say almost anything. Own it and it is fair game. The rule is not about what you believe, it is about pretending your belief is the weather.',
+        },
+        {
           kind: 'call_or_pass',
           id: 'l2-3a-i3',
           rule: 'opinion_as_fact',
@@ -94,151 +112,111 @@ export const level2: LevelDef = {
     },
 
     {
-      name: 'Because',
+      // Beat B and beat C merged, 2026-08-24. The player has just learned to own
+      // a claim, so every item here already carries the ownership prefix and the
+      // only question is whether the reason holds up. The last item drops the
+      // prefix without warning, which is the test that the first half stuck.
+      name: 'Own it and back it',
       steps: [
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Owning it is the easy half. This is the other one: the reason you give after "because".',
+          text: 'Owning it is the easy half. Here is the other one: the part after "because".',
         },
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Two of these have a "because" and still fail. A reason that only restates the claim is not a reason.',
+          text: 'A real because is something somebody could go and check. A number, a thing that happened, something you saw. "Everyone knows" is a headcount, not a reason. Saying the claim again in a louder voice is not a reason either.',
         },
         {
-          kind: 'call_or_pass',
-          id: 'l2-3b-i1',
-          rule: 'opinion_as_fact',
+          kind: 'say',
           lane: 'coach',
-          line: 'Crypto needs much tighter rules, because it obviously needs tighter rules.',
-          expected: 'foul',
-          onCall: 'Circular. The reason just says the claim again in a louder voice.',
-          onPass:
-            'Look at the two halves. They are the same sentence twice. That is not a reason.',
+          text: 'Four lines. Three buttons. Tell me what is missing, or tell me it is good.',
         },
-        {
-          kind: 'call_or_pass',
-          id: 'l2-3b-i2',
-          rule: 'opinion_as_fact',
-          lane: 'coach',
-          line: 'Crypto worries me, because the two exchanges I used both froze withdrawals in the same year.',
-          expected: 'clean',
-          onCall:
-            'Fair instinct, but somebody could go and look. That is what makes it a reason.',
-          onPass: 'Checkable. Somebody could go and look. That is the bar.',
-        },
-        {
-          kind: 'call_or_pass',
-          id: 'l2-3b-i3',
-          rule: 'opinion_as_fact',
-          lane: 'coach',
-          line: 'Student loan forgiveness is unfair, because everyone knows it just moves the bill to people who never went.',
-          expected: 'foul',
-          onCall: 'Right. "Everyone knows" is a headcount, not evidence.',
-          onPass:
-            'That one crossed. "Everyone knows" is a headcount, not evidence, and it is doing all the work here.',
-        },
-        {
-          kind: 'edit',
-          id: 'l2-3b-i4',
-          rule: 'opinion_as_fact',
-          ask: 'Same deal, I have typed it. Replace the reason with one somebody could go and check.',
-          prefill:
-            "Federal workers should be back in the office five days a week, because that's obviously how real work gets done.",
-          chips: ['because I noticed', 'because the last time', 'because in my team'],
-          target:
-            'The edit must replace the circular or consensus reason with something checkable: a specific observation, a number, an event, an experience. "Obviously", "everyone knows", and restating the claim all fail.',
-          fallback:
-            'Something like: "because the two projects we ran remote last year both slipped a month." Small, specific, and somebody could argue with it.',
-        },
-        { kind: 'continue', label: 'Next: both halves at once' },
-      ],
-    },
 
-    {
-      name: 'Put them together',
-      steps: [
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'Last four. One claim, four ways of saying it. Tell me which halves are there.',
-        },
         {
           kind: 'sort',
           id: 'l2-3c-i1',
           rule: 'opinion_as_fact',
-          line: 'The federal minimum wage should be raised. Period.',
+          line: 'In my head, crypto needs much tighter rules. It just does.',
           options: [
-            { value: 'neither', label: 'Neither' },
-            { value: 'owned', label: 'Owned only' },
-            { value: 'reason', label: 'Reason only' },
-            { value: 'both', label: 'Both' },
+            { value: 'missing_own', label: 'Said as a fact' },
+            { value: 'missing_reason', label: 'No real because' },
+            { value: 'good', label: 'Good' },
           ],
-          expected: 'neither',
+          expected: 'missing_reason',
           feedback: {
-            neither: 'Neither half. Bare claim, and "Period" is the tell.',
-            owned: 'No owner in there. "Period" is the opposite of owning it.',
-            reason: 'No reason in there. Nothing after the claim but volume.',
-            both: 'Neither half is present. This is the bare claim.',
+            missing_own: 'That one is owned. "In my head" is right there at the front.',
+            missing_reason: 'Owned, and then nothing. "It just does" is where the reason should be.',
+            good: 'Half of it is good. There is no reason in there at all.',
           },
         },
         {
           kind: 'sort',
           id: 'l2-3c-i2',
           rule: 'opinion_as_fact',
-          line: 'In my head, the federal minimum wage should be raised.',
+          line: 'In my head, crypto needs tighter rules, because the two exchanges I used both froze withdrawals in the same year.',
           options: [
-            { value: 'neither', label: 'Neither' },
-            { value: 'owned', label: 'Owned only' },
-            { value: 'reason', label: 'Reason only' },
-            { value: 'both', label: 'Both' },
+            { value: 'missing_own', label: 'Said as a fact' },
+            { value: 'missing_reason', label: 'No real because' },
+            { value: 'good', label: 'Good' },
           ],
-          expected: 'owned',
+          expected: 'good',
           feedback: {
-            neither: '"In my head" is the owner. That half is there.',
-            owned: 'Owned, and no reason yet. Halfway.',
-            reason: 'That is the owner, not the reason. No "because" anywhere.',
-            both: 'Owned, but there is no reason attached yet.',
+            missing_own: 'It is owned. "In my head" at the front, doing its job.',
+            missing_reason: 'Somebody could go and look up those two exchanges. That is a real because.',
+            good: 'Both halves. Owned at the front, checkable at the back.',
           },
         },
         {
           kind: 'sort',
           id: 'l2-3c-i3',
           rule: 'opinion_as_fact',
-          line: 'The federal minimum wage should be raised, because the diner near me lost three cooks last year to a warehouse paying four dollars more.',
+          line: 'In my head, student loan forgiveness is unfair, because everyone knows it just moves the bill to people who never went.',
           options: [
-            { value: 'neither', label: 'Neither' },
-            { value: 'owned', label: 'Owned only' },
-            { value: 'reason', label: 'Reason only' },
-            { value: 'both', label: 'Both' },
+            { value: 'missing_own', label: 'Said as a fact' },
+            { value: 'missing_reason', label: 'No real because' },
+            { value: 'good', label: 'Good' },
           ],
-          expected: 'reason',
+          expected: 'missing_reason',
           feedback: {
-            neither: 'The reason is right there, and it is checkable.',
-            owned: 'No owner. It still opens as a flat statement of how things are.',
-            reason: 'Good reason, no owner. The other half of the pair.',
-            both: 'The reason is solid. Nobody said whose opinion it is.',
+            missing_own: 'She owned this one. The problem is on the other side of "because".',
+            missing_reason: 'Right. "Everyone knows" is a headcount, and it is doing all the work here.',
+            good: 'The front half is fine. "Everyone knows" is not a reason, it is a crowd.',
           },
         },
         {
+          // The prefix goes away here, with no announcement. Everything before
+          // this had one, so a player running on autopilot reads right past it.
           kind: 'sort',
           id: 'l2-3c-i4',
           rule: 'opinion_as_fact',
-          line: 'In my head the minimum wage should be raised, because the diner near me lost three cooks last year to a warehouse paying four dollars more.',
+          line: 'The federal minimum wage should be raised, because the diner near me lost three cooks last year to a warehouse paying four dollars more.',
           options: [
-            { value: 'neither', label: 'Neither' },
-            { value: 'owned', label: 'Owned only' },
-            { value: 'reason', label: 'Reason only' },
-            { value: 'both', label: 'Both' },
+            { value: 'missing_own', label: 'Said as a fact' },
+            { value: 'missing_reason', label: 'No real because' },
+            { value: 'good', label: 'Good' },
           ],
-          expected: 'both',
+          expected: 'missing_own',
           feedback: {
-            neither: 'Both halves are in there. Owner at the front, reason at the back.',
-            owned: 'Owner at the front, and a checkable reason at the back. Both.',
-            reason: 'The reason, yes, and "in my head" at the front. Both.',
-            both: 'Both. Same claim as the first one, and now it is arguable instead of just loud.',
+            missing_own: 'Caught it. Good reason, and it still opens like a weather report.',
+            missing_reason: 'The reason is the strong part. Read the front again.',
+            good: 'The because is solid. Nobody ever said whose opinion this is.',
           },
+        },
+
+        {
+          kind: 'edit',
+          id: 'l2-3b-i4',
+          rule: 'opinion_as_fact',
+          ask: 'Your turn, and I have done the typing. Replace the reason with one somebody could go and check.',
+          prefill:
+            "Federal workers should be back in the office five days a week, because that's obviously how real work gets done.",
+          chips: ['because I noticed', 'because the last time', 'because in my team'],
+          target:
+            'The edit must replace the reason with something checkable: a specific observation, a number, an event, an experience. "Obviously", "everyone knows", and simply saying the claim over again all fail.',
+          fallback:
+            'Something like: "because the two projects we ran remote last year both slipped a month." Small, specific, and somebody could argue with it.',
         },
         { kind: 'continue', label: 'Face her' },
       ],
@@ -246,6 +224,7 @@ export const level2: LevelDef = {
 
     {
       name: 'Obvious Olivia',
+      boss: true,
       steps: [
         {
           kind: 'say',
