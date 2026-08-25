@@ -393,6 +393,7 @@ export function useShowdown(): Match {
           push({
             lane: 'player',
             text: called === 'stand' ? 'Let it stand' : RULE_LABEL[called as FoulType],
+            isCall: called !== 'stand',
           });
 
           const correct = turn.foul ? called === turn.foul : called === 'stand';

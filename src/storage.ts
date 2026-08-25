@@ -42,6 +42,14 @@ export function load(): SaveFile {
     if (raw) {
       const parsed = JSON.parse(raw) as SaveFile;
       if (parsed.version === 1) {
+        // Shape, not just parseability. A blob written by an older build (or by
+        // a developer seeding localStorage by hand) can carry version 1 and the
+        // wrong type in a field, and the first write against it throws in the
+        // middle of a level. Repairing the containers costs nothing and keeps
+        // the promise the catch below is making.
+        if (!Array.isArray(parsed.items)) parsed.items = [];
+        if (!parsed.cleared || typeof parsed.cleared !== 'object') parsed.cleared = {};
+        if (typeof parsed.playerId !== 'string') parsed.playerId = crypto.randomUUID();
         cache = parsed;
         return cache;
       }

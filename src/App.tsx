@@ -7,6 +7,7 @@ import type { FoulType, LevelDef } from './types.ts';
 import { useGym } from './engine.ts';
 import { Composer } from './ui/Composer.tsx';
 import { Thread, type ThreadHandle } from './ui/Thread.tsx';
+import { Drill } from './ui/Drill.tsx';
 import { Header } from './ui/Header.tsx';
 import { RuleCards } from './ui/RuleCards.tsx';
 import { BossIntro } from './ui/BossIntro.tsx';
@@ -218,6 +219,7 @@ function Level({
         enterLabel={`In with ${level.boss.split(' ').slice(-1)[0]}`}
         onEnter={() => setInRoom(true)}
         onExit={onExit}
+        opponent={{ emoji: level.bossEmoji, name: level.boss, epithet: level.bossEpithet }}
       />
     );
   }
@@ -242,6 +244,18 @@ function Room({
   // height change with no message behind it.
   useLayoutEffect(land, [gym.finished, land]);
 
+  // True while the drill's cursor is behind the newest line. The rule card rail
+  // sits outside the drill and would otherwise offer a call on a specimen the
+  // player has not stepped forward to read (Steve's standing playtest ruling:
+  // "don't let the game move on when the player doesn't engage properly").
+  //
+  // Declared up here with the other hooks, not down beside the one line that
+  // reads it: the boss intro below returns early, and a hook that sits after an
+  // early return stops being called the moment that branch is taken. React
+  // counts hooks, so the first render of the boss intro threw "rendered fewer
+  // hooks than expected" and took the whole room down with it.
+  const [drillBehind, setDrillBehind] = useState(false);
+
   const fightNumber = LEVELS.findIndex((l) => l.slug === level.slug) + 1;
 
   if (gym.bossPending) {
@@ -259,8 +273,31 @@ function Room({
 
   const call = gym.composer.kind === 'call' ? gym.composer : null;
 
+  // Training and a fight are two different rooms now. Steve, 2026-08-25: "The
+  // coach was just training me, and that wasn't actually Victor... I think the
+  // training can be in the same format, but it needs to be a one-at-a-time
+  // stepper. Like the discussion with the coach. It can't be in the chat room.
+  // The chat room is only for The actual bosses."
+  //
+  // The engine does not change. Every level's last beat is its boss beat, and
+  // beginBoss already clears the thread on the way in, so the switch is a view
+  // choice made off the beat we are standing in.
+  const inBoss = level.beats[gym.beatIndex]?.boss === true;
+
+  const railLive = inBoss || !drillBehind;
+
+  const composerNode = gym.finished ? (
+    <div className="composer">
+      <button className="btn btn-wide" onClick={onExit}>
+        Back to the gym
+      </button>
+    </div>
+  ) : (
+    <Composer state={gym.composer} onSubmit={gym.submit} onResize={land} />
+  );
+
   return (
-    <div className="page page-level">
+    <div className={`page page-level${inBoss ? '' : ' page-drill'}`}>
       <div className="page-topbar">
         <button className="link" onClick={onExit}>
           Leave
@@ -278,27 +315,38 @@ function Room({
           playerEmoji: avatar,
         }}
       />
-      <Thread
-        ref={thread}
-        messages={gym.messages}
-        avatars={{ coach: COACH_EMOJI, opponent: level.bossEmoji, player: avatar }}
-        waiting={gym.waiting}
-        onSkip={gym.skip}
-      />
-      {gym.finished ? (
-        <div className="composer">
-          <button className="btn btn-wide" onClick={onExit}>
-            Back to the gym
-          </button>
-        </div>
+      {inBoss ? (
+        <>
+          <Thread
+            ref={thread}
+            messages={gym.messages}
+            avatars={{ coach: COACH_EMOJI, opponent: level.bossEmoji, player: avatar }}
+            waiting={gym.waiting}
+            onSkip={gym.skip}
+          />
+          {composerNode}
+        </>
       ) : (
-        <Composer state={gym.composer} onSubmit={gym.submit} onResize={land} />
+        <Drill
+          messages={gym.messages}
+          avatars={{ coach: COACH_EMOJI, opponent: level.bossEmoji, player: avatar }}
+          waiting={gym.waiting}
+          onSkip={gym.skip}
+          opponent={{ emoji: level.bossEmoji, name: level.boss, epithet: level.bossEpithet }}
+          composer={composerNode}
+          composerReady={gym.finished || gym.composer.kind !== 'locked'}
+          onBehind={setDrillBehind}
+        />
       )}
       <RuleCards
         enabled={[level.rule]}
-        live={liveCards(gym.composer.kind, call?.callable)}
+        live={railLive ? liveCards(gym.composer.kind, call?.callable) : null}
         onCall={(f) => gym.submit(f, [])}
-        pass={call ? { label: call.pass.label, onPass: () => gym.submit(call.pass.value, []) } : undefined}
+        pass={
+          call && railLive
+            ? { label: call.pass.label, onPass: () => gym.submit(call.pass.value, []) }
+            : undefined
+        }
       />
     </div>
   );
@@ -316,6 +364,7 @@ function Showdown({ avatar, onExit }: { avatar: string; onExit: () => void }) {
         enterLabel="In with Sofia"
         onEnter={() => setStage('intro')}
         onExit={onExit}
+        opponent={{ emoji: SOFIA_EMOJI, name: 'Slippery Sofia', epithet: 'Never raises her voice. Fouls you twice before you notice once.' }}
       />
     );
   }

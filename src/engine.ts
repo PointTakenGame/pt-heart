@@ -321,9 +321,13 @@ export function useGym(level: LevelDef): Gym {
           const called = value !== 'clean';
           const correct = step.expected === 'foul' ? value === step.rule : !called;
           setComposer({ kind: 'locked' });
+          // A foul call is not speech, it is a whistle, so it renders as one
+          // (Steve, 2026-08-25: "that Text chat line needs to be orange, not
+          // black"). Letting it stand is a pass, and stays ordinary.
           push({
             lane: 'player',
             text: called ? `Foul: ${CARDS[value as FoulType]?.name ?? value}` : 'Let it stand',
+            isCall: called,
           });
           record(correct, attempts.current === 0 ? '' : `-redo${attempts.current}`);
 

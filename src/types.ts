@@ -19,6 +19,8 @@ export interface Message {
   isTake?: boolean;
   /** renders the full printed rule card in the thread instead of the text */
   card?: FoulType;
+  /** the player blowing the whistle, which reads as a call and not as speech */
+  isCall?: boolean;
 }
 
 /** One fixed-text run, or one blank the player types into. */

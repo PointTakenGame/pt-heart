@@ -13,12 +13,16 @@
 // The meet-the-coach panel is prepended once, the first time ever, and never
 // again; a corner man who reintroduces himself before every fight is not a
 // person, he is a tooltip.
+//
+// 2026-08-25: the coach speaks through the RPG dialogue box (Dialogue.tsx), so
+// the frame never moves between panels and the line types itself out. When he
+// names the opponent, the opponent's card comes with it.
 
 import { useState } from 'react';
 import type { PrefightStep } from '../types.ts';
 import { COACH_EMOJI, COACH_NAME, COACH_LINE } from '../avatars.ts';
 import { hasMetCoach, markMetCoach } from '../storage.ts';
-import { RuleCardFull } from './RuleCards.tsx';
+import { Dialogue, type Mug } from './Dialogue.tsx';
 
 interface Props {
   steps: PrefightStep[];
@@ -26,11 +30,22 @@ interface Props {
   enterLabel: string;
   onEnter: () => void;
   onExit: () => void;
+  /** shown as a card whenever the coach's line names them */
+  opponent?: Mug | null;
+}
+
+/** Does this line name the opponent? Cheap, and it keeps the mug shot a content
+ *  decision rather than another field every level file has to remember to set. */
+function namesOpponent(text: string, mug: Mug | null | undefined): boolean {
+  if (!mug) return false;
+  if (text.includes(mug.name)) return true;
+  const last = mug.name.split(' ').slice(-1)[0];
+  return last.length > 2 && text.includes(last);
 }
 
 type Panel = PrefightStep | { kind: 'meet' };
 
-export function Prefight({ steps, enterLabel, onEnter, onExit }: Props) {
+export function Prefight({ steps, enterLabel, onEnter, onExit, opponent }: Props) {
   // Read once, at mount, so the panel does not vanish out from under the player
   // the moment we mark him met.
   const [panels] = useState<Panel[]>(() =>
@@ -66,25 +81,24 @@ export function Prefight({ steps, enterLabel, onEnter, onExit }: Props) {
             </span>
             <h1 className="pf-meet-name">{COACH_NAME}</h1>
             <p className="pf-meet-role">your corner</p>
-            <div className="pf-bubble pf-bubble-wide">{COACH_LINE}</div>
+            <Dialogue face={null} text={COACH_LINE} tone="coach" />
           </div>
         ) : panel.kind === 'card' ? (
-          <div className="pf-card">
-            <div className="pf-said">
-              <span className="pf-face" aria-hidden="true">
-                {COACH_EMOJI}
-              </span>
-              <div className="pf-bubble">This is the card. It stays on the wall all night.</div>
-            </div>
-            <RuleCardFull rule={panel.rule} />
-          </div>
+          <Dialogue
+            face={COACH_EMOJI}
+            name={COACH_NAME}
+            text="This is the card. It stays on the wall all night."
+            card={panel.rule}
+            tone="coach"
+          />
         ) : (
-          <div className="pf-said pf-said-line">
-            <span className="pf-face" aria-hidden="true">
-              {COACH_EMOJI}
-            </span>
-            <div className="pf-bubble">{panel.text}</div>
-          </div>
+          <Dialogue
+            face={COACH_EMOJI}
+            name={COACH_NAME}
+            text={panel.text}
+            mug={namesOpponent(panel.text, opponent) ? opponent : null}
+            tone="coach"
+          />
         )}
       </div>
 

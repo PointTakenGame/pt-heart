@@ -103,11 +103,23 @@ export function Thread({ messages, avatars, waiting, onSkip, ref }: Props) {
       onTouchMove={() => { byPlayer.current = true; }}
       onClick={() => waiting && onSkip()}
     >
-      {messages.map((m) => {
+      {messages.map((m, i) => {
+        // De-contrast what is behind us. Steve, 2026-08-25: "after it's been on
+        // the s it's the some new action is required. then the old stuff that's
+        // no longer relevant should be decontrasted."
+        //
+        // Positional, not semantic: distance from the end of the list. The engine
+        // does not hand the view an item boundary, and a rule that has to guess
+        // one would eventually disagree with the engine and fade a live line. The
+        // last three are full strength, the next three are dimmer, the rest are
+        // background.
+        const back = messages.length - 1 - i;
+        const age = back <= 2 ? 'now' : back <= 5 ? 'recent' : 'old';
+
         // The crowd is not a speaker. No bubble, no face, no name.
         if (m.lane === 'crowd') {
           return (
-            <div key={m.id} className="msg-row row-crowd">
+            <div key={m.id} className="msg-row row-crowd" data-age={age}>
               <div className="crowd" aria-hidden="true">{m.text}</div>
             </div>
           );
@@ -124,14 +136,16 @@ export function Thread({ messages, avatars, waiting, onSkip, ref }: Props) {
           m.isSpecimen ? 'msg-specimen' : '',
           m.isTake ? 'msg-take' : '',
           m.card ? 'msg-card' : '',
+          m.isCall ? 'msg-call' : '',
         ]
           .filter(Boolean)
           .join(' ');
-        // The face lives inside the bubble, not beside it (Steve, 2026-08-25:
-        // "put the emoji in the thought bubble"). Widths are fixed by lane in
-        // the stylesheet: opponent two thirds on the left, player two thirds on
-        // the right, coach one third down the middle, so the three speakers land
-        // on three predictable columns.
+        // The face sits on the first line of the bubble itself, not on a row
+        // above it (Steve, 2026-08-25: "Put the emoji head inside the box instead
+        // of the coach being on top. Just put it in in line inside the box").
+        // Widths are fixed by lane in the stylesheet: opponent two thirds on the
+        // left, player two thirds on the right, coach one third down the middle,
+        // so the three speakers land on three predictable columns.
         //
         // A drill specimen in the coach lane wears no face. Nobody is saying it:
         // it is a line on the table to be judged, and putting the coach's face on
@@ -139,15 +153,21 @@ export function Thread({ messages, avatars, waiting, onSkip, ref }: Props) {
         // specimens, but they are in her lane and she keeps her face.
         const faceless = m.isSpecimen && m.lane === 'coach';
         return (
-          <div key={m.id} className={`msg-row row-${m.lane}`}>
+          <div key={m.id} className={`msg-row row-${m.lane}`} data-age={age}>
             <div className={cls}>
-              {!faceless && (
-                <div className="msg-top">
-                  <span className="face" aria-hidden="true">{face}</span>
-                  {m.speaker && <span className="msg-speaker">{m.speaker}</span>}
+              {m.card ? (
+                <RuleCardFull rule={m.card} />
+              ) : (
+                <div className="msg-body">
+                  {!faceless && (
+                    <span className="face" aria-hidden="true">{face}</span>
+                  )}
+                  <span className="msg-said">
+                    {m.speaker && <span className="msg-speaker">{m.speaker}</span>}
+                    <span className="msg-text">{m.text}</span>
+                  </span>
                 </div>
               )}
-              {m.card ? <RuleCardFull rule={m.card} /> : <div className="msg-body">{m.text}</div>}
             </div>
           </div>
         );
