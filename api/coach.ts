@@ -4,10 +4,15 @@
 // Auth arrives later from the Brain agent (Steve's ruling, 2026-08-23); nothing in
 // here has to change when it does.
 //
-// Needs ANTHROPIC_API_KEY. On Vercel that comes from the project env. In local dev
+// Needs GEMINI_API_KEY. On Vercel that comes from the project env. In local dev
 // the plugin in vite.config.ts loads it from a file outside the repo and calls this
 // same handler, so there is one implementation and local play exercises it.
 // Without a key this returns 503 and every caller falls back to authored copy.
+//
+// Swapped from Anthropic to Gemini 2026-08-25: the operator's Anthropic key
+// started 401ing and a fix attempt didn't resolve it, so this runs on the
+// flash-tier Gemini model instead. Nothing below this point is provider-specific
+// except MODEL, ask(), and the key lookup in handler().
 
 // Pin the edge runtime. Without this Vercel builds the file for the Node runtime
 // and calls it as a legacy (req, res) handler: the Response this function returns
@@ -17,7 +22,7 @@
 // deployed stay one implementation. Found live 2026-08-24.
 export const config = { runtime: 'edge' };
 
-const MODEL = 'claude-haiku-4-5-20251001';
+const MODEL = 'gemini-flash-latest';
 
 const TEMPLATE = 'So what I\'m hearing is: it bugs you that [X], because [Y]. Did I get that right?';
 
@@ -152,26 +157,28 @@ const HOUSE =
 async function ask(key: string, prompt: string): Promise<string | null> {
   let res: Response;
   try {
-    res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
+    res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-goog-api-key': key,
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt + HOUSE }] }],
+        }),
+        signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
       },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 300,
-        messages: [{ role: 'user', content: prompt + HOUSE }],
-      }),
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-    });
+    );
   } catch {
     return null;
   }
   if (!res.ok) return null;
   const data: any = await res.json();
-  return data?.content?.[0]?.text?.trim() ?? '';
+  const parts = data?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) return '';
+  return parts.map((p: any) => p?.text ?? '').join('').trim();
 }
 
 /** Models sometimes fence their JSON, and sometimes write prose instead. */
@@ -186,7 +193,7 @@ function parseJson(raw: string): any | null {
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'POST') return new Response('method not allowed', { status: 405 });
 
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = process.env.GEMINI_API_KEY;
   if (!key) return new Response('no key', { status: 503 });
 
   let body: any;

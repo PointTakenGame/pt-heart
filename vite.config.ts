@@ -9,23 +9,24 @@ import react from '@vitejs/plugin-react';
 // local play exercises the same code that ships.
 //
 // The key is read from a file outside this repo, never from anything committed
-// here. Order: ANTHROPIC_API_KEY in the environment, else the first
-// ANTHROPIC_API_KEY= line of HEART_KEY_FILE, else the shared operator key file.
+// here. Order: GEMINI_API_KEY in the environment, else the first
+// GEMINI_API_KEY= line of HEART_KEY_FILE, else the shared operator key file.
 // If none of those resolve, the handler returns 503 and the client falls back
 // to authored coach lines, so the gym stays playable with no key at all.
 
-// The _secrets/anthropic.env copy of this key is dead (401, confirmed
-// 2026-08-24). The live operator key sits with the other Point Taken service
-// keys. Read only, never printed, never committed.
+// Swapped from Anthropic to Gemini 2026-08-25: the anthropic.env copy of the
+// key was dead (401, confirmed 2026-08-24) and a fix attempt the same day
+// didn't resolve it, so local dev now reads the Gemini key already in use by
+// the UX-testing programme. Read only, never printed, never committed.
 const DEFAULT_KEY_FILE =
-  '/Users/stevefranconeri/Documents/Claude/Projects/point-taken-biz/api-keys/claude-api-key.env';
+  '/Users/stevefranconeri/Documents/Claude/Projects/_secrets/gemini.env';
 
 function loadKey(): string | undefined {
-  if (process.env.ANTHROPIC_API_KEY) return process.env.ANTHROPIC_API_KEY;
+  if (process.env.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
   const path = process.env.HEART_KEY_FILE ?? DEFAULT_KEY_FILE;
   try {
     for (const line of readFileSync(path, 'utf8').split('\n')) {
-      const m = /^\s*ANTHROPIC_API_KEY\s*=\s*(.+?)\s*$/.exec(line);
+      const m = /^\s*GEMINI_API_KEY\s*=\s*(.+?)\s*$/.exec(line);
       if (m) return m[1].replace(/^['"]|['"]$/g, '');
     }
   } catch {
@@ -39,7 +40,7 @@ function coachDevApi(): Plugin {
     name: 'heart-coach-dev-api',
     configureServer(server: ViteDevServer) {
       const key = loadKey();
-      if (key) process.env.ANTHROPIC_API_KEY = key;
+      if (key) process.env.GEMINI_API_KEY = key;
       // Report presence only. The value never goes to stdout or to disk.
       server.config.logger.info(
         key
