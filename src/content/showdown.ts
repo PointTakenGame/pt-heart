@@ -1,5 +1,5 @@
 // Level 4: the full showdown against Slippery Sofia.
-// Design of record: docs/design/2026-08-23_showdown-live-play.md (HEART-T260823-30).
+// Design of record: docs/design/2026-08-23_showdown-full-match-sofia.md (HEART-T260823-30).
 //
 // Everything Sofia does is authored here. Her foul schedule is fixed and identical
 // every match, because a generated opponent that fouls at random cannot teach a

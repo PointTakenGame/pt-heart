@@ -15,7 +15,7 @@
 //   The player whistles Sofia. The coach whistles the player, because a player
 //   cannot call a foul on themselves.
 //
-// Design of record: docs/design/2026-08-23_showdown-live-play.md (HEART-T260823-30).
+// Design of record: docs/design/2026-08-23_showdown-full-match-sofia.md (HEART-T260823-30).
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
