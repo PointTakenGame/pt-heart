@@ -5,10 +5,10 @@ agent: point-taken-heart
 thread: heart-webapp
 kind: source
 status: live
-what_it_is: "The web build of Humility Showdown: a React/Vite app with an Anthropic-backed coach and an offline authored-fallback path."
+what_it_is: "The pt-heart repo: the web build of Point Taken: Humility Showdown, plus its canonical specs and print production materials."
 regen_command: none
 verified: 2026-08-26
-notes: "Its own git repo, not part of the Claude workspace monorepo above it (remote github.com/PointTakenGame/pt-heart, branch main). Deployed as an internal playtest prototype at pt-heart.vercel.app behind HTTP Basic Auth (game/middleware.ts, password in the Vercel SITE_PASSWORD env var). Production coach still needs Steve to set ANTHROPIC_API_KEY in the Vercel dashboard, tracked as HEART-T260826-05."
+notes: "Its own git repo, not part of the Claude workspace monorepo above it (remote github.com/PointTakenGame/pt-heart, branch main). Deployed as an internal playtest prototype at pt-heart.vercel.app behind HTTP Basic Auth (middleware.ts, password in the Vercel SITE_PASSWORD env var). Holds two registered sub-resources of its own: docs/ (canonical specs) and, once populated, pdf-game/ (print production)."
 ---
 
 # Humility Showdown
