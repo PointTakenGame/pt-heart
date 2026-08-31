@@ -121,7 +121,9 @@ Page 1's one-line definitions, verbatim: Fake Listening is "Summarizing Player f
 
 **Who else may call.** Foul calling is the Referee's job. A disputant's own whistle is an expert affordance, off by default, because a disputant's job while the other speaks is to listen well enough to summarize, not to monitor. Locked 2026-07-11: "the human is never expected to monitor, only permitted to." `[ruled]`
 
-**Contested calls.** Ruled 2026-08-15 (`HEART-T260815-09`): when the Referee flags a foul, the wronged player casts the deciding vote on whether it landed. The accused may contest by playing a rule card, which brings a second opinion, and **the wronged player still has the final call after hearing it, so the person who was wronged is the one whose voice decides** `[ruled, Nathan; Steve's confirmation outstanding]`. This is the print procedure as well as the online one. The v7 deck does not print it, and what physical object the contesting card is in print is still open: GAP-3.
+**Contested calls, print and live-human play.** Ruled 2026-08-15 (`HEART-T260815-09`): when the Referee flags a foul, the wronged player casts the deciding vote on whether it landed. The accused may contest by playing a rule card, which brings a second opinion, and **the wronged player still has the final call after hearing it, so the person who was wronged is the one whose voice decides** `[ruled]`. This governs a live human Referee's call and a live human accused contesting it; the v7 deck does not print it, and what physical object the contesting card is in print is still open: GAP-3.
+
+**This does not describe the online edition's AI foul-flagging pipeline.** A 2026-08-31 Steve/Nathan call ruled that pipeline separately, and stricter: the software only nominates candidates, they go to the wronged party alone, and **the accused never sees the flag and never gets a vote at all**, no contest step of any kind. `roadmap.md` retired its online "contest flow" mechanic on this basis. Do not port the print contest-with-a-card procedure above into the online edition.
 
 **What a foul does not do.** It does not stop play, does not require an apology, and settles nothing about the topic. Being flagged is about one sentence, not about the person. That framing is load-bearing and is told to players up front in the online edition's opening agreement screen.
 
@@ -133,7 +135,15 @@ A round contains both directions. Do not read the flip as a separate round; the 
 
 1. **Player A gives their view.** Printed opener: *"The way I see it is..."* Thirty seconds. `[ruled]`
 2. **Player B summarizes it.** Two required halves, printed: "What I heard is [x]... ... did I miss anything?" Forty-five seconds. `[ruled]`
-3. **Player A answers the question.** They say what was missed, or that nothing was. This is the ground truth for Fake Listening: the person who was summarized rules on whether they were heard. `[ruled]` **There is no timer on this beat and no cap on the number of corrections** `[ruled, Nathan]`. Player B summarizes again until Player A confirms they were heard, and the game does not move on before that confirmation. **The deduction does not stack:** the miss is charged once, on the first failed summary, and the retries that follow cost nothing however many it takes. Section 9 item 5 records the shipped three-attempt ceiling, which this ruling overrides and which the code has not been changed to match.
+3. **Player A answers the question.** They say what was missed, or that nothing was. This is the ground truth for Fake Listening: the person who was summarized rules on whether they were heard. `[ruled]` **There is no timer on this beat, and for a live human Referee confirming a spoken summary, no cap on the number of corrections** `[ruled, Nathan]`. Player B summarizes again until Player A confirms they were heard, and the game does not move on before that confirmation. **The deduction does not stack:** the miss is charged once, on the first failed summary, and the retries that follow cost nothing however many it takes.
+
+   **This does not carry over to the online solo edition's summary coverage check unchanged.** A 2026-08-31
+   Steve/Nathan call ruled the online check specifically no-redo: a miss is charged once and play moves on
+   immediately, with no retry prompt at all, because retyping a summary against a bot is tedious in a way a live
+   verbal retry is not. `roadmap.md` §7 carries this reversal and its own cross-reference to the shipped
+   three-attempt ceiling, which neither this ruling nor that one match. Whether the same no-redo rule should also
+   apply to a live-human game refereed by a person is not decided; treat the "no cap" language above as governing
+   print and live-human-Referee play only until someone rules on that question explicitly.
 4. **Switch Roles.** Printed as its own step between the two sub-flows.
 5. **Player B gives their view**, same opener, thirty seconds. `[ruled]`
 6. **Player A summarizes it**, same two halves, forty-five seconds. `[ruled]`
@@ -177,7 +187,7 @@ The deck's worked examples, verbatim, all on the student loan topic:
 
 ---
 
-## 7. The moderator's job
+## 7. The Referee's job
 
 Player C referees the whole game, both directions, all four rounds. In order of importance:
 
@@ -216,7 +226,18 @@ The print flow and the live-human flow are identical. `[ruled]` The differences 
 **Different online:**
 
 1. **The AI fills a seat, so a second human is optional.** Ruled 2026-08-10: the default second player is the AI and a human opponent is unlocked. `[ruled]` In the shipped code the AI coach referees and the human plays a disputant against an AI opponent, so print's third human seat is software. There is no three-human online mode today.
-2. **A teaching ladder in front of the game. Six levels** `[ruled, Nathan; Steve's confirmation outstanding]`: L1 the word "You" (Judging), L2 In my head, because (Opinions as Facts), L3 Did I miss anything? (Fake Listening), L4 Full Showdown with all three fouls live, L5 the Final Showdown, L6 the player takes the referee seat and two AI agents play in front of them. L1 to L3 are built, L4 ships as a three-round match against the AI, L5 is the least-built part of the game, and L6 is unbuilt. This supersedes the five-level ladder ruled 2026-08-15 (`HEART-T260815-27`), which ended at L5 and had no referee level. `roadmap.md` section 6 is the home of the six-level ruling and carries the outstanding request for Steve's confirmation; the numbering is settled there, so build against six. An unnumbered agreement screen sits before L1. Boss names are explicitly placeholders and the docs and the code disagree on them, so quote none of them anywhere player facing. **None of this vocabulary is player facing in print:** the v7 deck contains zero level, phase, boss, tier, stage, or chapter words. Never source a level count from the deck.
+2. **A teaching ladder in front of the game. Seven levels** `[ruled]`, per a 2026-08-31 Steve/Nathan call Steve
+   confirmed directly: L1 the word "You" (Judging), L2 In my head, because (Opinions as Facts), L3 Did I miss
+   anything? (Fake Listening), L4 Full Showdown with all three fouls live, L5 What I Learned, L6 Why We Might Still
+   Disagree, L7 the combined Final Showdown boss. L1 to L4 are built. L5 and L6 are **referee-format**: the human
+   takes the Referee seat, watches the coach play one side of an argument against an AI opponent playing the other,
+   both typing, and calls fouls, the same format now also ruled for L1-3 (`roadmap.md` §7, a scoped-but-unbuilt
+   redesign). L7 is played for real, like L4. This supersedes both the five-level ladder ruled 2026-08-15
+   (`HEART-T260815-27`) and the six-level ladder that briefly followed it. `roadmap.md` section 6 is the home of
+   the seven-level ruling; the numbering is settled there, so build against seven. An unnumbered agreement screen
+   sits before L1. Boss names are explicitly placeholders and the docs and the code disagree on them, so quote none
+   of them anywhere player facing. **None of this vocabulary is player facing in print:** the v7 deck contains zero
+   level, phase, boss, tier, stage, or chapter words. Never source a level count from the deck.
 3. **The player, not a referee, throws the whistle at the AI.** The human calls fouls on the AI and the coach calls fouls on the human. Missing one of the AI's fouls costs half a token `[ruled]`; whistling a clean line costs a full token `[unratified]` (`game/src/showdown.ts:399-422`). Both exist only because there is no third human.
 4. **Wrong answers cost tokens during teaching.** In L1 to L3 a wrong or too-thin answer costs one token, once per item however many tries it takes, and both purses run from seven from L1 on `[unratified]` (`game/src/engine.ts`). Print has no quiz and no equivalent.
 5. **Attempt ceilings, and a code conflict.** The shipped code allows three attempts on an answering step and then moves on `[unratified]` (`game/src/engine.ts:486`, `game/src/showdown.ts:433`). **That ceiling is wrong under the ruling in section 5: there is no cap on corrections, and nothing advances until the summarized player confirms they were heard.** Print has no attempt limit either. Two things have to change in the code before it matches the rule: the ceiling has to come off, and a coverage check has to exist for the confirmation to be checked against, because no summary coverage check is implemented anywhere today. Recorded, not changed here; `roadmap.md` section 7 carries the build item.

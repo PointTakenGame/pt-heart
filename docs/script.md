@@ -55,7 +55,7 @@ coached by "Coach Ray." It uses levels and bosses (`game/src/content/level1.ts`
 through `level3.ts`, plus `content/showdown.ts`). Every gym reference below is
 labeled "(gym)" so it is never mistaken for the live game's rules.
 
-Spoken lines (what a moderator, coach, or opponent says aloud, or what a UI shows a
+Spoken lines (what a Referee, coach, or opponent says aloud, or what a UI shows a
 player) are set as blockquotes. UI strings that are pure interface chrome (button
 labels, aria text) are set in `code font` with a `file:LINE` citation. Where a
 source string contains an em dash, it is quoted faithfully and flagged as violating
@@ -81,7 +81,7 @@ Premise, said to the table before dealing cards:
 > hint of) anger. Humility Showdown teaches you how to contain their anger,
 > allowing them to actually listen to you.
 
-Moderator, assigning seats (deck's "HOW IT WORKS", `deck-content-v7.md:75-77`):
+Referee, assigning seats (deck's "HOW IT WORKS", `deck-content-v7.md:75-77`):
 
 > Players A and B take turns giving their view on a topic where they disagree.
 > Player C, that's you, serves as referee: you call fouls while A and B speak.
@@ -89,7 +89,7 @@ Moderator, assigning seats (deck's "HOW IT WORKS", `deck-content-v7.md:75-77`):
 Token setup (`deck-content-v7.md:83-96`, `content/showdown.ts:22` for the digital
 mirror of the same number):
 
-> Each of you takes seven humility tokens. ["humility token" is what a moderator
+> Each of you takes seven humility tokens. ["humility token" is what a Referee
 > calls the 🙏 emoji token out loud `[ruled, Nathan; Steve's confirmation
 > outstanding]`. The deck never names the emoji in words, only shows it, so this
 > name lives in the script and not yet on the card; the glyph is still described as
@@ -106,7 +106,7 @@ Sample Topics table, carried in full at Section 5 below.
 Source: `deck-content-v7.md:150-207` (PLAY band). `[ruled]`: 30 seconds to speak,
 45 seconds to summarize (Established Facts, this task's brief).
 
-Moderator, opening the round:
+Referee, opening the round:
 
 > Player A gives their view.
 
@@ -114,14 +114,14 @@ Speaker's frame (`deck-content-v7.md:159`, exact deck string):
 
 > "The way I see it is..."
 
-Moderator calls time at 30 seconds. `[unratified]`: the deck's own timer badge
+Referee calls time at 30 seconds. `[unratified]`: the deck's own timer badge
 reads "⏱️ 30 sec" on all four PLAY-band exchange steps, both the speak step and the
 summarize step (`deck-content-v7.md:186-188`), which does not distinguish a
 45-second summarize call from a 30-second speak call. This is a real divergence
 between the printed deck and the Established Fact of a 45-second summary window;
 flagged, not resolved.
 
-Moderator, handing off to the listener:
+Referee, handing off to the listener:
 
 > Player B, summarize.
 
@@ -129,7 +129,7 @@ Summarizer's frame (`deck-content-v7.md:161-162`):
 
 > "What I heard is [x]... did I miss anything?"
 
-Moderator calls time at 45 seconds `[ruled]`. If the summary is missing a major
+Referee calls time at 45 seconds `[ruled]`. If the summary is missing a major
 point, that's a Fake Listening foul; see Section 4.
 
 Role flip, mid-round (`deck-content-v7.md:164`, `168-169`):
@@ -137,7 +137,7 @@ Role flip, mid-round (`deck-content-v7.md:164`, `168-169`):
 > Switch roles.
 
 The mirrored half repeats with B speaking and A summarizing, same frames, same
-timers. Moderator, at the end of the round (`deck-content-v7.md:194-196`):
+timers. Referee, at the end of the round (`deck-content-v7.md:194-196`):
 
 > Repeat three times. Then, the Final Showdown round.
 
@@ -148,7 +148,7 @@ Source: `game/src/content/cards.ts:85-255`, cross-checked against
 canonical content; where they diverge, it is noted.
 
 **Judging.** Cost: 2 tokens (`cards.ts:90`), "DOUBLE PENALTY" (`cards.ts:110`,
-deck header `deck-content-v7.md:600`). Definition, moderator reads aloud:
+deck header `deck-content-v7.md:600`). Definition, Referee reads aloud:
 
 > A verdict on who the person is, or a claim about what they secretly want,
 > instead of an answer to what they said. (`cards.ts:91`)
@@ -156,7 +156,7 @@ deck header `deck-content-v7.md:600`). Definition, moderator reads aloud:
 Smoke-alarm terms to listen for (`cards.ts`, printed face; deck
 `deck-content-v7.md:645-649`): "You're saying that because...", "You only care
 about...", "You don't really believe that", "You're an [X]-ist / -phobe", "You're
-so [adjective]". Incorrect vs. correct pair, moderator's example script
+so [adjective]". Incorrect vs. correct pair, Referee's example script
 (`cards.ts:128-135`, deck `deck-content-v7.md:658-664`):
 
 > INCORRECT: "That's typical conservative / liberal thinking." / "You just don't
@@ -172,7 +172,7 @@ Trains: "Critique the argument, not the person." (`cards.ts`, deck
 > A contested opinion delivered as settled truth, with nobody named as the one who
 > holds it. (`cards.ts:146`)
 
-Two-step fix, moderator's script (`deck-content-v7.md:566-568`, `591-593`; the
+Two-step fix, Referee's script (`deck-content-v7.md:566-568`, `591-593`; the
 deck's own dash is quoted faithfully and violates this document's no-em-dash
 style):
 
@@ -193,7 +193,7 @@ penaltyNote at `cards.ts` printed face). Definition:
 > Reloading your rebuttal while they talk, then playing back a version of it that
 > leaves out the part you cannot answer. (`cards.ts:207`)
 
-Two required steps, moderator's script (`deck-content-v7.md:508-509`):
+Two required steps, Referee's script (`deck-content-v7.md:508-509`):
 
 > (1) "What I heard is [...]" → (2) "Did I miss anything?"
 
@@ -215,10 +215,10 @@ emoji, and the third card there is titled "Opinion as Facts" (singular), against
 
 ## 5. The Final Showdown script
 
-Source: `deck-content-v7.md:270-411`. Own three steps, own moderator lines and
+Source: `deck-content-v7.md:270-411`. Own three steps, own Referee lines and
 rubric, separate from the loop's script `[ruled]`.
 
-Moderator, opening:
+Referee, opening:
 
 > Three steps, starting with Player A.
 
@@ -240,7 +240,7 @@ Moderator, opening:
 Referee's scoring call, three-way rubric (`deck-content-v7.md:305`, `320-360`):
 follows the rules (expected, no tokens change hands), earns a humility bonus
 (tokens flow toward the speaker), or is Naughty (tokens flow away from the
-speaker). Worked example the moderator can read aloud, step 3
+speaker). Worked example the Referee can read aloud, step 3
 (`deck-content-v7.md:355-360`):
 
 > Follows the rules: "You think that people should pay back their loans, that's
@@ -279,14 +279,14 @@ See Section 10 for the neutrality audit of this table.
 
 Source: `deck-content-v7.md:83-96` (HOW TO WIN band), `320-360` (rubric).
 
-Moderator, at the end of the Final Showdown round:
+Referee, at the end of the Final Showdown round:
 
 > Count the tokens. Most tokens at the end wins. If either of you hit zero at any
 > point tonight, that was an instant loss, whatever round it happened in.
 
 **Equal tokens at the end is a draw** `[ruled, Nathan]`. There is no tiebreak, and
 Final Showdown bonuses are not counted separately to break one; the game ends level
-and the moderator says so. `rules.md` section 1 is the home of that ruling. No
+and the Referee says so. `rules.md` section 1 is the home of that ruling. No
 tiebreak rule appears anywhere in the v7 deck or the design docs read for this task,
 so the ruling is its only source. The web edition already ends this way
 (`game/src/showdown.ts:517-522`) and has the line for it:
@@ -294,7 +294,7 @@ so the ruling is its only source. The web edition already ends this way
 > Dead even. Which, in this game, isn't a bad night.
 
 `[unratified]` (`game/src/content/showdown.ts:249`). Print has no closing line of
-its own for a draw; the moderator reads the count and the count is the result.
+its own for a draw; the Referee reads the count and the count is the result.
 
 ## 7. Coaching lines (gym)
 
