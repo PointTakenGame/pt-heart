@@ -20,6 +20,13 @@ full match against an AI opponent using all three.
 This is the web build. The printed deck is the original, and Steve's Keynote
 master is the source of truth for card content; it lives outside this repo.
 
+**Read `docs/` first.** That folder is the canonical specification set: what the
+game is, what ships in what order, the rules, the strings players read, the
+architecture, the component inventory, and the printed deck. It is normative and
+written in the present tense. `docs/README.md` explains the status markers that
+tell you how much authority any given value has, and the house rules for editing
+anything in there. Anything under `docs/` reaches `main` through a pull request.
+
 ## Run it
 
 ```bash
