@@ -23,9 +23,11 @@ argument mapping. Heart is Humility Showdown, about emotional hygiene and relati
 card deck and as this web app. Different games sharing a brand, an account, and a launcher, not two media of one
 game. Brain material found in this repo is misfiled.
 
-**Provenance markers.** `[ruled]` means Steve or a registry decision established it. `[unratified]` means it lives
-in the code and nobody ruled it, cited to a file. `[vibecoded]` means invented for this document; there are none.
-`GAP:` means refused to invent, with the exact question written out.
+**Provenance markers.** `[ruled]` means Steve, Nathan, or a registry decision established it; anything that is not
+Steve's is attributed inline, and `[ruled, Nathan; Steve's confirmation outstanding]` marks a ruling that is
+answered and in force but still wants his sign-off. `[unratified]` means it lives in the code and nobody ruled it,
+cited to a file. `[vibecoded]` means invented for this document; there are none. `GAP:` means refused to invent,
+with the exact question written out; a `GAP:` prefixed with a name is that person's to answer.
 
 **No dates here, and do not add any.** Order and dependency are stated, calendar commitments are not, at any
 confidence. A date attached to a source is that source's date, never a ship date. The sources live above the repo
@@ -172,9 +174,12 @@ Three Level 4 constants that look like bugs and are not:
 - `COACH.bankruptHer` is unreachable by design and kept anyway. Sofia's authored fouls total four against a
   seven-token purse, so her floor is three and she cannot be knocked out. **Do not "fix" this by giving her a fourth
   foul** `[ruled]`.
-- She fouls twice in a row in round 3, deviating from the governing spec's no-adjacent-fouls rule. Documented in
-  place and deliberate: three cards cannot be covered by two non-adjacent fouls in six turns. GAP: keep or cut
-  Sofia's adjacent round-3 fouls? The governing spec parks this as Steve's call and it is still open.
+- She fouls twice in a row in round 3, deviating from the governing spec's no-adjacent-fouls rule. **Keep them**
+  `[ruled, Nathan]`. Adjacent fouls are allowed on a boss-fight level, because covering all three cards inside six
+  turns is the higher priority and the no-adjacent-fouls rule loses to it. Three cards cannot be covered by two
+  non-adjacent fouls in six turns, so the rule and the coverage goal cannot both hold here. The shipped schedule in
+  `content/showdown.ts` already does this; the ruling ratifies the code rather than changing it, and the coach line
+  in front of the round stays.
 
 ## 5. Structural facts you will otherwise break
 
@@ -192,7 +197,13 @@ Three Level 4 constants that look like bugs and are not:
 - **The player should never type more than a sentence or two across an entire level** `[ruled]`, which is why the
   free-text `player_commits` mode is retired. Typed and spoken input are interchangeable.
 - **The coach is the moderator. No fourth party, no separate referee character** `[ruled]`. Code or docs implying
-  otherwise predate that ruling and are wrong.
+  otherwise predate that ruling and are wrong. **This one is now in tension with §7 item 12**, which rules three
+  presented figures including a judge. The gym half reconciles cleanly: inside the gym the coach holds the judge
+  seat, which is a seat and not a fourth character, so nothing there gains a party. Outside the gym a judge that
+  presents as its own figure is exactly the separate referee character this bullet forbids. Both readings cannot
+  ship. `GAP: (Steve) does the no-separate-referee ruling still hold outside the gym, or is it narrowed to the gym
+  so that live play and Level 6 can present a judge of their own? Until this is answered, build no judge face; the
+  seat is real and ruled, the face is not.`
 - **Every stored flag records the prompt version that generated it.** The collected human rulings are the repo's
   most valuable asset and are worth far less if a prompt revision silently changes what the labels mean.
   Ground-truth precedence: wronged human's ruling, then speaker's tag, then spectator's.
@@ -216,19 +227,36 @@ Boss: **Stonewall Sung-min**, who commits no fouls at all, forcing the player to
 by catching anyone `[ruled]`. That name survived the cast pass. Nothing of this exists in `src/`: no content files,
 no runner, no screen.
 
-**The structural blocker.** In solo play the party who rules on the Super-Summary and awards the
-Why-We-Might-Still-Disagree bonus is the AI boss. That asks the machine to cast an experience-based ruling on
-whether it felt fairly described, which is exactly the machine-as-judge the binding soul doc forbids in as many
-words. Build without resolving it and you hand the bonuses to the referee prompt.
+**Who awards the bonuses.** In solo play the party who rules on the Super-Summary and awards the
+Why-We-Might-Still-Disagree bonus is the AI boss, which asks the machine to cast an experience-based ruling on
+whether it felt fairly described.
 
-GAP: In solo play, who awards the Final Showdown's bonuses when the other party is an AI boss: a model in an
-explicit judge role, a scripted rubric, or nobody?
+**A model in an explicit judge role awards the points and bonuses in solo play** `[ruled, Nathan]`. Inside the gym,
+across the first four training levels, **the coach holds the judge seat** `[ruled, Nathan]`. The judge is one of the
+three AI figures the player meets, and it presents as its own figure and not as the boss: see §7, item 12.
 
-GAP: Is the Final Showdown Level 5, following the built Level 4 Full Showdown, or does it renumber or replace Level
-4? A settled ruling puts five levels on the ladder with the Full Showdown at 4 and the Final Showdown at 5, and the
-code agrees, hardcoding the Showdown as fight 4. A later brief describes the Final Showdown's steps as "levels 4 to
-6ish", off by one against both. Renumber nothing until this is answered: saves are keyed by slug precisely so
-renumbering is survivable, but the ladder copy and the hardcoded `'4'` are not.
+How this sits with the soul doc, which is the only document that can veto a mechanic. The soul doc forbids software
+deciding that a foul happened and applying a penalty **without the wronged party's assent**. The Final Showdown's
+three steps score generosity positively, so nobody is being penalized over their own objection, and in solo play the
+party being summarized is the machine itself, so no human's assent is being routed around. In live play the human
+being summarized still rules on their own summary. Read that way the ruling and the soul doc do not collide.
+**Do not extend this ruling to fouls, to penalties, or to any seat where a human is the party who was possibly
+wronged.**
+
+GAP: (Steve) confirm the reading in the paragraph above, since it is the one place a ruling brushes against the
+machine-as-judge prohibition. If that prohibition is meant to cover positive scoring too, the solo-play judge seat
+needs a different answer and step 1 of §7 reopens.
+
+**The ladder is six levels** `[ruled, Nathan; Steve's confirmation outstanding]`. Level 5 is the Final Showdown and
+follows the built Level 4 Full Showdown. **Level 5 teaches how to be generous.** Level 6 follows Level 5, and in it
+the player is the referee for two AI agents playing each other; it is not fully designed. Nothing renumbers: the
+Full Showdown stays at 4 and the hardcoded `'4'` stands. A later brief describing the Final Showdown's steps as
+"levels 4 to 6ish" now reads as an early sighting of this six-level ladder rather than an off-by-one.
+
+GAP: (Steve) confirm the six-level ladder. The ruling above is in force and is what to build against; only his
+sign-off is outstanding. Note that `rules.md` still carries a five-level ladder and a "the numbering itself is
+contested, do not build against it" warning, and its filed ruling request is answered by the above. That document
+has not been swept yet and will disagree with this one until it is.
 
 ## 7. Order of work
 
@@ -236,7 +264,9 @@ Sequence and dependency only. No dates, at any confidence.
 
 **Before the Final Showdown can be built:**
 
-1. Answer the two GAPs in §6. The judge contract blocks step 1; the numbering blocks the ladder UI.
+1. Nothing here waits on §6 any longer. The judge seat goes to a model in an explicit judge role, with the coach
+   holding it inside the gym, and the ladder is six levels with the Final Showdown at 5. Build the ladder UI to
+   six.
 2. Author the three steps' content, matching the shape of `content/level3.ts` including the political balance ledger
    in the header.
 3. Build the positive-scoring path. Everything in `showdown.ts` moves tokens as penalties; nothing awards a bonus.
@@ -262,10 +292,17 @@ Sequence and dependency only. No dates, at any confidence.
 
 **Live play, in order, none built and none spec'd beyond the sequence itself** `[ruled]`:
 
-10. Define the graduation bar that unlocks live play.
+10. Enforce the graduation bar that unlocks live play. The bar itself is ruled below; what is missing is somewhere
+    to enforce it other than `localStorage`.
 11. Session infrastructure: pairing, transport, session state.
-12. The AI coach as moderator. Its role flips: in the gym it teaches and, in bosses, argues; in live play it stops
-    arguing entirely and only nominates. How much gym coach code survives is open.
+12. **The AI figures, and how many the player meets. Three** `[ruled, Nathan]`: the **coach**, who teaches the
+    cards; the **bosses**, who play against the player; and the **judge**, who referees and awards. All three can
+    run on the same code and hold the same knowledge of the game, but **they must present differently to the
+    player**. One engine, three faces, never one voice visibly wearing three hats. Inside the gym the coach also
+    holds the judge seat (§6), which is a seat, not a fourth figure. **Outside the gym this collides with §5's
+    no-separate-referee-character ruling and is parked there for Steve; build no judge face until that clears.** The
+    coach's own role still flips: in the gym it teaches and, in bosses, argues; in live play it stops arguing
+    entirely and only nominates. How much gym coach code survives is open.
 13. Spectator mode, after the two-human loop works, since there is nothing to spectate before then. The classroom is
     the strongest case.
 14. Voice, audio, video. The product target, not a nice-to-have, and last.
@@ -273,22 +310,41 @@ Sequence and dependency only. No dates, at any confidence.
 Level gating is `localStorage`-trust only today. Fine for solo play, a real hole the moment human-vs-human matches
 exist. Fix it before step 11, not during.
 
-GAP: What exactly must a player clear in the gym before live play unlocks: which levels, what bar? No proposal
-exists.
+**Live play unlocks when the player has cleared the first four gym levels** `[ruled, Nathan]`: Levels 1 to 3 plus
+the Full Showdown. Levels 5 and 6 are not part of the gate. What "clear" means for Levels 1 to 3 is ruled in §9.
 
-GAP: How many gym levels are there in total? Three plus the Full Showdown ship today, five are ruled, and a later
-brief proposes a further level in which the player watches two AI players and moderates, which exists in no code and
-no prior design doc. Unresolved whether that replaces, follows, or reframes the Full Showdown. The printed deck
-cannot answer this, having no level vocabulary at all.
+**Six levels in total**, ruled in §6 and not restated here. What that means for the work in this section: four of
+the six ship or are gated for solo play, Level 6 is a slot on the ladder rather than buildable work until it is
+designed, and the proposed further level in the newest brief is that Level 6 rather than a seventh. The printed deck
+cannot corroborate any of this, having no level vocabulary at all.
 
-GAP: Does the 30 second speak / 45 second summarize timer apply anywhere in the online edition? The gym has no clock
-by settled decision, and live play is named as where timing actually matters, but no clock design exists for it.
+**A clock runs in live play, and never in the gym** `[ruled, Nathan]`. The gym having no clock is confirmed rather
+than merely settled-for-now, and live play definitely uses one.
 
-GAP: Do tokens spend or transfer in the code? Transfer is ruled. A source states the codebase spends them and calls
-it a small isolated fix. Verify against `showdown.ts` before writing new arithmetic.
+GAP: the clock has not been designed for the digital edition at all. Whether the printed 30 second speak / 45 second
+summarize figures carry across to typed play unchanged, what starts each clock, and what happens when one expires
+are all unanswered. The ruling above says a clock exists in live play. It does not say what the clock is.
 
-GAP: How many retries does a player get on a failed summary coverage check, what happens when they run out, and
-during retries does the per-missed-point cost land per attempt, on the last attempt only, or not at all?
+**Tokens transfer. They do not spend** `[ruled, Nathan]`. The code already agrees: `engine.ts`'s `transfer` moves a
+clamped amount from one purse into the other and destroys none, and the two sides still sum to fourteen after any
+number of moves. The source claiming the codebase spends them is wrong about this codebase, and there is no fix to
+make. Any new arithmetic moves tokens between purses; none of it removes them from the table.
+
+**No cap on retries** `[ruled, Nathan]`. The player retries until the summary passes the coverage check, and the
+game does not move on before it does. **Deductions do not stack:** the miss is paid for once, on the first failure,
+and further attempts at the same item cost nothing.
+
+The non-stacking half already holds in the code: a wrong first try hands one token over once per item, however many
+attempts it then takes to get it right (`engine.ts`). **The no-cap half does not hold.** `showdown.ts` runs its redo
+loop as `while (attempt <= 3)` and breaks out at `attempt === 3`, and the gym's edit steps keep the same
+three-attempt ceiling, with a header comment in `engine.ts` calling it "the same ceiling live play uses"
+`[unratified]`. Under this ruling that ceiling and that comment are both wrong. Neither has been changed: this
+document records the ruling, not a completed edit.
+
+A second mismatch, smaller, worth not tripping over. The three-attempt loop in `showdown.ts` is not a coverage
+check; it re-runs a summarizing turn that carried a Judging or Opinions-as-Facts foul. **A summary coverage check of
+the kind this ruling governs does not exist in the shipped code yet**, so the ruling is a constraint on the thing
+that gets built, not only a correction to the thing that is there.
 
 ## 8. Deferred, and cut
 
@@ -301,8 +357,11 @@ during retries does the per-missed-point cost land per attempt, on the last atte
   `[ruled]`: live trains reflex, post-game trains judgment. Both adversarial reviews wanted the live whistle cut
   wholesale and both were overruled.
 - **The contest flow**, where an accused player plays a rule card to summon an AI second opinion. It may not ship.
-  GAP: after the AI second opinion, who makes the final call? Read literally, the governing paragraph names the
-  accused, contradicting "the wronged player casts the deciding vote" in the same paragraph.
+  **After the second opinion, the wronged party makes the final call** `[ruled, Nathan; Steve's confirmation
+  outstanding]`, so that the process ends on the voice of the person who felt fouled. This resolves the governing
+  paragraph's internal contradiction in favour of "the wronged player casts the deciding vote" and against the
+  literal reading that named the accused, and it is the reading the soul doc already requires: the only correct
+  answer to "did I foul?" is whether the other person felt fouled.
 - **Audio retention policy.** Standing proposal: transcribe in stream, never persist audio, hold the transcript for
   the match only, discard unless the player opts to keep, disclose before the mic opens. Not decided. Blocks the
   moment Family Pack work starts.
@@ -321,9 +380,10 @@ during retries does the per-missed-point cost land per attempt, on the last atte
 
 **An older prototype may sit in `app/`**: roughly 3,500 lines, zero tests. **Read it, do not extend it** `[ruled]`.
 
-GAP: Does `src/voiceSeam.ts` exist? Two sources say a voice seam already exists in the gym build and should not be
-built behind further. It is absent from `src/`. Either it was never migrated from the older prototype or those
-sources are stale.
+GAP: (Steve) Does `src/voiceSeam.ts` exist anywhere? Confirmed absent from `src/` in this repo, and not in Nathan's
+copy either. Two sources say a voice seam already exists in the gym build and should not be built behind further, so
+either it was never migrated from the older prototype or those sources are stale. Steve holds the file if anyone
+does; until it turns up, treat the seam as unbuilt.
 
 ## 9. Provisional: written down but not settled
 
@@ -332,9 +392,17 @@ Treat these as swappable and do not let the code assume them.
 - **The win condition.** Most tokens wins is on the test list, not settled. Standing alternatives: a communal points
   pool, and a blind simultaneous "how heard did you feel" rating revealed together. **Make the win condition
   swappable when you structure the code.** Separate rather than communal purses is likewise for now.
-- **Clear conditions for Levels 1 to 3.** The docs have none: the build table's conditions assume a full match with
-  tokens live, which these levels are not. The code substitutes "complete every authored item" and clears regardless
-  of accuracy `[unratified]`. GAP: What exactly does clearing each of Levels 1, 2, and 3 require?
+- **Clear conditions for Levels 1 to 3. No longer provisional; ruled, and listed here only until this section is
+  re-sorted.** **A level clears when the player has been through every one of its
+  authored practice items, of both kinds: the ones that ask them to play the card, and the ones that ask them to
+  correct a mistake** `[ruled, Nathan]`. The build table's old conditions assumed a full match with tokens live,
+  which these levels are not, and they are superseded. This is close to what the gym already does, and closer than
+  "clears regardless of accuracy" makes it sound: nothing advances until the item is actually done, and a wrong
+  call, a wrong sort, an unedited prefill, or a one-character answer loops back to the same step `[unratified]`
+  (`engine.ts`). What clearing does not require is a score, and under this ruling it still does not. **The one hole
+  is the edit steps' three-attempt ceiling**, which lets a player who fails three times move on having never
+  corrected the mistake. That ceiling is already contradicted by the no-cap ruling in §7, and closing it there
+  closes this too.
 - **Whether the moderator is a participant in the group thread or an out-of-band UI layer.** The recommendation on
   record is participant, and taking it lowers the stakes of several other items.
 - **Whether the teaching drills run in the thread with the coach as a participant or on a separate exercise
@@ -368,7 +436,8 @@ of them, on what is true today, sits the code.**
 1. **Level numbering.** The build table uses a superseded eight-level scheme with the Full Showdown at 5 and the
    Final Showdown at 6. Build-table level N is current level N minus 1, for N from 2 to
    6. The clearest casualty is tokens, which that table says go live "from level 5" and which therefore go live at
-      current Level 4.
+      current Level 4. The current ladder is **six levels** (§6), which does not change the offset above: the Full
+      Showdown is still 4 and the Final Showdown still 5. `rules.md` has not been swept and still says five.
 2. **Boss names.** Vikram, Ottoline, Nils, Sofía in three docs; Victor, Olivia, Noemi, Sofia in the code. The code
    is right.
 3. **Tokens in the gym.** One doc says tokens are off in Levels 1 to 3, and another says no score, no token count,
@@ -377,17 +446,20 @@ of them, on what is true today, sits the code.**
    printed deck is whole tokens.
 5. **Retries and gating.** One doc says no retry, no red flash, no blocked path, the player still clears. The code
    gates every answering step and loops back on a wrong or empty answer, attributed to a later ruling. Direct
-   reversal.
+   reversal. Gating wins, and §7 now goes further: **retries are uncapped**, so the code's three-attempt ceilings
+   are wrong and not yet fixed.
 6. **Model calls in Levels 1 to 3.** One doc says model-free and calls that the strongest argument for the teaching
    order. The code makes model calls.
 7. **Screen count.** Ten in one doc, six in another, four in the code.
 8. **The voice seam.** Two docs say it exists. It does not.
-9. **Clear conditions for Levels 1 to 3.** An open question in one doc, answered de facto by the code.
+9. **Clear conditions for Levels 1 to 3.** Formerly an open question answered de facto by the code. Now ruled in
+   §9: through every authored practice item of both kinds.
 10. **The gym clock.** Docs settle no clock in the gym; print and live-human play carry 30 and 45 second timers.
     Compatible, but only if you keep the editions separate.
 11. **The newest doc's own placeholder** describes gym as three levels each with a miniboss, which may reframe the
     Full Showdown as Level 3's miniboss rather than a capstone, and proposes a further level where the player
-    moderates two AI players. Explicitly unintegrated.
+    moderates two AI players. The miniboss reframing is still unintegrated. The further level is no longer
+    speculative: it is **Level 6** (§6), it follows Level 5, and it is not fully designed.
 
 Where a newer source contradicts an older one the newer one probably wins, but **say so rather than silently
 choosing.** Every item above is a place where an implementer who quietly picked one reading would have shipped
