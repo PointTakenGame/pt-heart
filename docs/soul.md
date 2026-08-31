@@ -45,7 +45,7 @@ Affective polarization is reported as falling from a neutral 48 degrees in the 1
 today, outparty dislike now exceeding inparty affection. Both `[unratified]`; the citations are not
 in this repository.
 
-GAP: What is the source study and year for the 32%/6%, 38%/2%, and 48-to-20-degree figures, and are they cleared for player-facing or press-facing copy?
+GAP: (Steve) What is the source study and year for the 32%/6%, 38%/2%, and 48-to-20-degree figures, and are they cleared for player-facing or press-facing copy? Steve holds the source and has to locate it; until he does the figures stay `[unratified]` and stay out of anything a player or a journalist reads.
 
 ## 2. Lineage: deep canvassing
 
@@ -69,9 +69,21 @@ facilitator runs the moderator seat. The game is strictly **opt-in** `[ruled]`. 
 vulnerable person to sit down and educate someone hostile. If a session would function as that,
 Heart is the wrong tool, and every surface you build should make leaving cheap and unpunished.
 
-GAP: What is the youngest age Heart is designed for, and is there a classroom-specific variant of the moderator seat?
+**The youngest player Heart is designed for is 11, the start of middle school** `[ruled, Nathan;
+Steve's confirmation outstanding]`. That is a floor on the player, not a clearance on the subject:
+the opt-in rule above and the moderator's judgment still decide whether a particular room should be
+running a particular disagreement.
 
-GAP: When only two people are available, who moderates? Is a two-human game with an AI in the moderator seat a shipping configuration, or practice-only?
+GAP: (Steve) Is there a classroom-specific variant of the moderator seat, or does a facilitator simply take the ordinary third seat?
+
+**Two people can play** `[ruled, Nathan]`. In person, the two of them self-moderate for each other,
+each taking the referee's job on the other's turns. Online, the AI takes the referee seat. Both are
+real configurations rather than practice-only, and the online one is the only place besides solo
+practice where software sits in that seat: otherwise the AI referee exists so that a person playing
+alone has a second and third player, and live play with three humans never puts software there.
+Section 6 still binds the AI in the two-player online game. It may call something to the table's
+attention, and it may not decide over the wronged player's head that a foul happened, because the
+wronged player's answer is the only correct answer there is.
 
 ## 4. What a good session feels like
 
@@ -87,7 +99,10 @@ and consoles divergence. Informally, when players state points plainly they retr
 versions of their own arguments and find they already agree on roughly 75% to 80% of the underlying
 logic `[unratified]`.
 
-GAP: What is the intended session length for one online match, and is any time figure approved for player-facing or marketing copy?
+**One online match is intended to run about 15 minutes** `[ruled, Nathan]`, a design target rather
+than a measured result. The figure gets settled by playtesting later, so **no time figure is
+approved for player-facing or marketing copy yet** `[ruled, Nathan]`. Build to 15 minutes; print
+nothing about it.
 
 ## 5. Why humility rather than winning
 
@@ -248,18 +263,36 @@ charge.
 
 ## 11. The flow, as ruled
 
-Three rounds of listen-and-summarize, with the two speakers flipping roles inside each round; then
-one Final Showdown round, flipping once. The third player moderates the whole game. Most 🙏 tokens at
-the end wins, and roles swap between games. Timers: 30 seconds for the speaker, 45 seconds to
-summarize `[ruled]`. **The print flow is the same as the live-human flow** `[ruled]`, the constraint
-that keeps the web edition honest: if a web mechanic could not be performed by three people at a
-table with a printed deck, it is probably wrong.
+Three rounds of listen-and-summarize, with the two speakers flipping roles inside each round; then,
+optionally, one Final Showdown round, flipping once. The third player moderates the whole game. Most
+🙏 tokens at the end wins, and roles swap between games. Timers: 30 seconds for the speaker, 45
+seconds to summarize `[ruled]`. **The print flow is the same as the live-human flow** `[ruled]`, the
+constraint that keeps the web edition honest: if a web mechanic could not be performed by three
+people at a table with a printed deck, it is probably wrong.
 
-GAP: Do the 30-second and 45-second timers apply to typed play in the web edition, or only to spoken play? If they apply, what starts the summarize clock?
+GAP: (Steve) Do the 30-second and 45-second timers apply to typed play in the web edition, or only to spoken play? If they apply, what starts the summarize clock? There is no timer plan to read off; Steve has it or nobody does.
 
-GAP: The Final Showdown round is ruled but is not present in the current code (`game/src/content/showdown.ts` runs rounds 1 to 3 and then scores). What distinguishes the Final Showdown from an ordinary round: token stakes, card availability, timers, or something else?
+**The Final Showdown is an add-on, not a required round** `[ruled, Nathan]`. A game played without
+it is a whole game, not a truncated one. What sets it apart is not the economy: **token stakes, card
+availability, and the three fouls all stay exactly as they are in the ordinary rounds, and tokens
+carry straight over from the main game rather than resetting** `[ruled, Nathan]`. What it adds is
+its own three-step structure and rubric, the one-token humility bonus included. `rules.md` section 6
+is the home of those mechanics and `roadmap.md` section 6 carries the build. It is still absent from
+the current code, which runs rounds 1 to 3 and then scores.
 
-GAP: Can a player who reaches zero tokens recover, or is empty terminal in every mode? The code ends the match on empty (`game/src/content/showdown.ts:250`).
+**A player who reaches zero is not out** `[ruled, Nathan; Steve's confirmation outstanding]`. Tokens
+stop at zero and never go negative, and the player finishes the game from there. The reasoning fits
+this document: ejecting the player who fouled most removes the person with the most left to learn,
+and section 3 wants the exit to stay cheap for the player who wants one, not to be handed to the
+player who does not.
+
+**This reverses a standing ruling and has not been propagated anywhere.** The instant loss at zero
+is `[ruled]` in `rules.md` sections 1, 8, and 9, where it records a 2026-08-10 decision that
+considered softening the zero and refused. It is printed on page 1 of the deck, it is quoted twice
+in `script.md` sections 2 and 6, and the web edition ends the match on empty
+(`game/src/content/showdown.ts:250`). None of that has been changed. Steve has standing to overturn
+this, and the printed deck has to be reconciled with whichever way it lands, so it is escalated
+rather than quietly carried through the other documents.
 
 ## 12. The open tension, held open on purpose
 
@@ -276,7 +309,12 @@ did the speaker give a reason?" A real-time red button would be cleaner, but pre
 is disruptive and players will not want to interrupt. The review is a first-class feature, not a
 nice-to-have.
 
-GAP: Is the post-round listener review in scope for the current build, and is player consent for using that data already handled anywhere?
+**The post-round listener review is not in the current build** `[ruled, Nathan]`, and may be picked
+up later. That defers the instrument, not the tension: the paragraph above stands, the review stays
+a first-class feature of the design, and the Opinions-as-Facts question stays open because nothing
+in this build can settle it. The consent question is deferred with it rather than answered, and has
+to be settled before any version of the review ships. `roadmap.md` section 8 is the home of
+deferrals.
 
 ## 13. Things that cannot be carried into this repository
 
@@ -287,7 +325,11 @@ deck-content transcription that `game/src/content/cards.ts` cites in its header 
 paths are **not reachable from inside this repo**, so do not chase them; the corpus annotation files
 behind the foul design; and the deep-canvassing notes.
 
-GAP: `game/src/content/cards.ts` cites a v6 rules summary in one header comment and v7 card-anatomy in another. Which print version is the current design of record for card copy?
+**v7 is the design of record for card copy** `[ruled, Nathan]`: where two print generations
+disagree, the more recent one wins. Every other version citation in the code already points at v7,
+and the card copy itself was taken from v7 card-anatomy (`game/src/content/cards.ts:24`). The one
+stale citation is the file's opening header (`game/src/content/cards.ts:3`), which still names a v6
+rules summary. The comment has not been changed here.
 
 ## 14. Warning about the older design generation
 
