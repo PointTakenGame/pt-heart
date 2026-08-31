@@ -25,11 +25,14 @@ exist, what is printed on each, the deck's full text, and where the print
 masters live. Heart is a 3-player print/card game; this document does not
 apply to Brain, which has no cards.
 
-Status markers used throughout: `[ruled]` (Steve or a registry decision
-established it), `[unratified]` (present in deck files or code but never
-formally ruled, cited to `path/file:LINE`), `[vibecoded]` (invented in this
-document, always labeled inline), and `GAP: <question>` (a value this
-document refuses to invent).
+Status markers used throughout: `[ruled]` (Steve, Nathan, or a registry
+decision established it; anything that is not Steve's is attributed inline,
+and `[ruled, Nathan; Steve's confirmation outstanding]` marks a ruling that
+is answered and in force but still wants his sign-off), `[unratified]`
+(present in deck files or code but never formally ruled, cited to
+`path/file:LINE`), `[vibecoded]` (invented in this document, always labeled
+inline), and `GAP: <question>` (a value this document refuses to invent). A
+`GAP:` prefixed with a name is that person's to answer.
 
 ## 1. Deck inventory
 
@@ -186,11 +189,16 @@ balanced as written and needs no counterpart.
 
 Foul emoji: Fake Listening 🙃, Judging 😒, Opinions as Facts 🧐 on page
 1's summary row `[ruled, deck-content-v7.md:79-83]`. Player tokens in the
-XML: Player A 🧝‍♀️, Player B 🧝, Referee 🧙. `GAP: the PDF substitutes
-different rendered glyphs for these three codepoints (a font-substitution
-export effect); the print vendor should be told the intended codepoints
-and asked which glyph set the final print run should render, rather than
-this document guessing.` Penalty glyph is pray-hands 🙏 repeated per token
+XML: Player A 🧝‍♀️, Player B 🧝, Referee 🧙. The PDF substitutes
+different rendered glyphs for these three codepoints, a font-substitution
+export effect. **The XML codepoints above are the intended set, and the
+deck standardizes on them** `[ruled, Nathan]`: where the substituted glyph
+is a near match for the codepoint listed here, the codepoint wins and the
+substitution is not carried forward as a second variant. The print vendor
+is told these codepoints. The ruling covers near matches only. A
+substitution that is not recognizably the same figure is a separate
+question and goes back for a ruling rather than being standardized away.
+Penalty glyph is pray-hands 🙏 repeated per token
 cost, followed by an arrow and the recipient tokens, e.g. Judging's
 🙏🙏→🧝‍♀️/🧝.
 
@@ -200,7 +208,11 @@ Each player cuts one column of **one player token plus seven 🙏 tokens**
 `[ruled, deck-content-v7.md:679-707, matching page 1's "TAKE x7"]`. This
 corrects `card-anatomy.md`'s section A, which undercounts the cutout as
 "six" pray-hands per column; seven is the ruled count, drawn independently
-from both the token-cutout XML and the page 1 "x7" label.
+from both the token-cutout XML and the page 1 "x7" label, and confirmed
+against this document `[ruled, Nathan]`. `card-anatomy.md` is a design
+source living above the repo root, outside this repo, and it still reads
+"six". The count is wrong at source and is fixed there. It is not carried
+as a permanent exception here.
 
 Penalty economy: Judging costs 🙏🙏 (DOUBLE PENALTY), Opinions as Facts
 costs 🙏 (PENALTY), Fake Listening costs 🙏 x1 per missing major point
@@ -240,10 +252,15 @@ around a shared student-loan-forgiveness scenario: a follows-the-rules
 line, a humility-bonus line, and a naughty line (quoted in section 3's
 sibling material and in `deck-content-v7.md` lines 332-389). After Player
 A's three steps, roles switch and Player B runs the same three steps
-("3 Steps... (Now Player B)"). "Next game: Swap Roles!" appears with no
-further elaboration `GAP: what "Swap Roles" changes beyond the 🧝‍♀️↔🧙
-icon swap, and how many games make a session, is not stated anywhere in
-the deck.`
+("3 Steps... (Now Player B)").
+
+"Next game: Swap Roles!" replays the Final Showdown steps above with the
+players holding different roles, and changes nothing else `[ruled,
+Nathan]`. The deck deliberately does not restate the steps for the
+swapped order: the first run-through already describes how the Final
+Showdown works, and repeating identical information with the players
+reordered is duplication, not instruction. **One game makes a session**
+`[ruled, Nathan]`.
 
 ## 7. Sample topics and neutrality audit
 
@@ -285,9 +302,26 @@ which side across rounds, and the topic set as a whole spans hot-button
 issues from across the spectrum. `docs/design/scenario-cards.md`, an
 earlier, non-canonical design (section 10), self-flags comparable framing
 difficulty on individual cards, so this tilt was recognized before,
-without being resolved. `GAP: whether the sample-topic set's left-leaning
-framing tilt was a deliberate choice or an oversight has no recorded
-ruling.`
+without being resolved.
+
+**Ruling on the tilt** `[ruled, Nathan]`: it is a structural artifact of
+the prompt format, not an oversight and not an editorial thumb on the
+scale. Left-leaning positions usually involve adding something, a
+government policy, a law, a program, where right-leaning positions more
+often propose a hands-off approach. A prompt set written as "X should be
+Y" propositions therefore trends toward reading as the left-hand side of
+the argument, because the left-hand side is the one with a proposal in
+it. The tilt is a property of writing policy questions as propositions,
+and it is not cured by rewriting prompts into statements that no longer
+describe a policy.
+
+Of the twelve, **item 8 is the only one that could be stated from the
+other side and still directly describe the policy.** The proposed
+alternative wording is "Female sports should be restricted to biological
+females only." `GAP: (Steve) the exact wording of item 8. The general
+ruling above stands and is not waiting on him; only this one prompt's
+phrasing is.` If item 8 flips, the tally moves from 7 left, 3 right, 2
+cross-cutting to 6, 4, and 2.
 
 ## 8. Print production: dimensions, bleed, color
 
@@ -299,13 +333,18 @@ values `#D4520A` (header bars), `#0D1B2A` (top navy bar on pages 2-3, but
 pure black `#000000` on page 1, an inconsistency flagged in
 `card-anatomy.md` and not resolved).
 
-`GAP: no bleed value is stated anywhere in the source PDF, PPTX, or
-card-anatomy.md. Bleed, trim marks, and safe-area margins for an actual
-print run are unverified and must not be invented; a print vendor needs
-these specified fresh, not inferred from this document.`
+**Both gaps below are Steve's** `[ruled, Nathan]`. They are print-vendor
+questions rather than game-development questions, nothing in the web
+edition is blocked on either, and they sit outside the scope of the
+rulings in this document.
 
-`GAP: card stock, finish (matte/gloss), and print quantities are not
-recorded anywhere in the reviewed sources. Any number here would be
+`GAP: (Steve) no bleed value is stated anywhere in the source PDF, PPTX,
+or card-anatomy.md. Bleed, trim marks, and safe-area margins for an
+actual print run are unverified and must not be invented; a print vendor
+needs these specified fresh, not inferred from this document.`
+
+`GAP: (Steve) card stock, finish (matte/gloss), and print quantities are
+not recorded anywhere in the reviewed sources. Any number here would be
 invented and would cost real money if wrong; do not guess.`
 
 ## 9. Print masters not in this repo
