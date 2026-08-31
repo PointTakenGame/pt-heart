@@ -197,13 +197,12 @@ Three Level 4 constants that look like bugs and are not:
 - **The player should never type more than a sentence or two across an entire level** `[ruled]`, which is why the
   free-text `player_commits` mode is retired. Typed and spoken input are interchangeable.
 - **The coach is the moderator. No fourth party, no separate referee character** `[ruled]`. Code or docs implying
-  otherwise predate that ruling and are wrong. **This one is now in tension with §7 item 12**, which rules three
-  presented figures including a judge. The gym half reconciles cleanly: inside the gym the coach holds the judge
-  seat, which is a seat and not a fourth character, so nothing there gains a party. Outside the gym a judge that
-  presents as its own figure is exactly the separate referee character this bullet forbids. Both readings cannot
-  ship. `GAP: (Steve) does the no-separate-referee ruling still hold outside the gym, or is it narrowed to the gym
-  so that live play and Level 6 can present a judge of their own? Until this is answered, build no judge face; the
-  seat is real and ruled, the face is not.`
+  otherwise predate that ruling and are wrong. **This bullet governs live play, and there it stands unqualified**
+  `[ruled, Nathan]`. The judge figure of §7 item 12 is solo play only: a player alone needs the machine to fill the
+  second and third seats a table would otherwise have people in, one to argue and one to judge. Live play already
+  has the people, so it has no judge, and this bullet is not narrowed by anything. Inside the gym the coach holds
+  the judge seat itself, which is a seat and not a fourth character. The two rulings do not collide and Steve is
+  not needed here.
 - **Every stored flag records the prompt version that generated it.** The collected human rulings are the repo's
   most valuable asset and are worth far less if a prompt revision silently changes what the labels mean.
   Ground-truth precedence: wronged human's ruling, then speaker's tag, then spectator's.
@@ -235,17 +234,19 @@ whether it felt fairly described.
 across the first four training levels, **the coach holds the judge seat** `[ruled, Nathan]`. The judge is one of the
 three AI figures the player meets, and it presents as its own figure and not as the boss: see §7, item 12.
 
-How this sits with the soul doc, which is the only document that can veto a mechanic. The soul doc forbids software
-deciding that a foul happened and applying a penalty **without the wronged party's assent**. The Final Showdown's
-three steps score generosity positively, so nobody is being penalized over their own objection, and in solo play the
-party being summarized is the machine itself, so no human's assent is being routed around. In live play the human
-being summarized still rules on their own summary. Read that way the ruling and the soul doc do not collide.
-**Do not extend this ruling to fouls, to penalties, or to any seat where a human is the party who was possibly
-wronged.**
+**The judge exists in solo practice play and nowhere else** `[ruled, Nathan]`. It is there to fill a seat a live
+table fills with a person, so it adds no party a real game would not have had. Live play has no judge; the coach
+moderates and the wronged human rules, exactly as §5 says. Level 6 is the same principle pointed the other way:
+the human takes the referee seat and two AI agents play in front of them.
 
-GAP: (Steve) confirm the reading in the paragraph above, since it is the one place a ruling brushes against the
-machine-as-judge prohibition. If that prohibition is meant to cover positive scoring too, the solo-play judge seat
-needs a different answer and step 1 of §7 reopens.
+How this sits with the soul doc, which is the only document that can veto a mechanic. The soul doc forbids software
+deciding that a foul happened and applying a penalty **without the wronged party's assent**. Two independent things
+keep the judge clear of it. The Final Showdown's three steps score generosity positively, so nobody is penalized
+over an objection they were never asked for. And the judge only ever sits at a solo table, where the party being
+summarized is the machine, so there is no human assent to route around; the moment a real person could be the
+wronged party there is no judge in the room. **Do not extend this ruling to fouls, to penalties, or to any seat
+where a human is the party who was possibly wronged.** That constraint is what holds the two documents apart, and
+it is a boundary rather than a preference.
 
 **The ladder is six levels** `[ruled, Nathan; Steve's confirmation outstanding]`. Level 5 is the Final Showdown and
 follows the built Level 4 Full Showdown. **Level 5 teaches how to be generous.** Level 6 follows Level 5, and in it
@@ -264,9 +265,9 @@ Sequence and dependency only. No dates, at any confidence.
 
 **Before the Final Showdown can be built:**
 
-1. Nothing here waits on §6 any longer. The judge seat goes to a model in an explicit judge role, with the coach
-   holding it inside the gym, and the ladder is six levels with the Final Showdown at 5. Build the ladder UI to
-   six.
+1. Nothing here waits on §6 any longer. In solo play the judge seat goes to a model in an explicit judge role, with
+   the coach holding it inside the gym, and the ladder is six levels with the Final Showdown at 5. Build the
+   ladder UI to six.
 2. Author the three steps' content, matching the shape of `content/level3.ts` including the political balance ledger
    in the header.
 3. Build the positive-scoring path. Everything in `showdown.ts` moves tokens as penalties; nothing awards a bonus.
@@ -298,11 +299,12 @@ Sequence and dependency only. No dates, at any confidence.
 12. **The AI figures, and how many the player meets. Three** `[ruled, Nathan]`: the **coach**, who teaches the
     cards; the **bosses**, who play against the player; and the **judge**, who referees and awards. All three can
     run on the same code and hold the same knowledge of the game, but **they must present differently to the
-    player**. One engine, three faces, never one voice visibly wearing three hats. Inside the gym the coach also
-    holds the judge seat (§6), which is a seat, not a fourth figure. **Outside the gym this collides with §5's
-    no-separate-referee-character ruling and is parked there for Steve; build no judge face until that clears.** The
-    coach's own role still flips: in the gym it teaches and, in bosses, argues; in live play it stops arguing
-    entirely and only nominates. How much gym coach code survives is open.
+    player**. One engine, three faces, never one voice visibly wearing three hats. **The judge is solo play only**
+    (§6): it fills a seat a live table fills with a person, and inside the gym's four training levels the coach
+    holds that seat rather than a third face appearing at all. Live play meets the coach and the other human and
+    nothing else, which is why §5's no-separate-referee-character ruling is untouched. The coach's own role still
+    flips: in the gym it teaches and, in bosses, argues; in live play it stops arguing entirely and only nominates.
+    How much gym coach code survives is open.
 13. Spectator mode, after the two-human loop works, since there is nothing to spectate before then. The classroom is
     the strongest case.
 14. Voice, audio, video. The product target, not a nice-to-have, and last.
