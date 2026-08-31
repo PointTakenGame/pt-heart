@@ -30,10 +30,14 @@ sources:
 # HEART: script.md
 
 All paths below are relative to `point-taken-heart/`. Labels: `[ruled]` means Steve
-established it directly. `[unratified]` means it exists in code or a design doc but
-nobody ruled on it; cited as `path:LINE`. `[vibecoded]` means I wrote a placeholder
-because a slot exists but no copy does; flagged inline every time it occurs.
-`GAP: <question>` means I refused to invent and the question is open.
+established it directly. `[ruled, Nathan]` means Nathan established it; his rulings
+are attributed inline, because the bare marker means Steve. `[ruled, Nathan; Steve's
+confirmation outstanding]` is the same on a point Steve has standing to overturn.
+`[unratified]` means it exists in code or a design doc but nobody ruled on it; cited
+as `path:LINE`. `[vibecoded]` means I wrote a placeholder because a slot exists but
+no copy does; flagged inline every time it occurs. `GAP: <question>` means I refused
+to invent and the question is open, and a name in parentheses says whose answer it
+is. `cards.md`, `roadmap.md`, and `rules.md` carry the same vocabulary.
 
 ## 1. How to use this document
 
@@ -85,9 +89,12 @@ Moderator, assigning seats (deck's "HOW IT WORKS", `deck-content-v7.md:75-77`):
 Token setup (`deck-content-v7.md:83-96`, `content/showdown.ts:22` for the digital
 mirror of the same number):
 
-> Each of you takes seven pray-hands tokens. [vibecoded: "pray-hands tokens" is my
-> plain-English name for the 🙏 emoji token; the deck never names the emoji in
-> words, only shows it. GAP: what should a moderator call this token out loud.]
+> Each of you takes seven humility tokens. ["humility token" is what a moderator
+> calls the 🙏 emoji token out loud `[ruled, Nathan; Steve's confirmation
+> outstanding]`. The deck never names the emoji in words, only shows it, so this
+> name lives in the script and not yet on the card; the glyph is still described as
+> pray-hands in `cards.md` and `ui-components.md`, which describe the artwork
+> rather than the spoken word.]
 > Most tokens at the end wins. If either of you hits zero, that's an instant loss,
 > whatever round we're on.
 
@@ -277,8 +284,17 @@ Moderator, at the end of the Final Showdown round:
 > Count the tokens. Most tokens at the end wins. If either of you hit zero at any
 > point tonight, that was an instant loss, whatever round it happened in.
 
-`GAP: the deck does not state what happens on a tie.` No tiebreak rule appears
-anywhere in the v7 deck or the design docs read for this task.
+**Equal tokens at the end is a draw** `[ruled, Nathan]`. There is no tiebreak, and
+Final Showdown bonuses are not counted separately to break one; the game ends level
+and the moderator says so. `rules.md` section 1 is the home of that ruling. No
+tiebreak rule appears anywhere in the v7 deck or the design docs read for this task,
+so the ruling is its only source. The web edition already ends this way
+(`game/src/showdown.ts:517-522`) and has the line for it:
+
+> Dead even. Which, in this game, isn't a bad night.
+
+`[unratified]` (`game/src/content/showdown.ts:249`). Print has no closing line of
+its own for a draw; the moderator reads the count and the count is the result.
 
 ## 7. Coaching lines (gym)
 
