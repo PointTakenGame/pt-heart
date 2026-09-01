@@ -383,6 +383,11 @@ that gets built, not only a correction to the thing that is there.
 - **Post-match transcript review.** Live refereeing and post-match review are both in, not one or the other
   `[ruled]`: live trains reflex, post-game trains judgment. Both adversarial reviews wanted the live whistle cut
   wholesale and both were overruled.
+- **The post-round listener review**, the two questions put to the listener after each round about whether the
+  speaker was given a verdict and whether they gave a reason. **Not in the current build** `[ruled, Nathan]`, and it
+  may be picked up later. Distinct from the post-match transcript review above: this one runs inside the match, at
+  the round boundary. Deferring it does not close the Opinions-as-Facts tension it was meant to instrument, which
+  `soul.md` section 12 holds open, and player consent for using the data is deferred with it rather than settled.
 - **Audio retention policy.** Standing proposal: transcribe in stream, never persist audio, hold the transcript for
   the match only, discard unless the player opts to keep, disclose before the mic opens. Not decided. Blocks the
   moment Family Pack work starts.
