@@ -32,7 +32,7 @@ opponent named Sofia, with a coach character adjudicating the human's own calls.
 `App.tsx:77-79` states this outright in a comment: "The teal flow diagram is the
 tabletop procedure, which the app runs for the player. The referee panel has no
 counterpart: here you are the referee." `types.ts:3` confirms it from the other
-side: "the coach is still the only referee." There is no Player-3/moderator UI
+side: "the coach is still the only referee." There is no Player-3/Referee UI
 surface anywhere in the code. `[unratified: App.tsx:77-79, types.ts:3]` This
 document describes what exists, not what the print rules would imply exists.
 
@@ -173,7 +173,12 @@ call sites in App.tsx]`
 5. **Room**: `Drill.tsx` for the three training levels, `Thread.tsx` for the
    showdown. `RuleCards.tsx` pinned at the bottom throughout. `Header.tsx`
    pinned at the top once tokens are live (from level 1 on, per
-   `engine.ts:15`, not only in the showdown).
+   `engine.ts:15`, not only in the showdown). **This `Drill.tsx` stepper is
+   what's shipped today, not necessarily what ships next**: `game/docs/roadmap.md`
+   §7 rules a referee-format redesign for Levels 1-3 (human referees a
+   coach-vs-AI-opponent exchange rather than answering authored items
+   directly), scoped as an open GAP, not yet built or mapped onto this
+   component.
 6. **BossIntro**: shown once, before the showdown only, not before the three
    training levels.
 7. **Showdown match**: `Thread.tsx` running the fixed 12-turn script in
@@ -196,7 +201,7 @@ call sites in App.tsx]`
   running (icons rendered = tokens currently held, not a static printed sheet)
   and starts each side at seven, per `content/showdown.ts:22` (`START_TOKENS =
   7`). See section 6 below on the six-vs-seven discrepancy.
-- **The referee/moderator role** (physical Player 3) has no web component.
+- **The Referee role** (physical Player 3) has no web component.
   Per `App.tsx:78-79`, this is a deliberate omission, not a gap to fill.
 - **The turn-sequence flow diagram** (printed teal SPEAK -> GATE -> RESPOND
   loop) has no rendered on-screen diagram; the app runs the procedure for the

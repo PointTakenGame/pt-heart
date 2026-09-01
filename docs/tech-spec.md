@@ -120,8 +120,12 @@ separately in `content/showdown.ts` (section 5 below).
 There are two independent runners, not one state machine, and they are
 structurally different by design.
 
-**`useGym(level: LevelDef): Gym`, in `engine.ts`.** Drives training levels 1-3.
-Internally a flat array produced by walking each `Beat`'s `Step`s in order,
+**`useGym(level: LevelDef): Gym`, in `engine.ts`.** Drives training levels 1-3
+**as they ship today.** `game/docs/roadmap.md` §7 rules a referee-format
+redesign for these levels (the human referees a coach-vs-AI-opponent exchange
+rather than walking authored items directly); it is a scoped-but-unbuilt open
+GAP, not yet mapped onto this runner. Internally a flat array produced by
+walking each `Beat`'s `Step`s in order,
 with a `cursor` index that advances one step at a time. Each step type maps to
 one `ComposerState` and one scoring rule. `tooThin(value)` rejects too-short
 free text, replying with `THIN_REPLY`. `CARD_BEFORE_PAY_MS = 950` delays a card
@@ -394,16 +398,20 @@ Per the online-edition roadmap (`docs/design/online-edition-roadmap.md`), which
 describes intended architecture only, cross-checked against what section 4-11
 above confirm is actually in `game/`:
 
-- **A fifth level, the Final Showdown, with its own judge contract.** The
-  roadmap's five-level scheme reserves level 4 for "Full Showdown, all three
-  fouls, full token economy" (matches what `showdown.ts` implements) and a
-  *separate* level 5 for "Final Showdown: Super-Summary, What I Learned, Why We
-  Might Still Disagree," requiring a "Final Showdown judge" role the roadmap
-  states plainly "does not exist, and Level 5 structurally requires it."
-  `[unratified, docs/design/online-edition-roadmap.md:157-158, 426-432]` **Not
-  present in `game/` in any form**: no level 5, no judge role, no
-  Super-Summary code path. This is intended-but-unbuilt, not a discrepancy in
-  what already ships.
+- **The Final Showdown, unbuilt.** The source cited here is a superseded
+  five-level scheme (`docs/design/online-edition-roadmap.md:157-158, 426-432`)
+  reserving level 4 for "Full Showdown, all three fouls, full token economy"
+  (matches what `showdown.ts` implements) and a separate level 5 for "Final
+  Showdown: Super-Summary, What I Learned, Why We Might Still Disagree,"
+  requiring a "Final Showdown judge" role it says plainly "does not exist, and
+  Level 5 structurally requires it." `[unratified]` **Both the level count and
+  the judge role are stale.** `game/docs/roadmap.md` §6 (current, corrected
+  2026-08-31) rules the Final Showdown across three levels, 5-7, not one, and
+  rules that no judge role exists or will: 5 and 6 are referee-format (the
+  human referees a coach-vs-AI-opponent exchange), 7 is played for real like
+  Level 4. **Still not present in `game/` in any form**: no levels 5-7, no
+  judge role of any kind, no Super-Summary code path. This is
+  intended-but-unbuilt, not a discrepancy in what already ships.
 - **A "coach" as a distinct third role in the training levels' teaching
   exercises**, per the roadmap's original framing, is described as needing to
   be built; it has since shipped (`src/coach.ts`, `api/coach.ts`), which the
@@ -423,11 +431,14 @@ above confirm is actually in `game/`:
   typing indicator and transcript want token-by-token"). The current
   `api/coach.ts` returns a single complete JSON/text response per call; there
   is no streaming response handling anywhere in `coach.ts` or `api/coach.ts`.
-- **A 30-second turn clock and a formal `AWAITING_CONTEST` phase** (a
-  second-opinion contest mechanic for disputed calls) are both named in the
-  roadmap as designed-but-explicitly-deferred, not accidentally missing;
-  neither exists in `showdown.ts` or `engine.ts` today, consistent with the
-  roadmap's own framing.
+- **A 30-second turn clock**, named in the roadmap as designed-but-deferred for
+  live play, not accidentally missing; it does not exist in `showdown.ts` or
+  `engine.ts` today, consistent with the roadmap's own framing. **The formal
+  `AWAITING_CONTEST` phase this bullet used to pair it with is no longer
+  intended-but-unbuilt: it is retired outright** `[ruled]`, per a 2026-08-31
+  Steve/Nathan call recorded in `game/docs/roadmap.md` §8. AI foul flags route
+  only to the wronged party; the accused never sees one and never gets a vote,
+  so there is no second opinion to contest and no phase to build.
 - **The Family Pack (beats 7-8, four additional foul types)** is explicitly
   "designed, not being built" per the roadmap, and no trace of it (types,
   content, or UI) exists in `src/`.
