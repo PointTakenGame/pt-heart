@@ -1796,3 +1796,31 @@ p  { margin: 0 0 0.75rem; }
   border-bottom-color: var(--teal);
   background: var(--cream);
 }
+
+/* Live play: the block under the ladder, and the door screen. */
+.live-head { margin-top: 2rem; }
+.live-doors { display: flex; gap: 0.6rem; margin-top: 0.75rem; }
+.live-doors .btn { flex: 1; }
+
+.door-label { display: block; margin-top: 1.5rem; font-weight: 600; }
+.door-input {
+  width: 100%;
+  margin-top: 0.4rem;
+  font: inherit;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  background: var(--cream);
+  color: inherit;
+}
+.door-input:focus { outline: none; border-color: var(--teal); }
+.door-footer { margin-top: 0.5rem; font-style: italic; }
+/* The printed deck's twelve, and several of them run long. A column of full
+   sentences reads as a list to choose from; a wrapped pill row reads as tags. */
+.door-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 1rem 0 1.5rem;
+}
+.door-chips .chip { text-align: left; border-radius: var(--radius); }

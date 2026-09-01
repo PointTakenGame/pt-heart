@@ -147,10 +147,16 @@ four light / three mid / three dark and four men / four women / two neutral:
 | 9 | 👩🏾‍🦱 | woman, medium dark, curly |
 | 10 | 🧑🏿 | person, dark |
 
-Number 10 is the addition. Reuse `TILES` in `src/avatars.ts` and add the tenth
-there rather than opening a second list; the avatar picker lays out a 3x3 grid
-against gender and tone and will need a look if the source list grows, so the
-grid's slice stays the first nine.
+Number 10 is the addition. As built: `ROOM_PEOPLE` in `src/avatars.ts` names the
+nine picker tiles by reference and adds the tenth as its own literal, so
+`PLAYER_AVATARS` and the 3x3 grid are untouched. The grid lays itself out against
+gender and tone and would need a second look if `TILES` itself grew, which is
+the reason the tenth face lives beside that list rather than inside it.
+
+They are named. Live play has no boss, and `figureLine` writes a turn for a
+persona; "the opponent" is not one, so an unnamed slot argues like a paragraph.
+The names carry no position: which side a stranger takes is assigned at the door,
+and in player mode it is always the opposite of whatever the human picked.
 
 Coach Ray keeps his own face and is never drawn from this set.
 

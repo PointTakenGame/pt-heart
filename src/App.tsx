@@ -17,6 +17,9 @@ import { Mast } from './ui/Mast.tsx';
 import { useShowdown } from './showdown.ts';
 import { useReferee } from './referee.ts';
 import { useFinal } from './final.ts';
+import { useRoom, type Person } from './room.ts';
+import { LIVE_TOPICS, TOPIC_FOOTER, type Seat } from './content/room.ts';
+import { drawPeople } from './avatars.ts';
 import { REFEREE_LEVELS, type RefereeLevel } from './content/referee.ts';
 import { SHOWDOWN_PREFIGHT, SHOWDOWN_SLUG, SOFIA_EMOJI } from './content/showdown.ts';
 import {
@@ -36,7 +39,9 @@ type Screen =
   | { name: 'level'; level: LevelDef }
   | { name: 'showdown' }
   | { name: 'referee'; level: RefereeLevel }
-  | { name: 'final' };
+  | { name: 'final' }
+  | { name: 'door'; seat: Seat }
+  | { name: 'live'; seat: Seat; topic: string };
 
 export function App() {
   const seen = Object.keys(load().cleared).length > 0;
@@ -60,6 +65,26 @@ export function App() {
         onShowdown={() => setScreen({ name: 'showdown' })}
         onReferee={(level) => setScreen({ name: 'referee', level })}
         onFinal={() => setScreen({ name: 'final' })}
+        onLive={(seat) => setScreen({ name: 'door', seat })}
+      />
+    );
+  }
+  if (screen.name === 'door') {
+    return (
+      <Door
+        seat={screen.seat}
+        onEnter={(topic) => setScreen({ name: 'live', seat: screen.seat, topic })}
+        onExit={() => setScreen({ name: 'select' })}
+      />
+    );
+  }
+  if (screen.name === 'live') {
+    return (
+      <LiveRoom
+        seat={screen.seat}
+        topic={screen.topic}
+        avatar={avatar}
+        onExit={() => setScreen({ name: 'select' })}
       />
     );
   }
@@ -180,6 +205,7 @@ function Select({
   onShowdown,
   onReferee,
   onFinal,
+  onLive,
 }: {
   avatar: string;
   onAvatar: (emoji: string) => void;
@@ -187,6 +213,7 @@ function Select({
   onShowdown: () => void;
   onReferee: (l: RefereeLevel) => void;
   onFinal: () => void;
+  onLive: (seat: Seat) => void;
 }) {
   // Two screens, not one. Steve, 2026-08-25: "Let them choose their fighter. And
   // then hit done and then show the levels. Don't show them both at once." So
@@ -239,6 +266,7 @@ function Select({
   // one before it taught, and the showdown assumes all three.
   const cleared = LEVELS.map((l) => isCleared(l.slug));
   const allCleared = cleared.every(Boolean);
+  const liveOpen = allCleared && isCleared(SHOWDOWN_SLUG);
 
   return (
     <div className="page page-narrow">
@@ -346,6 +374,25 @@ function Select({
           })()}
         </li>
       </ul>
+
+      {/* Live play. Roadmap section 7: it unlocks on Levels 1 to 3 plus the Full
+          Showdown, and Levels 5 to 7 are not part of that gate. The gate is a
+          localStorage read and that is fine here: the hole it leaves open needs
+          a second human to exploit, and there is not one yet. */}
+      <h2 className="live-head">Live play</h2>
+      <p className="muted">
+        {liveOpen
+          ? 'A real disagreement, three seats, no lesson. Pick which one you are in.'
+          : 'Clear the first three levels and the Showdown, then the room opens.'}
+      </p>
+      <div className="live-doors">
+        <button className="btn btn-wide" disabled={!liveOpen} onClick={() => onLive('player')}>
+          Play a round
+        </button>
+        <button className="btn btn-wide" disabled={!liveOpen} onClick={() => onLive('referee')}>
+          Referee a round
+        </button>
+      </div>
     </div>
   );
 }
@@ -630,6 +677,141 @@ function FinalRun({ avatar, onExit }: { avatar: string; onExit: () => void }) {
         live={liveCards(match.composer.kind, call?.callable)}
         onCall={(f) => match.submit(f, [])}
         pass={call ? { label: call.pass.label, onPass: () => match.submit(call.pass.value, []) } : undefined}
+      />
+    </div>
+  );
+}
+
+/** The door to a live room: which seat, and what the argument is about. */
+function Door({
+  seat,
+  onEnter,
+  onExit,
+}: {
+  seat: Seat;
+  onEnter: (topic: string) => void;
+  onExit: () => void;
+}) {
+  const [topic, setTopic] = useState('');
+  const ready = topic.trim().length >= 3;
+
+  return (
+    <div className="page page-narrow">
+      <Mast
+        slim
+        right={
+          <button className="link" onClick={onExit}>
+            Back
+          </button>
+        }
+      />
+      <h1>{seat === 'player' ? 'Play a round' : 'Referee a round'}</h1>
+      <p className="muted">
+        {seat === 'player'
+          ? 'You argue one side. Somebody takes the other. Ray watches your turns.'
+          : 'Two people argue. You call what you see, and the one who got hit decides.'}
+      </p>
+
+      <label className="door-label" htmlFor="live-topic">
+        What is the disagreement?
+      </label>
+      <input
+        id="live-topic"
+        className="door-input"
+        value={topic}
+        placeholder="name the thing you two disagree about"
+        onChange={(e) => setTopic(e.target.value)}
+      />
+      <p className="muted door-footer">{TOPIC_FOOTER}</p>
+
+      <div className="door-chips">
+        {LIVE_TOPICS.map((t) => (
+          <button key={t} className="chip" onClick={() => setTopic(t)}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      <button className="btn btn-wide" disabled={!ready} onClick={() => onEnter(topic.trim())}>
+        {seat === 'player' ? 'Get in the room' : 'Take the whistle'}
+      </button>
+    </div>
+  );
+}
+
+function LiveRoom({
+  seat,
+  topic,
+  avatar,
+  onExit,
+}: {
+  seat: Seat;
+  topic: string;
+  avatar: string;
+  onExit: () => void;
+}) {
+  // Drawn once, before the match script starts, so the header and the thread
+  // have faces to render from the first frame. The human's own avatar is passed
+  // in as taken, so no seat in the room ever wears the face the player wears.
+  const [people] = useState<Person[]>(() => drawPeople(seat === 'referee' ? 2 : 1, [avatar]));
+  const a = people[0];
+  const b = seat === 'referee' ? people[1] : null;
+
+  const run = useRoom({ seat, topic, avatar, a, b });
+  const thread = useRef<ThreadHandle>(null);
+  const land = useCallback(() => {
+    thread.current?.land();
+  }, []);
+  useLayoutEffect(land, [run.finished, land]);
+
+  const call = run.composer.kind === 'call' ? run.composer : null;
+  const left = seat === 'referee' ? a : { name: 'You', emoji: avatar };
+  const right = seat === 'referee' ? (b as Person) : a;
+
+  return (
+    <div className="page page-level">
+      <Mast
+        slim
+        right={
+          <button className="link" onClick={onExit}>
+            Leave
+          </button>
+        }
+      />
+      <Header
+        title={seat === 'player' ? 'Live round' : 'You have the whistle'}
+        teaches={topic.length > 64 ? `${topic.slice(0, 61)}...` : topic}
+        beatName={run.phase}
+        purses={{
+          player: run.nearTokens,
+          opponent: run.farTokens,
+          opponentLabel: right.name.toLowerCase(),
+          opponentEmoji: right.emoji,
+          playerEmoji: left.emoji,
+          playerLabel: left.name.toLowerCase(),
+        }}
+      />
+      <Thread
+        ref={thread}
+        messages={run.messages}
+        avatars={{ coach: COACH_EMOJI, opponent: right.emoji, player: left.emoji }}
+        waiting={run.waiting}
+        onSkip={run.skip}
+      />
+      {run.finished ? (
+        <div className="composer">
+          <button className="btn btn-wide" onClick={onExit}>
+            Back to the gym
+          </button>
+        </div>
+      ) : (
+        <Composer state={run.composer} onSubmit={run.submit} onResize={land} />
+      )}
+      <RuleCards
+        enabled={CARD_ORDER}
+        live={liveCards(run.composer.kind, call?.callable)}
+        onCall={(f) => run.submit(f)}
+        pass={call ? { label: call.pass.label, onPass: () => run.submit(call.pass.value) } : undefined}
       />
     </div>
   );

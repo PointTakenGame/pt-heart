@@ -115,7 +115,7 @@ export interface Match {
  *
  * Both are deliberately reluctant. A coach with no model should under-call.
  */
-function offlineRuling(kind: 'speak' | 'summarize', text: string): FoulType | null {
+export function offlineRuling(kind: 'speak' | 'summarize', text: string): FoulType | null {
   if (kind === 'summarize') {
     // The phrase detectors run first, before the structural check. A summary
     // that judges the other person is a Judging foul at two tokens, not a Fake

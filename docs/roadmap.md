@@ -96,15 +96,28 @@ so a double invoke emits every line twice.
   `Revision` history, an eight-member `Step` union, `Beat`, `PrefightStep`, `LevelDef`.
 - `engine.ts` (530) `useGym`, the drill runner walking authored steps. `showdown.ts` (549) `useShowdown`, one async
   function that awaits the player, Level 4's runner. `referee.ts` `useReferee`, Levels 5 and 6. `final.ts`
-  `useFinal`, Level 7. Four runners, three patterns: authored drill, human-as-disputant, human-as-referee.
+  `useFinal`, Level 7. `room.ts` `useRoom`, live play in both seats. Five runners, three patterns: authored drill,
+  human-as-disputant, human-as-referee. Live play adds no fourth pattern; it is the same two play patterns with the
+  authored level removed and a typed topic in its place.
 - `detectors.ts` (234) phrase rules: Judging and Opinions as Facts are callable with no model call at all, Fake
   Listening needs one call per summary. `coach.ts` (129) client side of the model calls. `storage.ts` (135)
   `localStorage` under `humility-showdown.v1` `[unratified]`, browser only, no account and no server persistence.
 - `content/`: `cards.ts` (266), `level1.ts` (218), `level2.ts` (271), `level3.ts` (180), `showdown.ts` (288),
   `index.ts` (14). `ui/` ten components. `App.tsx` (525) screens and room.
 
-**Six screens exist** (2026-08-31), not the ten one doc inventories: `agreement`, `select`, `level`, `showdown`,
-`referee`, `final`. `select` is two steps, choose-your-fighter then the ladder, never both at once `[ruled]`.
+**Eight screens exist** (2026-08-31), not the ten one doc inventories: `agreement`, `select`, `level`, `showdown`,
+`referee`, `final`, plus live play's `door` and `live`. `select` is two steps, choose-your-fighter then the ladder,
+never both at once `[ruled]`.
+
+**Live play is built in both single-browser seats** (2026-08-31), against the spec at `docs/live-play.md`
+(`HEART-T260831-17`). The human either argues while an AI stranger takes the other side, or holds the whistle while
+two AI strangers argue. Neither shape needs pairing, transport, or session state, which is why they exist before
+item 11 below does. Human versus human is untouched and still item 11. Four things about it are open and filed as
+rows rather than settled here: the label on the third seat (`HEART-T260831-18`), how stances are assigned in
+referee mode (`-19`), the foul rate (`-20`), and the clock, which is knowingly unshipped against Nathan's ruling
+(`-21`). A fifth, `HEART-T260831-22`, is the consequence of §5's wronged-party rule in a room with no answer key:
+the human's foul call on an AI stranger is the ruling, so it is unappealable, and there is no fix that does not
+break §5.
 
 **All seven ladder levels are built and playable** (2026-08-31). `content/index.ts`'s `LEVELS` array still holds
 only the three authored drill levels; the other four are separate screens keyed off their own slugs, because they
