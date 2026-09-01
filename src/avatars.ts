@@ -46,6 +46,44 @@ export const PLAYER_AVATARS = TILES.map((t) => t.emoji);
 // change along with the list order.
 export const DEFAULT_AVATAR = PLAYER_AVATARS[6];
 
+/** The ten strangers a live room can seat, and the one place in this build where
+ *  a face carries a name.
+ *
+ *  Steve's brief of 2026-08-31: "we pick one random emoji from a set of ten that
+ *  you curate." These are the nine picker tiles plus a tenth, which puts the
+ *  darkest tone back in circulation after the 2026-08-25 trim took it out of the
+ *  picker, and lands the set on four light, three mid, three dark and four men,
+ *  four women, two neither.
+ *
+ *  They are named because live play has no boss. `figureLine` writes a turn for a
+ *  persona, and "the opponent" is not a persona; a stranger with a first name
+ *  argues like a person and an unnamed slot argues like a paragraph. The names
+ *  carry no position: which side a stranger takes is assigned at the door, and in
+ *  player mode it is always the opposite of whatever the human picked. */
+export const ROOM_PEOPLE: { name: string; emoji: string }[] = [
+  { name: 'Peter', emoji: TILES[0].emoji },
+  { name: 'Hannah', emoji: TILES[1].emoji },
+  { name: 'Kyle', emoji: TILES[2].emoji },
+  { name: 'Bridget', emoji: TILES[3].emoji },
+  { name: 'Rosa', emoji: TILES[4].emoji },
+  { name: 'Andre', emoji: TILES[5].emoji },
+  { name: 'Robin', emoji: TILES[6].emoji },
+  { name: 'Terrence', emoji: TILES[7].emoji },
+  { name: 'Nia', emoji: TILES[8].emoji },
+  { name: 'Sam', emoji: '\u{1F9D1}\u{1F3FF}' }, // person, dark
+];
+
+/** Draw `n` distinct strangers, skipping any face already in the room. Two seats
+ *  wearing one face is the failure this exists to prevent. */
+export function drawPeople(n: number, taken: string[]): { name: string; emoji: string }[] {
+  const pool = ROOM_PEOPLE.filter((p) => !taken.includes(p.emoji));
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, n);
+}
+
 /** The picker deals the tiles in a different order every time it opens.
  *
  *  Steve, 2026-08-25: "randomize the fighter emojis choice locations." A fixed
