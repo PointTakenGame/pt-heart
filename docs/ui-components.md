@@ -200,7 +200,9 @@ call sites in App.tsx]`
   correspond to `Header.tsx`'s purse icons. The web purse is dynamic and
   running (icons rendered = tokens currently held, not a static printed sheet)
   and starts each side at seven, per `content/showdown.ts:22` (`START_TOKENS =
-  7`). See section 6 below on the six-vs-seven discrepancy.
+  7`). The print deck disagrees with itself on this count; see `rules.md:46`
+  (`card-anatomy.md` section B.3 says six per column, that is a known error,
+  `HEART-T260827-03`, and the ruled/correct count is seven).
 - **The Referee role** (physical Player 3) has no web component.
   Per `App.tsx:78-79`, this is a deliberate omission, not a gap to fill.
 - **The turn-sequence flow diagram** (printed teal SPEAK -> GATE -> RESPOND

@@ -256,11 +256,14 @@ levels, or plays against the player directly in Levels 4 and 7). In referee-form
 holds the referee role that a fourth AI party would otherwise have to simulate. §7 item 12's old three-AI-figures
 framing is retired along with it.
 
-GAP: (unresolved by the call) **who affirms the Super-Summary and Why-We-Might-Still-Disagree bonuses when the
-human plays Level 7 solo**, with no second human at the table. The call resolved foul-flagging architecture (the
-accused never sees a flag; only the wronged party rules, §5, §8) but did not address bonus-awarding, which is a
-different kind of call: crediting generosity rather than penalizing a foul. Do not default to reviving the retired
-judge persona to answer this; ask Steve directly before building Level 7's bonus logic.
+`[ruled]` **Who affirms the Super-Summary and Why-We-Might-Still-Disagree bonuses in solo Level 7 play**, with no
+second human at the table: the same suggest-then-let-the-affected-party-decide architecture that governs every
+AI-suggested foul call (§5, §8) governs bonus-awarding too, even though a bonus moves points toward a player rather
+than penalizing a foul. The AI nominates/suggests the bonus; the potential offendee makes the final call, whether
+points are being transferred or credited. In solo Level 7 play there's no second human to be that offendee, so the
+AI boss itself renders the ruling, an experience-based judgment, exactly as it already renders rulings on the
+human's own foul calls in Levels 4 and 7 today. Still a `GAP:` to build (no bonus logic exists yet), but the
+architecture question is closed.
 
 ## 7. Order of work
 
