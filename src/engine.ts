@@ -23,7 +23,7 @@ import { judgeEdit, restate } from './coach.ts';
 import { markCleared, recordItem } from './storage.ts';
 import { BEAT_GAP, dwellMs } from './pacing.ts';
 import { CARDS } from './content/cards.ts';
-import { START_TOKENS } from './content/showdown.ts';
+import { foulCost, START_TOKENS } from './content/showdown.ts';
 import { crowdRow } from './avatars.ts';
 
 function isItem(step: Step): boolean {
@@ -341,7 +341,10 @@ export function useGym(level: LevelDef): Gym {
         advance();
       };
 
-      /** A wrong answer costs one token, once, however many tries it then takes. */
+      /** A wrong answer costs one token, once, however many tries it then takes.
+       *  Flat, and deliberately not foulCost(): this is a drill penalty for
+       *  misreading a line, not payment for a foul someone committed, and the
+       *  authored coach copy says "costs you one" out loud. */
       const chargeMiss = () => {
         if (paidThisItem.current) return;
         paidThisItem.current = true;
@@ -383,7 +386,7 @@ export function useGym(level: LevelDef): Gym {
             const clean = attempts.current === 0;
             after(CARD_BEFORE_PAY_MS, () => {
               push({ lane: 'coach', text: step.onCall });
-              if (clean) transfer('opponent', 1);
+              if (clean) transfer('opponent', foulCost(step.rule));
               settle();
             });
             return;
