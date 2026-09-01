@@ -186,6 +186,7 @@ export function useReferee(level: RefereeLevel, avatar: string): RefereeRun {
           turn.kind,
           turn.foul,
           turn.fallback,
+          turn.frame,
         );
         if (isRay) lastRay = out.text;
         else lastFigure = out.text;

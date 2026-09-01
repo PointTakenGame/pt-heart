@@ -35,6 +35,52 @@ const RULES: Record<string, string> = {
     'Fake Listening: summarizing without the because, or without inviting a correction. Agreeable noise that skips the check.',
 };
 
+// Naming a foul is not the same as being able to commit one. Told only "commit
+// Fake Listening", the model reliably produced a warm, accurate, complete
+// restatement: it knows the foul is bad and will not do it. Found in the first
+// referee playthrough, 2026-08-31, where the scheduled foul simply did not
+// appear and the referee was scored on a turn that had nothing in it.
+//
+// So a scheduled foul now ships with the physical move, in the imperative. Not
+// what the foul is, what to actually type.
+const COMMIT: Record<string, string> = {
+  judging:
+    'Say what is going on inside them. Use one of these, or something just like it: ' +
+    '"you\'re basically saying...", "you only care about...", "you don\'t really believe...". ' +
+    'Attribute a motive or a character trait to them that they did not claim. Stay warm ' +
+    'while you do it. This is the foul, so it must actually be in your line.',
+  opinion_as_fact:
+    'State the contested part of your position as though it were settled and obvious. Use ' +
+    'one of these, or something just like it: "the fact is...", "obviously...", "everyone ' +
+    'knows...", "the real problem is...". No "I think", no "in my head", no reason attached ' +
+    'to the contested claim. This is the foul, so it must actually be in your line.',
+  fake_listening:
+    'Summarize them, and BREAK the summary in a way they would notice. Drop their reason ' +
+    'entirely, or keep the reason and quietly swap their conclusion for a weaker one, or ' +
+    'reduce a two-part point to the half that suits you. Then stop, with no "did I get ' +
+    'that right?" and no opening for them to correct you. Warm and agreeable in tone, ' +
+    'materially incomplete in content. An accurate, complete restatement is NOT this foul ' +
+    'and fails the turn. This is the foul, so it must actually be in your line.',
+};
+
+// What the wronged party checks their own gut against. Straight off the printed
+// cards' smoke alarm column, because that is what a human at the table has in
+// front of them when they decide whether to accept a call.
+const MARKERS: Record<string, string> = {
+  judging:
+    'Did they tell you what you think, what you want, or what kind of person you are? ' +
+    '"You\'re basically saying...", "you only care about...", "you don\'t really believe...", ' +
+    'or a trait pinned on you. Naming your argument is fine. Naming your character is not.',
+  opinion_as_fact:
+    'Did they hand you a contested claim as though it were settled? "Obviously...", "the ' +
+    'fact is...", "everyone knows...", "the real problem is...", with no "I think" and no ' +
+    'reason under it. A claim they owned, or backed with a reason, is fine.',
+  fake_listening:
+    'Did their summary lose something you actually said? A dropped reason, your point ' +
+    'shrunk to the convenient half, your conclusion swapped for a weaker one, or no opening ' +
+    'for you to correct them. If they got you right and checked, that is real listening.',
+};
+
 const PROMPTS = {
   restate_perfect: (t: string) =>
     `A player in a listening drill just said this:\n\n"${t}"\n\n` +
@@ -125,22 +171,32 @@ const PROMPTS = {
     lastLine: string,
     kind: string,
     foul: string,
+    frame: string,
   ) =>
     `You are ${persona}, a character in a game about disagreeing well. ` +
     `The topic is: ${topic}\n\nYour side of it: ${stance}\n\n` +
     (lastLine
       ? `The person you are talking with just said:\n\n"${lastLine}"\n\n`
       : `You are opening the exchange.\n\n`) +
-    (kind === 'summarize'
-      ? `This is a SUMMARIZING turn. Restate what they just said back to them. Do not rebut yet.\n\n`
-      : `This is a SPEAKING turn. Argue your side in two or three sentences.\n\n`) +
+    // The move for this turn, when the level has one. Levels 5 and 6 are about a
+    // specific step of the showdown, and without this the model just argues: the
+    // coach announces "watch what he says he learned" and the figure says nothing
+    // about learning anything.
+    (frame
+      ? `WHAT THIS TURN IS. ${frame}\nDo this. It is the whole point of the turn, and the ` +
+        `referee has been told to watch for it.\n\n`
+      : kind === 'summarize'
+        ? `This is a SUMMARIZING turn. Restate what they just said back to them. Do not rebut yet.\n\n`
+        : `This is a SPEAKING turn. Argue your side in two or three sentences.\n\n`) +
     (foul === 'clean'
       ? `Play this turn completely clean. No verdicts on the person, no opinion stated as ` +
         `settled fact, and if you are summarizing, keep their reason and end by checking that ` +
         `you got it right.`
-      : `Commit exactly one foul, mildly, so that an alert referee could catch it and a ` +
-        `distracted one would not:\n${RULES[foul]}\nEverything else about the turn should be ` +
-        `reasonable and in good faith. Do not be a cartoon.`) +
+      : `Commit exactly one foul, and commit it for real:\n${RULES[foul]}\n` +
+        `HOW TO COMMIT IT: ${COMMIT[foul] ?? ''}\n` +
+        `Keep it mild enough that a distracted referee would miss it. Everything else about ` +
+        `the turn should be reasonable and in good faith. Do not be a cartoon, and do not ` +
+        `apologize for it or flag it.`) +
     `\n\nReply with your line only. No preamble, no quotation marks, no stage directions.`,
 
   // The heart of the referee format, and of section 6 of the soul doc: the
@@ -152,11 +208,20 @@ const PROMPTS = {
     `You are ${persona}, a character in a game about disagreeing well. ` +
     `The person you are arguing with just said this to you:\n\n"${line}"\n\n` +
     `The referee stopped play and called it ${RULES[foul] ?? foul}\n\n` +
-    `You decide, for yourself, in character: did that land on you that way? Not whether the ` +
-    `label is technically right, and not whether they had a point. Only whether you felt it. ` +
-    `You are a reasonable person who is not looking to be offended and not pretending to be ` +
-    `fine either. If it genuinely stung or talked down to you, say so. If it was just blunt ` +
-    `disagreement you can take, wave it off.\n\n` +
+    // The markers are here so the character knows what to check itself against.
+    // Without them the model waved off lines that opened "you're basically saying
+    // poor people are just selfish", which is the foul in its purest form, and a
+    // player who calls it correctly should not be told they were wrong.
+    // Section 6 is untouched: this still decides nothing. It hands the character
+    // the same smoke alarm the printed card hands a human, and the character
+    // still answers for itself.
+    `Read their line again and look for this specific move:\n${MARKERS[foul] ?? ''}\n\n` +
+    `Now decide, for yourself, in character. If that move is in their line, it landed on ` +
+    `you: say so, even if they also made a fair point, and even if they were pleasant about ` +
+    `it. The point of this game is that a good argument does not buy you the foul. If the ` +
+    `move is genuinely not in their line, wave the call off, and wave it off plainly: blunt ` +
+    `disagreement is not a foul, a hard fact you did not enjoy hearing is not a foul, and ` +
+    `you are not looking for reasons to be offended.\n\n` +
     `Reply with strict JSON and nothing else: {"upheld": true|false, "text": "one sentence, ` +
     `in your own voice, saying whether it landed"}.`,
 
@@ -286,6 +351,7 @@ export default async function handler(req: Request): Promise<Response> {
       String(body.lastLine ?? '').slice(0, 1200),
       String(body.kind ?? 'speak'),
       String(body.foul ?? 'clean'),
+      String(body.frame ?? '').slice(0, 400),
     );
   } else if (task === 'affirm_call') {
     prompt = PROMPTS.affirm_call(

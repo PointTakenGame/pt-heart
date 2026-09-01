@@ -148,6 +148,8 @@ export async function figureLine(
   kind: 'speak' | 'summarize',
   foul: FoulType | null,
   fallback: string,
+  /** the showdown step this turn is, when the level is drilling one */
+  frame?: string,
 ): Promise<{ text: string; fromModel: boolean }> {
   const out = await callCoach({
     task: 'figure_line',
@@ -157,6 +159,7 @@ export async function figureLine(
     lastLine,
     kind,
     foul: foul ?? 'clean',
+    frame: frame ?? '',
   });
   const text = typeof out?.text === 'string' ? out.text.trim() : '';
   if (!text) return { text: fallback, fromModel: false };

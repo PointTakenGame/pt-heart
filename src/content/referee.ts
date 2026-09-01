@@ -40,6 +40,17 @@ export interface RefTurn {
   foul: FoulType | null;
   /** used verbatim when the model is unreachable */
   fallback: string;
+  /**
+   * The showdown step this turn is, in the imperative, addressed to the figure.
+   *
+   * These two levels each drill one step of the Final Showdown, and a turn told
+   * only "argue your side" produces another round of argument instead. The first
+   * playthrough had Ray announce "watch what he says he learned" over a line
+   * that mentioned no learning at all. Set this on every turn the coach's intro
+   * promises something specific, or the intro writes a cheque the turn does not
+   * cash.
+   */
+  frame?: string;
   /** the coach narrates before this turn, out of the ring */
   intro?: string;
 }
@@ -67,6 +78,21 @@ export interface RefereeLevel {
  *  referee holds no purse: the tokens on the table belong to the two people
  *  arguing, and the third seat has never had one in the printed game either. */
 export const REF_PASS_MARK = 0.6;
+
+// The two Final Showdown steps these levels drill, written as instructions to
+// whoever is speaking. Shared between the figure's turn and Ray's turn at the
+// same step on purpose: the referee is comparing two attempts at one thing, and
+// they have to be attempts at the same thing.
+const WHAT_I_LEARNED =
+  'This is the What I Learned step of the showdown. Do not argue your side again. Say what ' +
+  'you took away from what they just told you, out loud, and name the specific thing of ' +
+  'theirs that moved you. Open with something like "What I learned here is".';
+
+const WHY_WE_DISAGREE =
+  'This is the Why We Might Still Disagree step of the showdown. Do not argue your side ' +
+  'again. Say why you think THEY hold their position, in terms they would accept and ' +
+  'recognize: the value underneath it, the experience behind it. Open with something like ' +
+  '"I think we still land in different places because".';
 
 const RAY = COACH_NAME;
 
@@ -156,6 +182,7 @@ const LEVEL_5: RefereeLevel = {
       kind: 'speak',
       foul: 'judging',
       intro: 'This is the step. Watch what he says he learned.',
+      frame: WHAT_I_LEARNED,
       fallback:
         'I learned something here, honestly. I learned that you have never had to think ' +
         'about where the money actually comes from.',
@@ -166,6 +193,7 @@ const LEVEL_5: RefereeLevel = {
       kind: 'speak',
       foul: null,
       intro: 'My turn at the same step. Same question, and you tell me if I clear it.',
+      frame: WHAT_I_LEARNED,
       fallback:
         'What I learned is that the fairness part is real and I was treating it like a ' +
         'talking point. I changed my mind on the across-the-board version of this.',
@@ -266,6 +294,7 @@ const LEVEL_6: RefereeLevel = {
       kind: 'speak',
       foul: 'judging',
       intro: 'Now the last step. Why does he think I think what I think.',
+      frame: WHY_WE_DISAGREE,
       fallback:
         'You think that because deep down you have never lived near one of these things and ' +
         'you do not have to care what happens to the people who do.',
@@ -276,6 +305,7 @@ const LEVEL_6: RefereeLevel = {
       kind: 'speak',
       foul: null,
       intro: 'My turn at it. Same step. Hold me to the same bar.',
+      frame: WHY_WE_DISAGREE,
       fallback:
         'You think that because you value not handing our grandkids a problem they did not ' +
         'agree to. That is a real thing to want and I am not going to pretend it is not.',
@@ -286,6 +316,7 @@ const LEVEL_6: RefereeLevel = {
       kind: 'speak',
       foul: null,
       intro: 'He gets another swing at it. Careful here.',
+      frame: WHY_WE_DISAGREE,
       fallback:
         'Fine. You think that because you value keeping the lights on for people who cannot ' +
         'afford an outage, and I will grant that matters.',
