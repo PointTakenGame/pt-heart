@@ -26,6 +26,7 @@ import { crowdRow } from './avatars.ts';
 import { affirmStep, judgeTurn, opponentLine } from './coach.ts';
 import { THIN_REPLY, tooThin } from './engine.ts';
 import { markCleared, recordItem } from './storage.ts';
+import { offlineRuling } from './showdown.ts';
 import { RULE_LABEL, START_TOKENS, foulCost } from './content/showdown.ts';
 import {
   ARGUMENT,
@@ -216,6 +217,30 @@ export function useFinal(): FinalMatch {
       setComposer({ kind: 'locked' });
     };
 
+    /**
+     * An empty purse ends the match, the same way it does in Level 4. This level
+     * shipped without the check and it was reachable: false calls, judged fouls,
+     * and three naughty verdicts can take the player past seven, and the match
+     * carried on with a 0 to 14 ledger and no bankruptcy line.
+     *
+     * His side is reachable too, unlike Sofia's, and only one way: the bonus
+     * column. He never fouls, so nothing the player catches can drain him. Three
+     * bonuses at one token each cannot empty him from seven either, so today it
+     * is unreachable in practice. It is here because BONUS is a constant someone
+     * will raise, and the day they do, the win has to end the match.
+     */
+    const bankruptCheck = async (): Promise<boolean> => {
+      if (purse.current.player <= 0) {
+        await end('loss', FINAL_COACH.bankrupt);
+        return true;
+      }
+      if (purse.current.boss <= 0) {
+        await end('win', FINAL_COACH.bankruptHim);
+        return true;
+      }
+      return false;
+    };
+
     void (async () => {
       push({ lane: 'crowd', text: crowdRow(0) });
 
@@ -302,29 +327,36 @@ export function useFinal(): FinalMatch {
           if (called === 'stand') {
             await coach(FINAL_COACH.onStand);
           } else {
-            transfer('player', 1);
+            const { bust } = transfer('player', 1);
             await coach(FINAL_COACH.onFalseCall);
+            if (bust && (await bankruptCheck())) return;
           }
         } else {
           const answer = await askPlayer(turn.kind === 'summarize' ? SUMMARY_FRAME : SPEAK_FRAME);
           lastPlayer = answer.text;
           push({ lane: 'player', text: answer.text });
 
+          // Model first, phrase rules second, the same order Level 4 and the
+          // live room use. Without the fallback a dead key meant the final boss
+          // never charged the player for anything they said, which reads as the
+          // level being broken rather than as the player being clean.
           const ruled = await judgeTurn(topic, turn.kind, answer.text, lastBoss);
+          const foul = ruled ? ruled.foul : offlineRuling(turn.kind, answer.text);
           recordItem({
             itemId: turn.id,
             levelSlug: FINAL_SLUG,
             rule: 'mixed',
             answer: answer.text,
-            correct: ruled ? ruled.foul === null : null,
+            correct: foul === null,
             revisions: answer.revisions,
             answeredAt: new Date().toISOString(),
           });
 
-          if (ruled?.foul) {
-            const { moved } = transfer('player', foulCost(ruled.foul));
-            await coach(ruled.text);
-            await coach(`That is on you. ${RULE_LABEL[ruled.foul]}. ${moved} to him.`);
+          if (foul) {
+            const { moved, bust } = transfer('player', foulCost(foul));
+            if (ruled?.text) await coach(ruled.text);
+            await coach(`That is on you. ${RULE_LABEL[foul]}. ${moved} to him.`);
+            if (bust && (await bankruptCheck())) return;
           } else if (ruled?.text) {
             await coach(ruled.text);
           }
@@ -355,14 +387,19 @@ export function useFinal(): FinalMatch {
         );
         await say({ lane: 'opponent', speaker: SUNGMIN, text: ruling.text });
 
+        // The ledger row is written before any bankruptcy exit, so a step that
+        // ended the match is still recorded as having happened.
+        let busted = false;
         if (ruling.verdict === 'bonus') {
           earned += 1;
           setBonuses(earned);
-          const { moved } = transfer('boss', BONUS);
+          const { moved, bust } = transfer('boss', BONUS);
           await coach(FINAL_COACH.bonus(moved));
+          busted = bust;
         } else if (ruling.verdict === 'naughty') {
-          const { moved } = transfer('player', NAUGHTY);
+          const { moved, bust } = transfer('player', NAUGHTY);
           await coach(FINAL_COACH.naughty(moved));
+          busted = bust;
         } else {
           await coach(FINAL_COACH.rules);
         }
@@ -380,6 +417,8 @@ export function useFinal(): FinalMatch {
           revisions: answer.revisions,
           answeredAt: new Date().toISOString(),
         });
+
+        if (busted && (await bankruptCheck())) return;
       }
 
       const p = purse.current.player;

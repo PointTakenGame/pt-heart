@@ -214,6 +214,11 @@ export const FINAL_COACH = {
   loss: 'He kept it. Go back and look at the three steps, because that is where this was lost, not in the argument.',
   draw: 'Even, against a man who never gave you a thing. I will take that.',
   ledger: (p: number, s: number) => `You ${p}, him ${s}.`,
+  /** An empty purse ends the match wherever it happens, same as Level 4. */
+  bankrupt: 'You are empty. That ends it, whatever round we were in.',
+  /** Only reachable through the bonus column, which is the point: the one way to
+   *  knock him out is to be good to him three times running. */
+  bankruptHim: 'He is out, and every token of it he handed you himself. Nobody in this building has done that.',
 };
 
 /** Walked in order, never random, same as Sofia's. */
