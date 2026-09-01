@@ -95,19 +95,21 @@ so a double invoke emits every line twice.
 - `types.ts` (182): `FoulType`, `Lane`, `Message`, seven `ComposerState` variants, `ItemRecord` with keystroke-level
   `Revision` history, an eight-member `Step` union, `Beat`, `PrefightStep`, `LevelDef`.
 - `engine.ts` (530) `useGym`, the drill runner walking authored steps. `showdown.ts` (549) `useShowdown`, one async
-  function that awaits the player, Level 4's runner.
+  function that awaits the player, Level 4's runner. `referee.ts` `useReferee`, Levels 5 and 6. `final.ts`
+  `useFinal`, Level 7. Four runners, three patterns: authored drill, human-as-disputant, human-as-referee.
 - `detectors.ts` (234) phrase rules: Judging and Opinions as Facts are callable with no model call at all, Fake
   Listening needs one call per summary. `coach.ts` (129) client side of the model calls. `storage.ts` (135)
   `localStorage` under `humility-showdown.v1` `[unratified]`, browser only, no account and no server persistence.
 - `content/`: `cards.ts` (266), `level1.ts` (218), `level2.ts` (271), `level3.ts` (180), `showdown.ts` (288),
   `index.ts` (14). `ui/` ten components. `App.tsx` (525) screens and room.
 
-**Four screens exist, not the ten one doc inventories** `[unratified]`: `agreement`, `select`, `level`, `showdown`.
-`select` is two steps, choose-your-fighter then the ladder, never both at once `[ruled]`.
+**Six screens exist** (2026-08-31), not the ten one doc inventories: `agreement`, `select`, `level`, `showdown`,
+`referee`, `final`. `select` is two steps, choose-your-fighter then the ladder, never both at once `[ruled]`.
 
-**The shipped ladder is three gym levels plus one match** `[unratified]` (`content/index.ts`: `LEVELS = [level1,
-level2, level3]`). The Showdown is not in that array: it is a separate screen whose ladder number is the literal
-string `'4'`, with `fightNumber={4}` passed to its intro.
+**All seven ladder levels are built and playable** (2026-08-31). `content/index.ts`'s `LEVELS` array still holds
+only the three authored drill levels; the other four are separate screens keyed off their own slugs, because they
+are separate runners rather than more `LevelDef` data. The ladder numbers 4 through 7 are literals in `App.tsx`.
+Levels 1-3 remain the pre-redesign authored-drill shape (see §7).
 
 **Progress saves by level slug, never by index** `[ruled]`. Reordering or inserting a level must not orphan a save.
 Key nothing off array position.
@@ -217,7 +219,7 @@ Three Level 4 constants that look like bugs and are not:
 - **Screen skin is fixed** `[ruled]`: light striped ground, teal, orange, gold, Baloo 2 plus Nunito. **Background
   stays light, always. No dark mode.**
 
-## 6. The next build: the Final Showdown's three steps
+## 6. The Final Showdown's three steps (built 2026-08-31)
 
 The only place in the game where humility is scored **positively** rather than penalized. Three steps `[ruled]`:
 
@@ -229,8 +231,8 @@ The only place in the game where humility is scored **positively** rather than p
    awarded by the person being described.
 
 Boss: **Stonewall Sung-min**, who commits no fouls at all, forcing the player to score by being generous rather than
-by catching anyone `[ruled]`. That name survived the cast pass. Nothing of this exists in `src/`: no content files,
-no runner, no screen.
+by catching anyone `[ruled]`. That name survived the cast pass. Built: `content/final.ts`, `final.ts`, and the
+`final` screen in `App.tsx`.
 
 **The ladder is seven levels, not six** `[ruled]`, per a 2026-08-31 Steve/Nathan call that Steve confirmed directly.
 Rule A (listen-and-summarize) is already taught by Levels 1 to 3 and is not retaught. The Final Showdown splits
@@ -262,22 +264,31 @@ AI-suggested foul call (§5, §8) governs bonus-awarding too, even though a bonu
 than penalizing a foul. The AI nominates/suggests the bonus; the potential offendee makes the final call, whether
 points are being transferred or credited. In solo Level 7 play there's no second human to be that offendee, so the
 AI boss itself renders the ruling, an experience-based judgment, exactly as it already renders rulings on the
-human's own foul calls in Levels 4 and 7 today. Still a `GAP:` to build (no bonus logic exists yet), but the
-architecture question is closed.
+human's own foul calls in Levels 4 and 7 today. Built as `affirmStep` in `coach.ts` and the `affirm_step` task in
+`api/coach.ts`: he returns one of the printed card's three columns, and a model that cannot be reached falls to
+"rules", which moves nothing in either direction. A dead key must never award or charge on a guess.
 
 ## 7. Order of work
 
 Sequence and dependency only. No dates, at any confidence.
 
-**Before the Final Showdown can be built:**
+**The Final Showdown is built** (2026-08-31, pt-heart `6d34aad`). Items 1 to 4 below are done and are kept only so
+their rulings stay readable:
 
-1. Nothing here waits on §6 any longer. There is no separate judge role (§6); the ladder is seven levels, with the
-   Final Showdown split across 5, 6, and 7. Build the ladder UI to seven.
-2. Author the three steps' content, matching the shape of `content/level3.ts` including the political balance ledger
-   in the header.
-3. Build the positive-scoring path. Everything in `showdown.ts` moves tokens as penalties; nothing awards a bonus.
-   New arithmetic, not a new caller.
-4. Add the level to `content/index.ts` and to the ladder, by slug.
+1. ~~Build the ladder UI to seven.~~ Done. There is no separate judge role (§6); the ladder is seven levels, with
+   the Final Showdown split across 5, 6, and 7.
+2. ~~Author the three steps' content.~~ Done, `content/final.ts`. Political balance is structural rather than a
+   ledger: Sung-min has no authored position and argues the opposite of whatever the player picks.
+3. ~~Build the positive-scoring path.~~ Done, `final.ts`. A bonus is a transfer like every penalty, one token from
+   the boss's purse to the player's, so both sides still sum to fourteen.
+4. ~~Add the level to `content/index.ts`.~~ Not done and not wanted: `LEVELS` holds `LevelDef` drill data, and
+   Level 7 is a runner. It is keyed off its own slug, `final-showdown`.
+
+Left open by that build, deliberately: the printed card runs the Final Showdown after three full rounds and then
+says "switch roles and repeat". The shipped level runs four argument turns and does not build Sung-min's mirror
+half, on the reasoning that Levels 5 and 6 already model What I Learned and Why We Might Still Disagree, and his
+one framed summarize turn models the Super-Summary before the player is asked for one. Revisit if playtesting says
+the level ends too soon.
 
 **Independent of the Final Showdown, worth doing early:**
 
@@ -361,17 +372,17 @@ summary coverage check runs once; anything it misses is paid for immediately, an
 prompt at all. **This is stricter than either prior ruling**: not uncapped retries, and not even the shipped
 three-attempt ceiling, just a single pass.
 
-Neither the shipped code nor the uncapped ruling above matches this. `showdown.ts` runs a redo loop as
-`while (attempt <= 3)`, breaking out at `attempt === 3`, and the gym's edit steps keep the same three-attempt
-ceiling, with a header comment in `engine.ts` calling it "the same ceiling live play uses" `[unratified]`. Under
-this ruling that loop needs to become a single check, not a three-attempt one: move on with the point lost after
-the first miss, no retry step at all. Neither has been changed: this document records the ruling, not a completed
-edit.
+**Shipped 2026-08-31** (pt-heart `c979244`). Both three-attempt loops are gone: `showdown.ts`'s player turn is a
+single pass, and the gym's edit step in `engine.ts` rules once and settles. `COACH.redoSummary` is deleted.
 
-A second mismatch, smaller, worth not tripping over. The three-attempt loop in `showdown.ts` is not a coverage
-check; it re-runs a summarizing turn that carried a Judging or Opinions-as-Facts foul. **A summary coverage check of
-the kind this ruling governs does not exist in the shipped code yet**, so the ruling is a constraint on the thing
-that gets built, not only a correction to the thing that is there.
+One loop survives in each file and is not a redo. A turn the player did not genuinely attempt is **refused rather
+than judged** (Steve, 2026-08-24), so it costs nothing, spends no model call, and comes straight back to the same
+prompt. That gate is about non-engagement; the ruling above is about a real attempt that missed.
+
+Worth not tripping over: the loop that was removed was never a coverage check. It re-ran a summarizing turn that
+carried a Judging or Opinions-as-Facts foul. **A summary coverage check of the kind this ruling governs still does
+not exist in the shipped code**, so the ruling remains a constraint on the thing that gets built, not only a
+correction to the thing that was there.
 
 ## 8. Deferred, and cut
 
