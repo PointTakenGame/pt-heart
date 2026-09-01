@@ -1,16 +1,25 @@
 ---
 tid: HEART-T260831-17
 type: spec
-status: draft
+status: active
 thread: web-app
 authored: 2026-08-31
-governs: game/src/room/
+governs: game/src/room.ts
 ---
 
 # Live play: the room
 
 Drafted overnight 2026-08-31 from Steve's brief, the roadmap, and the shipped
-runners. Nothing here is built yet. Gaps are marked, not guessed.
+runners. Gaps are marked, not guessed.
+
+**Build status, corrected 2026-09-01.** This doc was written a few hours ahead
+of the code and said "nothing here is built yet". That stopped being true the
+same night. Both shapes a single browser can hold now ship, in `src/room.ts`,
+`src/content/room.ts`, and the `door` and `live` screens in `App.tsx`: the human
+as a disputant against one AI stranger, and the human as referee over two AI
+strangers. Human against human is still unbuilt and still needs the transport
+section 2 says this repo does not have. Section 6's four open questions are all
+still open, and each has its own registry row.
 
 Steve's brief, verbatim, because the rest of this doc is an attempt to be
 faithful to it:
@@ -74,7 +83,9 @@ sentences above. Neither needs pairing, transport, or session state.
 **Not buildable now, and not attempted:** human versus human. That is roadmap §7
 item 11, and it needs pairing, transport, and session state that this repo
 deliberately does not have. Nothing in this spec adds Supabase, auth, websockets,
-or a database.
+or a database. What that room would need is written out in §7, as a spec and not
+as a plan: the point of writing it down now is that several of its requirements
+are constraints on code that already ships.
 
 ## 3. The room, screen by screen
 
@@ -252,3 +263,173 @@ already exists in `api/coach.ts`.
 4. `HEART-T260831-21` The clock, entirely (§3.4).
 
 Each is filed as its own row rather than living only here.
+
+## 7. The room with two real humans in it
+
+Roadmap §7 item 11, written up 2026-09-01. **Nothing in this section is built and
+nothing in it may be built into this repo yet.** Auth is blocked on
+`HEART-T260825-12` and `HEART-T260825-34`, and the standing instruction is that
+no Supabase client, no auth, and no realtime transport enters this repo before
+those close. This is here so the shape is on paper, and because four of its
+requirements are constraints on code that already ships.
+
+### 7.1 The four seat arrangements
+
+The room always seats three, per Steve's brief. Two real humans fill two of the
+three, so the third is always AI, and which one is the seat choice:
+
+| Arrangement | Human 1 | Human 2 | AI fills |
+|---|---|---|---|
+| Both argue | disputant | disputant | the whistle, nominating only |
+| Split | disputant | referee | the other disputant |
+
+The second row is the same code as §2's two shapes with one AI swapped for a
+person, which is worth saying out loud: the split arrangement is a smaller build
+than the both-argue one, and it is a reasonable first human-vs-human milestone.
+
+GAP: whether a two-human room offers both arrangements or only one, and who
+picks when the two people want different seats. Owner: Steve.
+
+### 7.2 The four things that change in code that already ships
+
+These are the reason this section is written before the build rather than during
+it. Each one is a constraint on shipped code, not new code.
+
+1. **The purse cannot live in a React ref.** All five runners hold the ledger in
+   `purse.current` and reconcile it to state. Two browsers cannot both hold the
+   authoritative fourteen. Token arithmetic moves server-side, and the client
+   renders a number it is told rather than a number it computed. This is the
+   single largest change and it touches every runner.
+2. **The gate stops being a `localStorage` read.** `isCleared` is a client-side
+   claim. It is honest enough while the only person it could mislead is the
+   person making it; it is worthless the moment a second human is on the other
+   side of the room. Roadmap §7 already says fix it before item 11, and this is
+   the reason. The clear-record moves to the server with the user id.
+3. **A model call becomes one call for two viewers.** `/api/coach` is called from
+   the client today, so two clients asking the same question would get two
+   different answers and the room would disagree with itself about what the coach
+   said. Coach nominations and AI disputant lines get made once, keyed by room and
+   turn, and delivered to both.
+4. **`recordItem` needs a container that is not a level.** Already filed as
+   `HEART-T260831-23`; a two-human match makes it unavoidable rather than untidy,
+   because the record now belongs to two user ids and a room, not to a browser.
+
+### 7.3 Identity
+
+Design against **"a stable opaque user id arrives from a third project."** That
+phrasing is Brain's and it is deliberate. Steve ruled on 2026-08-25 that basic
+auth lives in a **third Supabase project** separate from both games' data, and
+Brain's own recommendation is to use Supabase's `auth.users` with no custom
+identities table.
+
+**Do not build against the JWT details.** The mechanism is a JWKS trust
+relationship written from documentation and never tested, carried by Brain as an
+open P0 (`BRAIN-T260825-24`). If Supabase will not accept another Supabase
+project as a JWKS issuer it gets redesigned. The opaque-user-id abstraction
+survives either outcome; anything below it does not.
+
+Nothing real is waiting to be migrated: 162 `auth.users` as of 2026-08-25, 161
+anonymous test sessions and one matching Steve's own test alias.
+
+### 7.4 Pairing
+
+- A queue the player joins from the door, holding seat preference and topic
+  preference.
+- A match rule. Simplest defensible version: pair the first two compatible
+  players, where compatible means their seat choices do not collide and they can
+  be given a topic.
+- Room creation on a match, with both players' user ids and the assigned seats.
+- An invite path, so two people who already know each other skip the queue. This
+  is probably the more important of the two for a product whose best case is a
+  couple or a classroom, and it is much easier than open matchmaking.
+
+GAP: topic selection with two people. Single-browser play lets the one human pick
+from `LIVE_TOPICS` or type their own. Two people have to arrive at one topic, and
+neither "first player picks" nor "both must agree" has been chosen. Owner: Steve.
+
+GAP: stance assignment with two people. `stances()` currently flips a coin.
+Two humans plausibly want to argue the side they actually hold, which is the
+whole premise of "use that real disagreement you have been carrying", and that
+requires asking rather than assigning. Owner: Steve. Related to
+`HEART-T260831-19`.
+
+### 7.5 Transport and session state
+
+What has to reach the other browser: each turn's text as it is submitted, each
+foul call, each ruling, each token movement, the clock, and both players'
+presence.
+
+The natural pick is Supabase Realtime, because identity is already ruled to be
+Supabase and it costs no additional vendor. It is a pick, not a ruling: a room
+this small could be served by polling a match-state row on a short interval, and
+polling is meaningfully simpler to reason about than a subscription that has to
+be resumed after a reconnect. Decide it when it is being built, with a working
+JWKS answer in hand, and not before.
+
+Session state is one authoritative match row: room id, both user ids, seats,
+topic, stances, turn index, both purses, the phase, and the clock deadline. The
+phases are the ones roadmap §7 item 6 already names and asks to be made explicit
+rather than implied by call ordering, which is a second reason to do that item
+before this one.
+
+### 7.6 A ruling now has a human on the other end
+
+This is the part with no precedent in the shipped code. `affirmCall` asks the
+party who was spoken to whether a call lands, and in every shipped shape that
+party is a model, so the answer arrives in a second and always arrives. With two
+humans, a foul called on a person routes to that person, and the room stops until
+they answer.
+
+That needs, at minimum: a prompt in their client, a deadline, and a default for
+what happens when the deadline passes. It also needs an answer to whether a
+player can decline every call against them for free, which is
+`HEART-T260831-22`'s question arriving from the opposite direction.
+
+GAP: the timeout default. Upholding on no answer punishes a disconnect;
+declining on no answer makes stalling the dominant strategy. Neither is obviously
+right. Owner: Steve or Nathan.
+
+### 7.7 The clock
+
+Ruled to exist in live play and never in the gym (`[ruled, Nathan]`), and
+entirely undesigned (`HEART-T260831-21`). A two-human room is where it stops
+being optional, because the thing a clock protects against is the other person
+not typing. Whatever it turns out to be, it is server-held: a deadline the server
+owns and both clients render, not a `setTimeout` in either browser.
+
+### 7.8 Abandonment, and safety
+
+**Abandonment.** Someone closes the tab mid-match. Needs a presence signal, a
+grace period, and a ruling on what the match becomes. Options range from
+forfeiting the leaver to converting the empty seat to AI and playing on, and the
+second is more interesting than it sounds given the AI disputant already exists
+and would slot straight into the vacated seat.
+
+**Safety, and this is the one to not leave until last.** Every shape shipped so
+far puts a human across from a model. This one puts two strangers in a private
+text room, and `LIVE_TOPICS` is the printed deck's twelve, which include
+deportation, gender identity, and the death penalty. That is the correct topic
+list for the game and it is also a real exposure the moment the other seat is a
+person. At minimum: a report path, a block path, a way to leave a room instantly
+without penalty, and a decision about whether an unmoderated open queue with
+strangers ships at all before an invite-only version does.
+
+GAP: all of it. Nothing here is designed and it is a product and policy question
+before it is an engineering one. Owner: Steve. This is the item most likely to
+change the shape of the whole feature, which is why it is written here rather
+than discovered later.
+
+### 7.9 Build order
+
+Sequence only, no dates:
+
+1. Make the turn phases explicit (roadmap §7 item 6) and move token arithmetic
+   off the client ref. Both are useful on their own and both are prerequisites.
+2. Identity, once `BRAIN-T260825-24` closes. Server-side clear-record, which
+   fixes the gate.
+3. Invite-only split arrangement: one human disputant, one human referee, AI in
+   the third seat. Smallest real two-human room.
+4. The human ruling path, the clock, and abandonment, which the split
+   arrangement is the first thing to need.
+5. Both-argue arrangement.
+6. Open matchmaking, and not before the safety questions in §7.8 are answered.
