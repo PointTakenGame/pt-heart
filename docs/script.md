@@ -1,4 +1,5 @@
 ---
+tid: HEART-T260831-27
 slot: script.md
 game: heart
 purpose: the spoken script for a live match and the UI strings of the web edition, in one document

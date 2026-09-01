@@ -1,4 +1,5 @@
 ---
+tid: HEART-T260831-26
 slot: ui-components.md
 game: heart
 purpose: Component inventory, real design tokens, and interaction specs for the HEART web trainer, so a coding agent can build a new screen that matches what already ships.

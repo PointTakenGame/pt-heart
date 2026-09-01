@@ -1,4 +1,5 @@
 ---
+tid: HEART-T260831-30
 slot: rules.md
 game: heart
 purpose: The complete player-facing rules of Humility Showdown, print and online, with every specific value marked ruled, unratified, vibecoded, or gapped.

@@ -1,4 +1,5 @@
 ---
+tid: HEART-T260831-29
 slot: roadmap.md
 game: heart
 purpose: Build order and scope for Humility Showdown, separating what is already in the repo from what is next, deferred, or provisional.

@@ -1,4 +1,5 @@
 ---
+tid: HEART-T260831-28
 slot: tech-spec.md
 game: heart
 purpose: Architecture and data contracts for the Heart web build, as the code actually implements them today.
