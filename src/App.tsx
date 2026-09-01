@@ -551,16 +551,21 @@ function Room({
           onBehind={setDrillBehind}
         />
       )}
-      <RuleCards
-        enabled={[level.rule]}
-        live={railLive ? liveCards(gym.composer.kind, call?.callable) : null}
-        onCall={(f) => gym.submit(f, [])}
-        pass={
-          call && railLive
-            ? { label: call.pass.label, onPass: () => gym.submit(call.pass.value, []) }
-            : undefined
-        }
-      />
+      {/* The rail goes away when the match does. Its whistle is dead once there
+          is nothing left to call, and leaving three inert cards pinned under the
+          result reads as a screen that has not finished loading. */}
+      {!gym.finished && (
+        <RuleCards
+          enabled={[level.rule]}
+          live={railLive ? liveCards(gym.composer.kind, call?.callable) : null}
+          onCall={(f) => gym.submit(f, [])}
+          pass={
+            call && railLive
+              ? { label: call.pass.label, onPass: () => gym.submit(call.pass.value, []) }
+              : undefined
+          }
+        />
+      )}
     </div>
   );
 }
@@ -672,12 +677,14 @@ function FinalRun({ avatar, onExit }: { avatar: string; onExit: () => void }) {
       ) : (
         <Composer state={match.composer} onSubmit={match.submit} onResize={land} />
       )}
-      <RuleCards
-        enabled={CARD_ORDER}
-        live={liveCards(match.composer.kind, call?.callable)}
-        onCall={(f) => match.submit(f, [])}
-        pass={call ? { label: call.pass.label, onPass: () => match.submit(call.pass.value, []) } : undefined}
-      />
+      {!match.finished && (
+        <RuleCards
+          enabled={CARD_ORDER}
+          live={liveCards(match.composer.kind, call?.callable)}
+          onCall={(f) => match.submit(f, [])}
+          pass={call ? { label: call.pass.label, onPass: () => match.submit(call.pass.value, []) } : undefined}
+        />
+      )}
     </div>
   );
 }
@@ -807,12 +814,14 @@ function LiveRoom({
       ) : (
         <Composer state={run.composer} onSubmit={run.submit} onResize={land} />
       )}
-      <RuleCards
-        enabled={CARD_ORDER}
-        live={liveCards(run.composer.kind, call?.callable)}
-        onCall={(f) => run.submit(f)}
-        pass={call ? { label: call.pass.label, onPass: () => run.submit(call.pass.value) } : undefined}
-      />
+      {!run.finished && (
+        <RuleCards
+          enabled={CARD_ORDER}
+          live={liveCards(run.composer.kind, call?.callable)}
+          onCall={(f) => run.submit(f)}
+          pass={call ? { label: call.pass.label, onPass: () => run.submit(call.pass.value) } : undefined}
+        />
+      )}
     </div>
   );
 }
@@ -914,12 +923,14 @@ function RefereeRun({
       ) : (
         <Composer state={run.composer} onSubmit={run.submit} onResize={land} />
       )}
-      <RuleCards
-        enabled={CARD_ORDER}
-        live={liveCards(run.composer.kind, call?.callable)}
-        onCall={(f) => run.submit(f)}
-        pass={call ? { label: call.pass.label, onPass: () => run.submit(call.pass.value) } : undefined}
-      />
+      {!run.finished && (
+        <RuleCards
+          enabled={CARD_ORDER}
+          live={liveCards(run.composer.kind, call?.callable)}
+          onCall={(f) => run.submit(f)}
+          pass={call ? { label: call.pass.label, onPass: () => run.submit(call.pass.value) } : undefined}
+        />
+      )}
     </div>
   );
 }
@@ -972,12 +983,14 @@ function Match({ avatar, onExit }: { avatar: string; onExit: () => void }) {
       ) : (
         <Composer state={match.composer} onSubmit={match.submit} onResize={land} />
       )}
-      <RuleCards
-        enabled={CARD_ORDER}
-        live={liveCards(match.composer.kind, call?.callable)}
-        onCall={(f) => match.submit(f, [])}
-        pass={call ? { label: call.pass.label, onPass: () => match.submit(call.pass.value, []) } : undefined}
-      />
+      {!match.finished && (
+        <RuleCards
+          enabled={CARD_ORDER}
+          live={liveCards(match.composer.kind, call?.callable)}
+          onCall={(f) => match.submit(f, [])}
+          pass={call ? { label: call.pass.label, onPass: () => match.submit(call.pass.value, []) } : undefined}
+        />
+      )}
     </div>
   );
 }
