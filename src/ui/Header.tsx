@@ -35,6 +35,10 @@ interface Purses {
   opponentLabel: string;
   opponentEmoji: string;
   playerEmoji: string;
+  /** Defaults to "you", which is right on every screen where the near purse is
+   *  the player's. On the referee levels it is not: the player holds the whistle
+   *  and no tokens, and the near purse belongs to the coach down in the ring. */
+  playerLabel?: string;
 }
 
 interface Props {
@@ -153,7 +157,13 @@ export function Header({ title, teaches, beatName, purses }: Props) {
           side="them"
           stack={them}
         />
-        <Purse value={purses.player} label="you" face={purses.playerEmoji} side="you" stack={you} />
+        <Purse
+          value={purses.player}
+          label={purses.playerLabel ?? 'you'}
+          face={purses.playerEmoji}
+          side="you"
+          stack={you}
+        />
       </div>
     </header>
   );

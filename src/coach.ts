@@ -127,3 +127,73 @@ export async function sofiaLine(
   if (!text) return { text: fallback, fromModel: false };
   return { text, fromModel: true };
 }
+
+// Referee format. The human holds the whistle and both disputants are AI, so
+// these two calls replace the ones above rather than adding to them: figureLine
+// writes a named figure's turn, affirmCall asks the figure who was spoken to
+// whether the referee's call landed.
+
+/**
+ * One AI figure's turn. Unlike Sofia, the figure is told which side to argue,
+ * because with no human in either seat nobody's position is implied. The pairing
+ * that keeps that balanced is authored in content/referee.ts, not here.
+ *
+ * `foul` is the figure's instruction, not a prediction. The schedule is authored.
+ */
+export async function figureLine(
+  persona: string,
+  topic: string,
+  stance: string,
+  lastLine: string,
+  kind: 'speak' | 'summarize',
+  foul: FoulType | null,
+  fallback: string,
+): Promise<{ text: string; fromModel: boolean }> {
+  const out = await callCoach({
+    task: 'figure_line',
+    persona,
+    topic,
+    stance,
+    lastLine,
+    kind,
+    foul: foul ?? 'clean',
+  });
+  const text = typeof out?.text === 'string' ? out.text.trim() : '';
+  if (!text) return { text: fallback, fromModel: false };
+  return { text, fromModel: true };
+}
+
+export interface CallRuling {
+  upheld: boolean;
+  text: string;
+  fromModel: boolean;
+}
+
+/**
+ * The figure who was spoken to rules on the referee's call, on its own behalf and
+ * in character (soul.md section 6). The referee nominates; this decides.
+ *
+ * The no-model fallback upholds a call the authored schedule says was a real foul
+ * and declines one it does not. That is the one place the game reads the answer
+ * off the schedule rather than off a ruling, and it is confined to the case where
+ * there is no model to ask: the alternative is a referee whose whistle does
+ * nothing at all when the key is dead.
+ */
+export async function affirmCall(
+  persona: string,
+  line: string,
+  foul: FoulType,
+  scheduled: FoulType | null,
+): Promise<CallRuling> {
+  const out = await callCoach({ task: 'affirm_call', persona, line, foul });
+  const text = typeof out?.text === 'string' ? out.text.trim() : '';
+  if (!text) {
+    const right = scheduled === foul;
+    return {
+      upheld: right,
+      text: right ? 'Yeah. That one landed wrong.' : 'That one was fine. I can take it.',
+      fromModel: false,
+    };
+  }
+  return { upheld: out.upheld === true, text, fromModel: true };
+}

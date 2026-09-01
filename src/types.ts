@@ -21,6 +21,14 @@ export interface Message {
   card?: FoulType;
   /** the player blowing the whistle, which reads as a call and not as speech */
   isCall?: boolean;
+  /**
+   * Overrides the face the lane would otherwise supply. Only the referee format
+   * needs it, and it needs it because that thread has four faces for three lanes:
+   * the coach is down in the ring on the right, the figure is on the left, and the
+   * middle carries both the coach narrating and the human blowing the whistle.
+   * Every other screen leaves this alone and the lane decides.
+   */
+  face?: string;
 }
 
 /** One fixed-text run, or one blank the player types into. */

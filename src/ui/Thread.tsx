@@ -129,7 +129,8 @@ export function Thread({ messages, avatars, waiting, onSkip, ref }: Props) {
         // who is talking. The coach is centered, in neither lane, because he is
         // not in the argument (ruling of the same day).
         const face =
-          m.lane === 'coach' ? avatars.coach : m.lane === 'player' ? avatars.player : avatars.opponent;
+          m.face ??
+          (m.lane === 'coach' ? avatars.coach : m.lane === 'player' ? avatars.player : avatars.opponent);
         const cls = [
           'msg',
           `msg-${m.lane}`,

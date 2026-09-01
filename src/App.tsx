@@ -1,5 +1,6 @@
-// Four screens: the agreement (Beat 0), level select, the gym thread, and the
-// showdown. Everything that carries game state lives in the two thread screens.
+// Five screens: the agreement (Beat 0), level select, the gym thread, the
+// showdown, and the referee levels. Everything that carries game state lives in
+// the three thread screens.
 
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { LEVELS } from './content/index.ts';
@@ -14,6 +15,8 @@ import { BossIntro } from './ui/BossIntro.tsx';
 import { Prefight } from './ui/Prefight.tsx';
 import { Mast } from './ui/Mast.tsx';
 import { useShowdown } from './showdown.ts';
+import { useReferee } from './referee.ts';
+import { REFEREE_LEVELS, type RefereeLevel } from './content/referee.ts';
 import { SHOWDOWN_PREFIGHT, SHOWDOWN_SLUG, SOFIA_EMOJI } from './content/showdown.ts';
 import { CARD_ORDER } from './content/cards.ts';
 import { COACH_EMOJI, DEFAULT_AVATAR, shuffledAvatars } from './avatars.ts';
@@ -23,7 +26,8 @@ type Screen =
   | { name: 'agreement' }
   | { name: 'select' }
   | { name: 'level'; level: LevelDef }
-  | { name: 'showdown' };
+  | { name: 'showdown' }
+  | { name: 'referee'; level: RefereeLevel };
 
 export function App() {
   const seen = Object.keys(load().cleared).length > 0;
@@ -45,11 +49,22 @@ export function App() {
         onAvatar={pickAvatar}
         onPick={(level) => setScreen({ name: 'level', level })}
         onShowdown={() => setScreen({ name: 'showdown' })}
+        onReferee={(level) => setScreen({ name: 'referee', level })}
       />
     );
   }
   if (screen.name === 'showdown') {
     return <Showdown avatar={avatar} onExit={() => setScreen({ name: 'select' })} />;
+  }
+  if (screen.name === 'referee') {
+    return (
+      <Referee
+        key={screen.level.slug}
+        level={screen.level}
+        avatar={avatar}
+        onExit={() => setScreen({ name: 'select' })}
+      />
+    );
   }
   return (
     <Level
@@ -150,11 +165,13 @@ function Select({
   onAvatar,
   onPick,
   onShowdown,
+  onReferee,
 }: {
   avatar: string;
   onAvatar: (emoji: string) => void;
   onPick: (l: LevelDef) => void;
   onShowdown: () => void;
+  onReferee: (l: RefereeLevel) => void;
 }) {
   // Two screens, not one. Steve, 2026-08-25: "Let them choose their fighter. And
   // then hit done and then show the levels. Don't show them both at once." So
@@ -262,6 +279,34 @@ function Select({
             {isCleared(SHOWDOWN_SLUG) && <span className="level-done">played</span>}
           </button>
         </li>
+        {/* The referee levels. Ray goes down into the ring and the player takes
+            the third seat, so these unlock behind the Showdown: you get handed
+            the whistle after you have been on the wrong end of one. */}
+        {REFEREE_LEVELS.map((l, i) => {
+          const locked = i === 0 ? !isCleared(SHOWDOWN_SLUG) : !isCleared(REFEREE_LEVELS[i - 1].slug);
+          return (
+            <li key={l.slug}>
+              <button
+                className={`level-card${locked ? ' is-locked' : ''}`}
+                disabled={locked}
+                onClick={() => onReferee(l)}
+              >
+                <span className="level-n">{locked ? '\u{1F512}' : i + 5}</span>
+                <span className="level-mid">
+                  <span className="level-title">{l.title}</span>
+                  <span className="level-sub">
+                    {locked
+                      ? i === 0
+                        ? 'play the Showdown first'
+                        : `clear level ${i + 4} first`
+                      : `You referee · ${l.figure}`}
+                  </span>
+                </span>
+                {isCleared(l.slug) && <span className="level-done">cleared</span>}
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -464,6 +509,113 @@ function Showdown({ avatar, onExit }: { avatar: string; onExit: () => void }) {
     );
   }
   return <Match avatar={avatar} onExit={onExit} />;
+}
+
+function Referee({
+  level,
+  avatar,
+  onExit,
+}: {
+  level: RefereeLevel;
+  avatar: string;
+  onExit: () => void;
+}) {
+  const [stage, setStage] = useState<'prefight' | 'intro' | 'run'>('prefight');
+  const fightNumber = REFEREE_LEVELS.indexOf(level) + 5;
+  if (stage === 'prefight') {
+    return (
+      <Prefight
+        steps={level.prefight}
+        enterLabel="Take the whistle"
+        onEnter={() => setStage('intro')}
+        onExit={onExit}
+        opponent={{ emoji: level.figureEmoji, name: level.figure, epithet: level.figureEpithet }}
+      />
+    );
+  }
+  if (stage === 'intro') {
+    return (
+      <BossIntro
+        fightNumber={fightNumber}
+        boss={level.figure}
+        bossEmoji={level.figureEmoji}
+        epithet={level.figureEpithet}
+        // The walk-out is between the two people who are about to argue, and
+        // tonight neither of them is the player. Ray's face goes in the near
+        // corner because Ray is the one getting in the ring.
+        playerEmoji={COACH_EMOJI}
+        onStart={() => setStage('run')}
+      />
+    );
+  }
+  return <RefereeRun level={level} avatar={avatar} onExit={onExit} />;
+}
+
+function RefereeRun({
+  level,
+  avatar,
+  onExit,
+}: {
+  level: RefereeLevel;
+  avatar: string;
+  onExit: () => void;
+}) {
+  const run = useReferee(level, avatar);
+  const thread = useRef<ThreadHandle>(null);
+  const land = useCallback(() => {
+    thread.current?.land();
+  }, []);
+  useLayoutEffect(land, [run.finished, land]);
+
+  const call = run.composer.kind === 'call' ? run.composer : null;
+
+  return (
+    <div className="page page-level">
+      <Mast
+        slim
+        right={
+          <button className="link" onClick={onExit}>
+            Leave
+          </button>
+        }
+      />
+      <Header
+        title={level.title}
+        teaches={`Your calls: ${run.correct} of ${run.judged}`}
+        beatName={run.phase}
+        purses={{
+          player: run.rayTokens,
+          opponent: run.figureTokens,
+          opponentLabel: level.figure.split(' ')[0].toLowerCase(),
+          opponentEmoji: level.figureEmoji,
+          playerEmoji: COACH_EMOJI,
+          playerLabel: 'ray',
+        }}
+      />
+      <Thread
+        ref={thread}
+        messages={run.messages}
+        avatars={{ coach: COACH_EMOJI, opponent: level.figureEmoji, player: COACH_EMOJI }}
+        waiting={run.waiting}
+        onSkip={run.skip}
+      />
+      {run.finished ? (
+        <div className="composer">
+          <button className="btn btn-wide" onClick={onExit}>
+            Back to the gym
+          </button>
+        </div>
+      ) : (
+        <Composer state={run.composer} onSubmit={run.submit} onResize={land} />
+      )}
+      <RuleCards
+        enabled={CARD_ORDER}
+        live={liveCards(run.composer.kind, call?.callable)}
+        onCall={(f) => run.submit(f)}
+        pass={call ? { label: call.pass.label, onPass: () => run.submit(call.pass.value) } : undefined}
+      />
+    </div>
+  );
 }
 
 function Match({ avatar, onExit }: { avatar: string; onExit: () => void }) {

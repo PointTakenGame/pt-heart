@@ -113,6 +113,53 @@ const PROMPTS = {
         `distracted one would not:\n${RULES[foul]}\nEverything else about the turn should be ` +
         `reasonable and in good faith. Do not be a cartoon.`) +
     `\n\nReply with your line only. No preamble, no quotation marks, no stage directions.`,
+
+  // Referee format. Two AI figures argue and the human holds the whistle, so
+  // unlike Sofia both sides are authored here: the figure is told which side to
+  // take rather than mirroring a human. Balance is the caller's job, in
+  // content/referee.ts, which pairs the stances.
+  figure_line: (
+    persona: string,
+    topic: string,
+    stance: string,
+    lastLine: string,
+    kind: string,
+    foul: string,
+  ) =>
+    `You are ${persona}, a character in a game about disagreeing well. ` +
+    `The topic is: ${topic}\n\nYour side of it: ${stance}\n\n` +
+    (lastLine
+      ? `The person you are talking with just said:\n\n"${lastLine}"\n\n`
+      : `You are opening the exchange.\n\n`) +
+    (kind === 'summarize'
+      ? `This is a SUMMARIZING turn. Restate what they just said back to them. Do not rebut yet.\n\n`
+      : `This is a SPEAKING turn. Argue your side in two or three sentences.\n\n`) +
+    (foul === 'clean'
+      ? `Play this turn completely clean. No verdicts on the person, no opinion stated as ` +
+        `settled fact, and if you are summarizing, keep their reason and end by checking that ` +
+        `you got it right.`
+      : `Commit exactly one foul, mildly, so that an alert referee could catch it and a ` +
+        `distracted one would not:\n${RULES[foul]}\nEverything else about the turn should be ` +
+        `reasonable and in good faith. Do not be a cartoon.`) +
+    `\n\nReply with your line only. No preamble, no quotation marks, no stage directions.`,
+
+  // The heart of the referee format, and of section 6 of the soul doc: the
+  // referee nominates, the person who was spoken to decides. The figure rules on
+  // its own behalf, in character, exactly as a human would. It is never asked
+  // whether the label is technically correct, only whether it landed that way,
+  // because "did the other person feel fouled?" is the only real question.
+  affirm_call: (persona: string, line: string, foul: string) =>
+    `You are ${persona}, a character in a game about disagreeing well. ` +
+    `The person you are arguing with just said this to you:\n\n"${line}"\n\n` +
+    `The referee stopped play and called it ${RULES[foul] ?? foul}\n\n` +
+    `You decide, for yourself, in character: did that land on you that way? Not whether the ` +
+    `label is technically right, and not whether they had a point. Only whether you felt it. ` +
+    `You are a reasonable person who is not looking to be offended and not pretending to be ` +
+    `fine either. If it genuinely stung or talked down to you, say so. If it was just blunt ` +
+    `disagreement you can take, wave it off.\n\n` +
+    `Reply with strict JSON and nothing else: {"upheld": true|false, "text": "one sentence, ` +
+    `in your own voice, saying whether it landed"}.`,
+
 } as const;
 
 // Deliberately under the client's own 6s deadline, so a slow upstream comes back
@@ -231,6 +278,21 @@ export default async function handler(req: Request): Promise<Response> {
       String(body.kind ?? 'speak'),
       String(body.foul ?? 'clean'),
     );
+  } else if (task === 'figure_line') {
+    prompt = PROMPTS.figure_line(
+      String(body.persona ?? 'a player').slice(0, 120),
+      String(body.topic ?? '').slice(0, 300),
+      String(body.stance ?? '').slice(0, 400),
+      String(body.lastLine ?? '').slice(0, 1200),
+      String(body.kind ?? 'speak'),
+      String(body.foul ?? 'clean'),
+    );
+  } else if (task === 'affirm_call') {
+    prompt = PROMPTS.affirm_call(
+      String(body.persona ?? 'a player').slice(0, 120),
+      String(body.line ?? '').slice(0, 1200),
+      String(body.foul ?? ''),
+    );
   } else {
     return new Response('unknown task', { status: 400 });
   }
@@ -254,6 +316,18 @@ export default async function handler(req: Request): Promise<Response> {
     const foul = parsed.foul;
     return Response.json({
       foul: foul in RULES ? foul : null,
+      text: String(parsed.text ?? ''),
+    });
+  }
+
+  if (task === 'affirm_call') {
+    const parsed = parseJson(raw);
+    // Prose where JSON was asked for is not an affirmation. The call fails open
+    // to not-upheld, which keeps a broken model from moving tokens on its own:
+    // no path lets software decide a foul happened (soul.md section 6).
+    if (!parsed) return Response.json({ upheld: false, text: raw });
+    return Response.json({
+      upheld: parsed.upheld === true,
       text: String(parsed.text ?? ''),
     });
   }
