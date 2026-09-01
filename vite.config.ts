@@ -79,6 +79,15 @@ function coachDevApi(): Plugin {
 
 export default defineConfig({
   plugins: [react(), coachDevApi()],
+  define: {
+    // Stamped into every corpus row (corpus.ts). Roadmap section 5 wants a
+    // stored ruling to stay interpretable after the prompts that produced it
+    // have moved, and the commit is the only honest answer to "which build".
+    // Vercel sets this on the build; a laptop does not, and says so.
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(
+      process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'dev',
+    ),
+  },
   // 5273 by default, but the harness that runs this preview assigns a port when
   // another session already holds that one, and it passes it in PORT.
   server: { port: Number(process.env.PORT) || 5273 },

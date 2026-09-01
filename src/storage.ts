@@ -1,12 +1,18 @@
-// Browser storage only. Steve's ruling B2, 2026-08-23: no accounts, no Supabase,
-// no auth anywhere in the MVP. PT Brain owns auth and hands it over later, at
-// which point this module gains a sync path and loses nothing else.
+// Browser storage. Steve's ruling B2, 2026-08-23: no accounts, no auth anywhere
+// in the MVP, and PT Brain owns auth when it arrives. That half still holds; the
+// playerId below is a random local id and never an identity.
 //
-// Everything lives under one key so a player can clear it in one action, and so
-// the eventual sync has exactly one blob to reason about.
+// What changed on 2026-09-01: answered items are now also donated to Heart's own
+// Supabase project, because the team plays a deployed site and a corpus that
+// only exists on their laptops is not a corpus (HEART-T260901-03). The donation
+// is a copy, not a move. This file remains the source of truth for a player's
+// own progress, and it still works whole with the network unreachable.
+//
+// Everything lives under one key so a player can clear it in one action.
 
 import type { ItemRecord } from './types.ts';
 import { PLAYER_AVATARS } from './avatars.ts';
+import { donate } from './corpus.ts';
 
 const KEY = 'humility-showdown.v1';
 
@@ -76,6 +82,9 @@ export function recordItem(record: ItemRecord): void {
   const file = load();
   file.items.push(record);
   save(file);
+  // The local write comes first and is what play depends on. The donation is a
+  // side effect that cannot throw and cannot block; see corpus.ts.
+  donate(record, file.playerId);
 }
 
 export function markCleared(slug: string): void {
