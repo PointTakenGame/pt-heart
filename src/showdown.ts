@@ -27,7 +27,7 @@ import type {
 } from './types.ts';
 import { BEAT_GAP, dwellMs } from './pacing.ts';
 import { crowdRow } from './avatars.ts';
-import { judgeTurn, sofiaLine } from './coach.ts';
+import { judgeTurn, opponentLine } from './coach.ts';
 import { runPhraseDetectors } from './detectors.ts';
 import { THIN_REPLY, tooThin } from './engine.ts';
 import { markCleared, recordItem } from './storage.ts';
@@ -45,6 +45,11 @@ import {
 } from './content/showdown.ts';
 
 const SOFIA = 'Slippery Sofia';
+
+/** Her manner, which is all that is authored about her. Her position is not:
+ *  she argues whatever the player did not. Kept to what the prompt used to
+ *  carry implicitly in her name, so nothing about Level 4 changes. */
+const SOFIA_MANNER = 'Pleasant, quick, and never loud. You do not insult anyone.';
 
 /**
  * What a foul you failed to whistle costs you. Half a token, not a whole one:
@@ -369,7 +374,15 @@ export function useShowdown(): Match {
         if (turn.intro) await coach(turn.intro);
 
         if (turn.actor === 'sofia') {
-          const out = await sofiaLine(topic, lastPlayer, turn.kind, turn.foul, turn.fallback ?? '');
+          const out = await opponentLine(
+            SOFIA,
+            SOFIA_MANNER,
+            topic,
+            lastPlayer,
+            turn.kind,
+            turn.foul,
+            turn.fallback ?? '',
+          );
           lastSofia = out.text;
           await say({ lane: 'opponent', speaker: SOFIA, text: out.text, isSpecimen: true });
 

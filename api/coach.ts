@@ -81,6 +81,63 @@ const MARKERS: Record<string, string> = {
     'for you to correct them. If they got you right and checked, that is real listening.',
 };
 
+// The Final Showdown's three steps, and the three ways each one can land. Taken
+// column by column off the printed scoring table in
+// docs/reference/print/v7/deck-content-v7.md, examples included, because the
+// examples are the calibration. The referee-level fix of 2026-08-31 proved that
+// a model given only the abstract description of a move does not reliably
+// recognize the move.
+//
+// This is the only place in the game where a turn can earn a player tokens
+// rather than cost them, which is why there are three verdicts here and not two.
+const STEPS: Record<string, { what: string; rules: string; bonus: string; naughty: string }> = {
+  super_summary: {
+    what: 'Step 1, the Super-Summary: they restate YOUR view back to you and invite a correction.',
+    rules:
+      'They got your view right and left you room to correct it. Example: "You believe it is ' +
+      'unfair to cancel loans for college grads when many people never went to college. Did I ' +
+      'miss anything?"',
+    bonus:
+      'They added a NOVEL point that strengthens your side, one you never made yourself. Example: ' +
+      '"I also imagine that forgiving loans would anger people who paid them back already." The ' +
+      'test is simple: is there an argument for your position in there that you did not give ' +
+      'them? If yes, this is a bonus, however plainly it is worded.',
+    naughty:
+      'Their summary lost something you actually said. Not a verdict on them, just an incomplete ' +
+      'account of you that you would want to correct.',
+  },
+  what_i_learned: {
+    what: 'Step 2, What I Learned: they tell you what they took away from what you said.',
+    rules:
+      'They named something specific of yours that taught them something. Example: "I learned ' +
+      'that richer graduates hold more debt than poorer ones."',
+    bonus:
+      'They admitted they CHANGED THEIR MIND, even partly. Example: "While I still think we ' +
+      'should cancel loan debt, I changed my mind and now think it is only for low-income ' +
+      'people." A named movement in their own position is the bonus. Learning a fact is not.',
+    naughty:
+      'They used the step to deliver a verdict on you. Example: "I learned that you do not ' +
+      'understand this issue." Anything that says what kind of person you are, or what you ' +
+      'really want, lands here.',
+  },
+  why_we_disagree: {
+    what:
+      'Step 3, Why We Might Still Disagree: they say why THEY think you hold your position, in ' +
+      'terms you would recognize.',
+    rules:
+      'They named the thing you weigh more heavily than they do. Example: "You think people ' +
+      'should pay back their loans; that is less important to me."',
+    bonus:
+      'They named a POSITIVE VALUE you hold and put your position on top of it. Example: "You ' +
+      'think people should pay back their loans, because you value fairness and honoring ' +
+      'commitments." A value you would be glad to be described as having is the bonus.',
+    naughty:
+      'They framed your position as a flaw or an absence. Example: "You do not care about ' +
+      'low-income people." Anything that makes your side sound like something missing in you ' +
+      'lands here.',
+  },
+};
+
 const PROMPTS = {
   restate_perfect: (t: string) =>
     `A player in a listening drill just said this:\n\n"${t}"\n\n` +
@@ -141,17 +198,37 @@ const PROMPTS = {
     `"text": "one sentence, quoting the words at fault if there is a foul, or one short line ` +
     `of credit if there is not"}`,
 
-  // Sofia's turn. She argues the opposite of the player, and commits the foul she
-  // is told to commit, mildly. Her position is never authored, only her manner.
-  showdown_line: (topic: string, playerLine: string, kind: string, foul: string) =>
-    `You are Slippery Sofia, an opponent character in a game about disagreeing well. ` +
+  // The mirroring opponent's turn, used by Level 4 (Sofia) and Level 7
+  // (Sung-min). Both argue the opposite of whatever the player argued, which is
+  // what keeps those levels politically balanced with nothing authored: the
+  // position is never written down, only the manner. `manner` is the only thing
+  // that separates the two of them here, plus the foul schedule their content
+  // file hands over.
+  showdown_line: (
+    persona: string,
+    manner: string,
+    topic: string,
+    playerLine: string,
+    kind: string,
+    foul: string,
+    frame: string,
+  ) =>
+    `You are ${persona}, an opponent character in a game about disagreeing well. ` +
     `The topic is: ${topic}\n\n` +
     `The other player just said:\n\n"${playerLine}"\n\n` +
     `Take the opposite side from them on this topic. You never have a position of your own; ` +
     `you argue against whatever they argued, and you argue it well.\n\n` +
-    (kind === 'summarize'
-      ? `This is a SUMMARIZING turn. Restate what they just said back to them. Do not rebut yet.\n\n`
-      : `This is a SPEAKING turn. Make your own argument in two or three sentences.\n\n`) +
+    (manner ? `How you argue: ${manner}\n\n` : '') +
+    // Same fix as figure_line's frame, for the same reason: a turn told only
+    // "summarize" produces a summary, and Level 7 needs one specific turn to be
+    // a Super-Summary with a novel point in it. Without this the coach says
+    // "watch this one closely, it is the move you have to make" over an ordinary
+    // playback with nothing added.
+    (frame
+      ? `WHAT THIS TURN IS. ${frame}\nDo this. It is the whole point of the turn.\n\n`
+      : kind === 'summarize'
+        ? `This is a SUMMARIZING turn. Restate what they just said back to them. Do not rebut yet.\n\n`
+        : `This is a SPEAKING turn. Make your own argument in two or three sentences.\n\n`) +
     (foul === 'clean'
       ? `Play this turn completely clean. No verdicts on them, no opinion stated as fact, and ` +
         `if you are summarizing, keep their reason and end by checking that you got it right.`
@@ -224,6 +301,32 @@ const PROMPTS = {
     `you are not looking for reasons to be offended.\n\n` +
     `Reply with strict JSON and nothing else: {"upheld": true|false, "text": "one sentence, ` +
     `in your own voice, saying whether it landed"}.`,
+
+  // The Final Showdown, and the same architecture as affirm_call above running in
+  // the other direction. A bonus moves tokens toward the player instead of away
+  // from them, and it is still not the software's to award: the person being
+  // summarized, learned from, or described is the one who says whether it landed
+  // (roadmap section 6, the 2026-08-31 ruling). In solo play the boss is that
+  // person, so the boss rules, in character, on its own behalf.
+  affirm_step: (persona: string, step: string, topic: string, theirLine: string, line: string) => {
+    const s = STEPS[step];
+    return (
+      `You are ${persona}, a character in a game about disagreeing well. The topic is: ${topic}\n\n` +
+      `Your own position, as you last put it:\n\n"${theirLine}"\n\n` +
+      `${s?.what ?? ''}\n\nHere is what they just said to you:\n\n"${line}"\n\n` +
+      `Decide, for yourself, in character, which of these three it was.\n\n` +
+      `"bonus" means: ${s?.bonus ?? ''}\n\n` +
+      `"rules" means: ${s?.rules ?? ''}\n\n` +
+      `"naughty" means: ${s?.naughty ?? ''}\n\n` +
+      `Be generous about the bonus and slow about naughty. This is the one part of the game ` +
+      `where somebody is trying to be good to you, and a player who did the generous thing ` +
+      `clumsily still did the generous thing. Award the bonus on what they meant, not on how ` +
+      `well they wrote it. Save naughty for a line that actually stung. If it is neither, it is ` +
+      `"rules", which is the expected result and costs nobody anything.\n\n` +
+      `Reply with strict JSON and nothing else: {"verdict": "bonus"|"rules"|"naughty", "text": ` +
+      `"one sentence, in your own voice, said straight to them"}.`
+    );
+  },
 
 } as const;
 
@@ -338,10 +441,13 @@ export default async function handler(req: Request): Promise<Response> {
     );
   } else if (task === 'showdown_line') {
     prompt = PROMPTS.showdown_line(
+      String(body.persona ?? 'Slippery Sofia').slice(0, 120),
+      String(body.manner ?? '').slice(0, 600),
       String(body.topic ?? '').slice(0, 300),
       String(body.playerText ?? '').slice(0, 1200),
       String(body.kind ?? 'speak'),
       String(body.foul ?? 'clean'),
+      String(body.frame ?? '').slice(0, 600),
     );
   } else if (task === 'figure_line') {
     prompt = PROMPTS.figure_line(
@@ -358,6 +464,14 @@ export default async function handler(req: Request): Promise<Response> {
       String(body.persona ?? 'a player').slice(0, 120),
       String(body.line ?? '').slice(0, 1200),
       String(body.foul ?? ''),
+    );
+  } else if (task === 'affirm_step') {
+    prompt = PROMPTS.affirm_step(
+      String(body.persona ?? 'a player').slice(0, 120),
+      String(body.step ?? ''),
+      String(body.topic ?? '').slice(0, 300),
+      String(body.theirLine ?? '').slice(0, 1200),
+      String(body.line ?? '').slice(0, 1200),
     );
   } else {
     return new Response('unknown task', { status: 400 });
@@ -394,6 +508,19 @@ export default async function handler(req: Request): Promise<Response> {
     if (!parsed) return Response.json({ upheld: false, text: raw });
     return Response.json({
       upheld: parsed.upheld === true,
+      text: String(parsed.text ?? ''),
+    });
+  }
+
+  if (task === 'affirm_step') {
+    const parsed = parseJson(raw);
+    // Prose where JSON was asked for falls to "rules", the outcome that moves
+    // nothing. A model that could not follow the format does not get to award a
+    // bonus or charge a player, in either direction.
+    if (!parsed) return Response.json({ verdict: 'rules', text: raw });
+    const v = parsed.verdict;
+    return Response.json({
+      verdict: v === 'bonus' || v === 'naughty' ? v : 'rules',
       text: String(parsed.text ?? ''),
     });
   }

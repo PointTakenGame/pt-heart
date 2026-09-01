@@ -106,22 +106,32 @@ export async function judgeTurn(
 }
 
 /**
- * Sofia's line. `foul` is her instruction, not a prediction: the schedule that
- * decides it is authored in content/showdown.ts and the model only writes wording.
+ * The mirroring opponent's line: Sofia in Level 4, Sung-min in Level 7. Neither
+ * has a position of their own, which is what keeps those levels balanced without
+ * anybody authoring a side. `foul` is an instruction, not a prediction: the
+ * schedule that decides it is authored in the level's content file and the model
+ * only writes wording.
  */
-export async function sofiaLine(
+export async function opponentLine(
+  persona: string,
+  manner: string,
   topic: string,
   playerText: string,
   kind: 'speak' | 'summarize',
   foul: FoulType | null,
   fallback: string,
+  /** the specific move this turn is, when the level asks for one */
+  frame?: string,
 ): Promise<{ text: string; fromModel: boolean }> {
   const out = await callCoach({
     task: 'showdown_line',
+    persona,
+    manner,
     topic,
     playerText,
     kind,
     foul: foul ?? 'clean',
+    frame: frame ?? '',
   });
   const text = typeof out?.text === 'string' ? out.text.trim() : '';
   if (!text) return { text: fallback, fromModel: false };
@@ -199,4 +209,44 @@ export async function affirmCall(
     };
   }
   return { upheld: out.upheld === true, text, fromModel: true };
+}
+
+/** The three columns of the printed Final Showdown scoring table, in order. */
+export type StepVerdict = 'bonus' | 'rules' | 'naughty';
+
+export interface StepRuling {
+  verdict: StepVerdict;
+  text: string;
+  fromModel: boolean;
+}
+
+/**
+ * The Final Showdown's bonus ruling. Same architecture as affirmCall, running the
+ * other way: a bonus moves tokens toward the player rather than away, and it is
+ * still not the software's to award. The party who was summarized, learned from,
+ * or described is the one who decides (roadmap section 6). In solo play that
+ * party is the boss.
+ *
+ * The no-model case falls to 'rules', which moves nothing in either direction.
+ * There is no schedule to read the answer off here, unlike affirmCall: what the
+ * player typed is the whole input, so a dead model has genuinely nothing to go
+ * on, and awarding or charging on a guess is the one thing it must not do.
+ */
+export async function affirmStep(
+  persona: string,
+  step: string,
+  topic: string,
+  theirLine: string,
+  line: string,
+  fallback: string,
+): Promise<StepRuling> {
+  const out = await callCoach({ task: 'affirm_step', persona, step, topic, theirLine, line });
+  const text = typeof out?.text === 'string' ? out.text.trim() : '';
+  if (!text) return { verdict: 'rules', text: fallback, fromModel: false };
+  const v = out.verdict;
+  return {
+    verdict: v === 'bonus' || v === 'naughty' ? v : 'rules',
+    text,
+    fromModel: true,
+  };
 }

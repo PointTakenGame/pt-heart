@@ -16,8 +16,16 @@ import { Prefight } from './ui/Prefight.tsx';
 import { Mast } from './ui/Mast.tsx';
 import { useShowdown } from './showdown.ts';
 import { useReferee } from './referee.ts';
+import { useFinal } from './final.ts';
 import { REFEREE_LEVELS, type RefereeLevel } from './content/referee.ts';
 import { SHOWDOWN_PREFIGHT, SHOWDOWN_SLUG, SOFIA_EMOJI } from './content/showdown.ts';
+import {
+  FINAL_PREFIGHT,
+  FINAL_SLUG,
+  SUNGMIN,
+  SUNGMIN_EMOJI,
+  SUNGMIN_EPITHET,
+} from './content/final.ts';
 import { CARD_ORDER } from './content/cards.ts';
 import { COACH_EMOJI, DEFAULT_AVATAR, shuffledAvatars } from './avatars.ts';
 import { getAvatar, isCleared, load, setAvatar } from './storage.ts';
@@ -27,7 +35,8 @@ type Screen =
   | { name: 'select' }
   | { name: 'level'; level: LevelDef }
   | { name: 'showdown' }
-  | { name: 'referee'; level: RefereeLevel };
+  | { name: 'referee'; level: RefereeLevel }
+  | { name: 'final' };
 
 export function App() {
   const seen = Object.keys(load().cleared).length > 0;
@@ -50,11 +59,15 @@ export function App() {
         onPick={(level) => setScreen({ name: 'level', level })}
         onShowdown={() => setScreen({ name: 'showdown' })}
         onReferee={(level) => setScreen({ name: 'referee', level })}
+        onFinal={() => setScreen({ name: 'final' })}
       />
     );
   }
   if (screen.name === 'showdown') {
     return <Showdown avatar={avatar} onExit={() => setScreen({ name: 'select' })} />;
+  }
+  if (screen.name === 'final') {
+    return <Final avatar={avatar} onExit={() => setScreen({ name: 'select' })} />;
   }
   if (screen.name === 'referee') {
     return (
@@ -166,12 +179,14 @@ function Select({
   onPick,
   onShowdown,
   onReferee,
+  onFinal,
 }: {
   avatar: string;
   onAvatar: (emoji: string) => void;
   onPick: (l: LevelDef) => void;
   onShowdown: () => void;
   onReferee: (l: RefereeLevel) => void;
+  onFinal: () => void;
 }) {
   // Two screens, not one. Steve, 2026-08-25: "Let them choose their fighter. And
   // then hit done and then show the levels. Don't show them both at once." So
@@ -307,6 +322,29 @@ function Select({
             </li>
           );
         })}
+        {/* Level 7. Behind level 6, because the Final Showdown asks the player to
+            perform two moves they only ever refereed before. */}
+        <li>
+          {(() => {
+            const locked = !isCleared(REFEREE_LEVELS[REFEREE_LEVELS.length - 1].slug);
+            return (
+              <button
+                className={`level-card level-card-boss${locked ? ' is-locked' : ''}`}
+                disabled={locked}
+                onClick={onFinal}
+              >
+                <span className="level-n">{locked ? '\u{1F512}' : '7'}</span>
+                <span className="level-mid">
+                  <span className="level-title">The Final Showdown</span>
+                  <span className="level-sub">
+                    {locked ? 'clear level 6 first' : `Be generous · ${SUNGMIN}`}
+                  </span>
+                </span>
+                {isCleared(FINAL_SLUG) && <span className="level-done">played</span>}
+              </button>
+            );
+          })()}
+        </li>
       </ul>
     </div>
   );
@@ -509,6 +547,92 @@ function Showdown({ avatar, onExit }: { avatar: string; onExit: () => void }) {
     );
   }
   return <Match avatar={avatar} onExit={onExit} />;
+}
+
+function Final({ avatar, onExit }: { avatar: string; onExit: () => void }) {
+  const [stage, setStage] = useState<'prefight' | 'intro' | 'match'>('prefight');
+  if (stage === 'prefight') {
+    return (
+      <Prefight
+        steps={FINAL_PREFIGHT}
+        enterLabel="In with Sung-min"
+        onEnter={() => setStage('intro')}
+        onExit={onExit}
+        opponent={{ emoji: SUNGMIN_EMOJI, name: SUNGMIN, epithet: SUNGMIN_EPITHET }}
+      />
+    );
+  }
+  if (stage === 'intro') {
+    return (
+      <BossIntro
+        fightNumber={7}
+        boss={SUNGMIN}
+        bossEmoji={SUNGMIN_EMOJI}
+        epithet={SUNGMIN_EPITHET}
+        playerEmoji={avatar}
+        onStart={() => setStage('match')}
+      />
+    );
+  }
+  return <FinalRun avatar={avatar} onExit={onExit} />;
+}
+
+function FinalRun({ avatar, onExit }: { avatar: string; onExit: () => void }) {
+  const match = useFinal();
+  const thread = useRef<ThreadHandle>(null);
+  const land = useCallback(() => {
+    thread.current?.land();
+  }, []);
+  useLayoutEffect(land, [match.finished, land]);
+
+  const call = match.composer.kind === 'call' ? match.composer : null;
+
+  return (
+    <div className="page page-level">
+      <Mast
+        slim
+        right={
+          <button className="link" onClick={onExit}>
+            Leave
+          </button>
+        }
+      />
+      <Header
+        title="The Final Showdown"
+        teaches={`Bonuses: ${match.bonuses} of 3`}
+        beatName={match.phase}
+        purses={{
+          player: match.playerTokens,
+          opponent: match.bossTokens,
+          opponentLabel: 'sung-min',
+          opponentEmoji: SUNGMIN_EMOJI,
+          playerEmoji: avatar,
+        }}
+      />
+      <Thread
+        ref={thread}
+        messages={match.messages}
+        avatars={{ coach: COACH_EMOJI, opponent: SUNGMIN_EMOJI, player: avatar }}
+        waiting={match.waiting}
+        onSkip={match.skip}
+      />
+      {match.finished ? (
+        <div className="composer">
+          <button className="btn btn-wide" onClick={onExit}>
+            Back to the gym
+          </button>
+        </div>
+      ) : (
+        <Composer state={match.composer} onSubmit={match.submit} onResize={land} />
+      )}
+      <RuleCards
+        enabled={CARD_ORDER}
+        live={liveCards(match.composer.kind, call?.callable)}
+        onCall={(f) => match.submit(f, [])}
+        pass={call ? { label: call.pass.label, onPass: () => match.submit(call.pass.value, []) } : undefined}
+      />
+    </div>
+  );
 }
 
 function Referee({
