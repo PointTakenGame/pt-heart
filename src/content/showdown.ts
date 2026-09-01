@@ -234,14 +234,11 @@ export const COACH = {
   onPlayerFoul: (foul: FoulType, cost: number) =>
     `That is on you. ${RULE_LABEL[foul]}: ${RULE_GLOSS[foul]}. ${cost} to her.`,
   onPlayerClean: 'Clean.',
-  /**
-   * A Judging or Opinions-as-Facts foul committed inside a summarizing turn.
-   * The expensive card gets ruled and paid for, and then the summary still has
-   * to be done (ruling of 2026-08-24). Burying a two-token foul in a summary
-   * does not convert it into a one-token one.
-   */
-  redoSummary: (foul: FoulType) =>
-    `${RULE_LABEL[foul]} does not get cheaper because it happened inside a summary. That is paid for. The summary still has not been done. Do it again.`,
+  // Retired 2026-08-31: redoSummary, which made a player redeliver a summary
+  // that carried a Judging or Opinions-as-Facts foul. No redo anywhere now. The
+  // half of the 2026-08-24 ruling that survives is still enforced above, in
+  // foulCost: burying a two-token foul inside a summary does not convert it
+  // into a one-token one.
   ledger: (p: number, s: number) =>
     `End of the round. You ${formatTokens(p)}, her ${formatTokens(s)}.`,
   win: 'You took it. Not because you were right about the policy; I have no idea who was right about the policy. You took it because you stayed on the argument and she didn\'t.',

@@ -282,8 +282,6 @@ function renderShowdown(): void {
   blank();
   quote(COACH.onPlayerClean, "Coach rules the player's turn clean");
   blank();
-  quote(COACH.redoSummary('judging'), 'A costed foul is buried inside a summary turn (sample: Judging)');
-  blank();
   quote(COACH.ledger(5.5, 4), 'End-of-round ledger (sample: player 5½, Sofia 4)');
   blank();
   quote(COACH.win, 'Match result: win');

@@ -8,9 +8,13 @@
 // The gym is gated (ruling of 2026-08-24, "don't let the game move on when the
 // player doesn't engage properly"). A wrong call, a wrong sort, an unedited
 // prefill, or a one-character answer loops back to the same step with the coach
-// saying why. Nothing advances until the item is actually done. The edit steps
-// keep a three-attempt ceiling, the same ceiling live play uses, so a player the
-// model keeps failing is never stuck in the drill forever.
+// saying why. Nothing advances until the item is actually done.
+//
+// Not engaging and getting it wrong are two different things, and only the first
+// one loops. An edit the player genuinely attempted gets one ruling: if it falls
+// short it costs a token and play moves on (Steve, 2026-08-31, the same ruling
+// that took the redo out of the showdown). Nobody at a real table gets to rewind
+// and deliver the sentence they meant to deliver.
 //
 // Both purses run from level 1, seven tokens a side, same as the printed game.
 // Right on the first try takes one off the opponent; a wrong first try hands one
@@ -478,29 +482,21 @@ export function useGym(level: LevelDef): Gym {
 
           setComposer({ kind: 'locked' });
           push({ lane: 'player', text: value });
-          const tryNo = attempts.current;
           void (async () => {
             const out = await judgeEdit(step.target, step.prefill, value, step.fallback);
-            record(out.pass, tryNo === 0 ? '' : `-redo${tryNo}`);
+            record(out.pass, '');
             push({ lane: 'coach', text: out.text });
 
+            // One pass, and then on. Steve's ruling of 2026-08-31: a miss costs
+            // the point once and play moves on, here as in the showdown. The
+            // gate above still holds a player who did not engage at all, an
+            // unedited prefill or a one-character answer; this is the other
+            // case, a real attempt the coach judged short, and it is paid for
+            // rather than rewound.
+            //
             // pass === null means the coach could not reach the model, so there
-            // is no ruling to hold anybody to. Take it and move on.
-            if (out.pass === false && tryNo < 2) {
-              chargeMiss();
-              push({ lane: 'coach', text: 'Try that again. Fix the part I just named.' });
-              attempts.current = tryNo + 1;
-              nonce.current += 1;
-              setComposer({
-                kind: 'prefilled',
-                // Their own attempt, not the original: nobody should have to
-                // retype the half of it that was already right.
-                prefill: value,
-                chips: step.chips,
-                nonce: nonce.current,
-              });
-              return;
-            }
+            // is no ruling to hold anybody to and nothing is charged.
+            if (out.pass === false) chargeMiss();
             settle();
           })();
           return;

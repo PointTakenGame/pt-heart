@@ -421,16 +421,18 @@ export function useShowdown(): Match {
             if (bust && (await bankruptCheck())) return;
           }
         } else {
-          // A summarizing turn that carries one of the other two fouls gets ruled
-          // on that card, at that card's price, and then has to be done again:
-          // the summary was never delivered. Three attempts is the ceiling, so a
-          // player who cannot get there does not sit in the loop; the token cost
-          // has already made the point by then.
+          // One pass. Steve's ruling of 2026-08-31: a miss costs the point once
+          // and play moves on immediately, with no second try offered. The redo
+          // was teaching the wrong reflex. At a real table nobody rewinds the
+          // conversation so you can deliver the summary you meant to deliver;
+          // you paid for the one you actually said, and the next thing out of
+          // your mouth is the only thing you get to fix.
           //
-          // A while loop rather than a for, because a non-answer does not spend an
-          // attempt. The three attempts are for real tries at a real summary.
-          let attempt = 1;
-          while (attempt <= 3) {
+          // The loop that remains is not a retry. A non-answer is refused rather
+          // than judged (Steve, 2026-08-24: the game does not move on when the
+          // player does not engage), so it costs nothing, spends nothing, and
+          // comes straight back to the same prompt.
+          for (;;) {
             nonce.current += 1;
             const answer = await ask({
               kind: 'template',
@@ -465,12 +467,9 @@ export function useShowdown(): Match {
             const ruled = await judgeTurn(topic, turn.kind, text, lastSofia);
             const foul = ruled ? ruled.foul : offlineRuling(turn.kind, text);
 
-            // Every attempt is its own row in the corpus. What somebody wrote on
-            // the second pass, after being told what the first one cost, is the
-            // interesting half of this level.
             record(
               turn,
-              attempt === 1 ? '' : `-redo${attempt - 1}`,
+              '',
               turn.kind === 'summarize' ? 'fake_listening' : 'mixed',
               text,
               foul === null,
@@ -488,11 +487,7 @@ export function useShowdown(): Match {
               await coach(COACH.onPlayerClean);
             }
 
-            const owesRedo =
-              turn.kind === 'summarize' && (foul === 'judging' || foul === 'opinion_as_fact');
-            if (!owesRedo || attempt === 3) break;
-            await coach(COACH.redoSummary(foul));
-            attempt += 1;
+            break;
           }
         }
 
