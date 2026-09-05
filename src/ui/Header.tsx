@@ -34,6 +34,12 @@ interface Purses {
   opponentLabel: string;
   opponentEmoji: string;
   playerEmoji: string;
+  /** the right-hand purse's name. "you" everywhere the player is in the
+   *  argument. In the ref seat the player holds no tokens at all (Nathan,
+   *  ruling 2, 2026-09-05: "the ref does not have a token count") and both
+   *  stacks belong to the two fighters (ruling 3: "show both fighter's purses
+   *  and drop the 'you' side"), so this names the second fighter instead. */
+  playerLabel?: string;
 }
 
 interface Props {
@@ -153,7 +159,13 @@ export function Header({ title, teaches, beatName, purses }: Props) {
           side="them"
           stack={them}
         />
-        <Purse value={purses.player} label="you" face={purses.playerEmoji} side="you" stack={you} />
+        <Purse
+          value={purses.player}
+          label={purses.playerLabel ?? 'you'}
+          face={purses.playerEmoji}
+          side="you"
+          stack={you}
+        />
       </div>
     </header>
   );

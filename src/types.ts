@@ -101,6 +101,18 @@ interface CallOrPassStep {
   /** which cards are live on the rail for this one call. Defaults to `[rule]`;
    *  levels 4 and 5 run all three, so the answer is a real choice. */
   callable?: FoulType[];
+  /** whose purse pays an upheld call. Defaults to `'opponent'`, which is right
+   *  for every level where the player is in the argument and the person across
+   *  the table is the one fouling. In the ref seat both purses belong to other
+   *  people, so each call has to name which of the two just fouled. */
+  charges?: 'player' | 'opponent';
+  /** Ref seat only (Nathan, ruling 5, 2026-09-05: the confirm "becomes suggest
+   *  it and watch them rule"). The whistle is a suggestion; the person the foul
+   *  landed on rules on it out loud. `upheld` is what they say when the ref
+   *  picked the card they will take, `declined` when they will not take it —
+   *  and a declined call is the AI player's "no", which replaces the coach
+   *  explaining that it was the wrong card. */
+  ruling?: { speaker: string; upheld: string; declined: string };
 }
 
 interface SortStep {
@@ -246,6 +258,21 @@ export interface LevelDef {
   enterLabel?: string;
   /** the boss's face, big, on every line they speak */
   bossEmoji: string;
+  /** a face per speaker name, for a level fielding more than one opponent. The
+   *  two of them share a lane and `bossEmoji` is the pair, so without this
+   *  Victor and Olivia wear the same head and the player cannot tell at a glance
+   *  who just fouled (Nathan, finding 14). Falls back to `bossEmoji`. */
+  bossFaces?: Record<string, string>;
+  /** who the two token stacks belong to when the player referees. The ref holds
+   *  no purse (Nathan, ruling 2, 2026-09-05: "the ref does not have a token
+   *  count, so their mistakes are not penalized"), so the header shows the two
+   *  fighters instead of "you" (ruling 3). `left` is the engine's `opponent`
+   *  purse, `right` is its `player` purse — the engine holds exactly two and we
+   *  did not add a third, we relabelled these. */
+  fighters?: {
+    left: { name: string; emoji: string };
+    right: { name: string; emoji: string };
+  };
   /** one line of trash talk for the entrance screen */
   bossEpithet: string;
   /** everything the coach says before the door opens */

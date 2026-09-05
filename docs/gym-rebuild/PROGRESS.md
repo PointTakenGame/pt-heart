@@ -46,16 +46,16 @@ mistake.** Grouped by the fix they need, not by level.
 | 10 | L3 | "I don't buy full remote" reads as buying a remote control | **done** |
 | 11 | L3 | boss fight races past the first interaction, then freezes | **done** (freeze; races-past by ruling 1) |
 | 12 | L4 | start button read "In with Olivia" in a two-opponent level | **done** |
-| 13 | L4 | first boss line hands the *player* an opinion and makes Ray ref | open (E) |
-| 14 | L4 | large revamp: Victor vs Olivia, player refs, player holds **no tokens** | open (E) |
+| 13 | L4 | first boss line hands the *player* an opinion and makes Ray ref | **done** |
+| 14 | L4 | large revamp: Victor vs Olivia, player refs, player holds **no tokens** | **done** |
 | 15 | L5 | "That's the attack…" wrong for three already-earned cards | **done** |
 | 16 | L5 | boss summaries do not read what the player wrote | **done** |
 | 17 | L5 | boss writes the same point three times | **done** |
 | 18 | L5 | round 3 "She's behind" asserted at 7-7 | **done** |
 
-Groups still open: **E** the L4 ref revamp (13, 14) · **G** zoom/fit (1). Group **F**
-(L5 boss quality, 16 and 17) is **closed** — see below. Group **C** is closed except for
-the one content ruling below.
+Groups still open: **G** zoom/fit (1). Group **E** (the L4 ref revamp, 13 and 14) is
+**closed** — see below. Group **F** (L5 boss quality, 16 and 17) is **closed**. Group
+**C** is closed except for the one content ruling below.
 
 ### Round two of fixes: 2, 5, 7, 8, 9
 
@@ -267,6 +267,64 @@ the last because **`npm run build` type-checks `scripts/` too**, so any change t
 exported shape in `src/content/` has to be swept into the exporter. Its fallback column
 now renders all three topic variants, or renders once labelled topic-independent for the
 playback summary.
+
+### Group E — findings 13 and 14, and Nathan's rulings 2, 3, 5 (L4)
+
+**The whole level was rebuilt.** L4 used to hand the *player* an opinion about the
+highway and seat *Ray* as referee — the exact inversion of what the level is for.
+Now **Victor argues Olivia**, the **player holds the whistle and nothing else**, and Ray
+coaches from outside the argument.
+
+**Ruling 2 — the ref holds no purse.** There is no third purse in the engine and there
+did not need to be: the two existing purses are **relabelled**, engine `opponent` =
+Victor (left), engine `player` = Olivia (right). `src/engine.ts` gains
+`const isRef = level.seat === 'referee'`; `chargeMiss` returns immediately when `isRef`,
+and the "a bad whistle costs you one" sentence is gated `tokensLive && !isRef`. The
+*payout* still runs: an upheld call moves the fouling player's tokens across the table.
+Which purse pays is named per step by the new `CallOrPassStep.charges?: 'player' |
+'opponent'` (default `'opponent'`), because in the ref seat both purses belong to other
+people. `l4-olivia-oaf` is the one step carrying `charges: 'player'`.
+
+**Ruling 3 — both fighters' purses, no "you" side.** `Header.tsx` takes a
+`playerLabel`; `LevelDef` takes `fighters: { left, right }` and `bossFaces`. App passes
+the fighters for the **whole level, not just the boss beat**, because beat 1 names the
+two stacks out loud. The header now reads `aria-label="victor 7"` /
+`aria-label="olivia 7"` with distinct faces and no "you". `bossFaces` also gives Victor
+and Olivia separate avatars inside the thread, which the single `bossEmoji` could not.
+
+**Ruling 5 — "suggest it and watch them rule".** `CallOrPassStep.ruling?: { speaker,
+upheld, declined }`. A correct card plays the offendee's `upheld` before the card, then
+Ray, then the transfer. A **wrong** card plays the offendee's `declined` and stops —
+no cost, no retry, and **the fighter's "no" replaces only the generic `CARDS[rule].tell`,
+never an authored Ray line**, so a bad whistle on a clean line still gets Ray's written
+explanation after the refusal.
+
+**Runtime-verified end to end** (all six paths, purses summing to 14 throughout):
+correct Judging call → Olivia's "Yes. Take it." → card → Ray → **two** tokens Victor→
+Olivia (`victor 5 | olivia 9`); correct `charges: 'player'` call → Victor's upheld →
+`victor 8 | olivia 6`; wrong card on a foul line → Olivia's "no", purses unchanged;
+missed call → Ray's miss text with no cost sentence, purses unchanged; bad whistle on a
+clean line → Victor's "no" **then Ray's authored explanation**, no cost; correct pass on
+a clean line → Ray's `onPass`. Closing `free` step and the Review screen both check out;
+Review already says "You sat in the ref's chair…" and shows no tokens.
+
+**Two things Nathan should see in the PR.**
+1. **L4 no longer carries a `confirm` step.** Ruling 5 replaced it with the fighters'
+   own rulings. CLAUDE.md says a confirm dialogue "is a core component in every level,
+   both seats" — that was already untrue in the code (L3 was the only one), and the
+   ruling supersedes it here. Flagged in the `level4.ts` header rather than dropped
+   quietly. **CLAUDE.md needs a line change, or the claim needs to become true.**
+2. **The balance ledger moved 2-2 → Victor 2 / Olivia 1.** The demo beat that was cut in
+   the rebuild was Olivia's second catch. Recorded in the file's ledger comment rather
+   than re-authored on the fly. Nathan closed the balance question for this pass
+   ("the political balance is fine, you can leave it"), so this is a note, not a debt.
+
+**Ruling 8 was withdrawn.** Nathan: *"i agree with you, no need to implement ruling 8 on
+visibilitychange."* Pause/resume on `visibilitychange` is **not** implemented and is not
+carried as work. The tab-backgrounding burst stays a known, accepted behaviour.
+
+Touched `src/types.ts`, `src/engine.ts`, `src/content/level4.ts`, `src/ui/Thread.tsx`,
+`src/ui/Drill.tsx`, `src/ui/Header.tsx`, `src/App.tsx`.
 
 ## Carried state
 

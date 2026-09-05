@@ -6,6 +6,11 @@ export interface Avatars {
   coach: string;
   opponent: string;
   player: string;
+  /** a face per speaker name, for a level fielding more than one opponent. Two
+   *  bosses share the opponent lane, so without this Victor and Olivia wear the
+   *  same head and the player cannot tell at a glance who just fouled (Nathan,
+   *  finding 14). Any name not listed falls back to `opponent`. */
+  faces?: Record<string, string>;
 }
 
 export interface ThreadHandle {
@@ -133,7 +138,11 @@ export function Thread({ messages, avatars, onSkip, ref }: Props) {
         // who is talking. The coach is centered, in neither lane, because he is
         // not in the argument (ruling of the same day).
         const face =
-          m.lane === 'coach' ? avatars.coach : m.lane === 'player' ? avatars.player : avatars.opponent;
+          m.lane === 'coach'
+            ? avatars.coach
+            : m.lane === 'player'
+              ? avatars.player
+              : ((m.speaker && avatars.faces?.[m.speaker]) ?? avatars.opponent);
         const cls = [
           'msg',
           `msg-${m.lane}`,

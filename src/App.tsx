@@ -456,6 +456,9 @@ function Room({
   // beginBoss clears the thread on the way through, so the fight opens empty and
   // the drill's worked examples cannot read as things the boss just said.
   const inBoss = level.beats[gym.beatIndex]?.boss === true;
+  // Set only on a ref-seat level, where the two purses belong to the two
+  // fighters rather than to the player and whoever is across from them.
+  const fighters = level.fighters;
 
   const railLive = inBoss || !drillBehind;
 
@@ -489,12 +492,23 @@ function Room({
         title={level.title}
         teaches={level.teaches}
         beatName={gym.beatName}
+        // A ref-seat level names both stacks after the two fighters and shows
+        // no "you" side at all, because the player holds nothing (Nathan,
+        // rulings 2 and 3, 2026-09-05). It reads that way for the whole level,
+        // drills included, since the coach says out loud in the first beat
+        // whose the two stacks are. `left` is the engine's opponent purse and
+        // `right` its player purse; there are still only two.
         purses={{
           player: gym.playerTokens,
           opponent: gym.opponentTokens,
-          opponentLabel: inBoss ? level.boss.split(' ')[0].toLowerCase() : 'coach',
-          opponentEmoji: inBoss ? level.bossEmoji : COACH_EMOJI,
-          playerEmoji: avatar,
+          opponentLabel: fighters
+            ? fighters.left.name
+            : inBoss
+              ? level.boss.split(' ')[0].toLowerCase()
+              : 'coach',
+          opponentEmoji: fighters ? fighters.left.emoji : inBoss ? level.bossEmoji : COACH_EMOJI,
+          playerEmoji: fighters ? fighters.right.emoji : avatar,
+          playerLabel: fighters ? fighters.right.name : 'you',
         }}
       />
       {inBoss ? (
@@ -502,7 +516,14 @@ function Room({
           <Thread
             ref={thread}
             messages={gym.messages}
-            avatars={{ coach: COACH_EMOJI, opponent: level.bossEmoji, player: avatar }}
+            // Two bosses share the opponent lane in the ref seat, so they need
+            // a face apiece or the player cannot see who just fouled.
+            avatars={{
+              coach: COACH_EMOJI,
+              opponent: level.bossEmoji,
+              player: avatar,
+              faces: level.bossFaces,
+            }}
             onSkip={gym.skip}
           />
           {composerNode}

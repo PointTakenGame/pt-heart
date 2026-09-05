@@ -133,7 +133,11 @@ export function Drill({
   // a line on the table. Same rule the thread uses.
   const faceless = m.isSpecimen && m.lane === 'coach';
   const face =
-    m.lane === 'coach' ? avatars.coach : m.lane === 'player' ? avatars.player : avatars.opponent;
+    m.lane === 'coach'
+      ? avatars.coach
+      : m.lane === 'player'
+        ? avatars.player
+        : ((m.speaker && avatars.faces?.[m.speaker]) ?? avatars.opponent);
   // A call is a whistle, not a remark, and it is the loudest thing the player
   // does all night. Steve, 2026-08-25: "When the player calls a foul like
   // judging, then they need to that Text chat line needs to be orange, not

@@ -158,6 +158,12 @@ export function useGym(level: LevelDef): Gym {
   // has to be re-honoured by every future step kind is a promise that will break.
   // One choke point cannot be forgotten.
   const tokensLive = level.tokens === 'live';
+  // In the ref seat neither purse is the player's. Nathan, ruling 2, 2026-09-05:
+  // "A missed call by the ref costs nothing. The ref does not have a token
+  // count, so their mistakes are not penalized. If the ref calls a foul on a
+  // player, that player still owes the token cost to the other player." So the
+  // payout below still runs, and only the miss charge is switched off.
+  const isRef = level.seat === 'referee';
   const transfer = useCallback((from: 'player' | 'opponent', n: number) => {
     if (!tokensLive) return;
     const moved = Math.min(n, purse.current[from]);
@@ -483,6 +489,8 @@ export function useGym(level: LevelDef): Gym {
        *  bad whistle is a flat one; the good-call payout below is what scales
        *  with the card (judging is a double penalty). */
       const chargeMiss = (n = 1) => {
+        // The ref holds nothing, so there is nothing to take (ruling 2).
+        if (isRef) return;
         if (paidThisItem.current) return;
         paidThisItem.current = true;
         transfer('player', n);
@@ -528,12 +536,20 @@ export function useGym(level: LevelDef): Gym {
             // coach, then the token flies. Steve, 2026-08-25: "thorw the foul
             // card in teh chat BEFORE the points move." Reading it in that
             // order tells you what you were paid for.
+            // From the ref seat the whistle only suggests, so the person it
+            // landed on rules on it before the card lands and the token moves
+            // (Nathan, ruling 5: "suggest it and watch them rule").
+            if (step.ruling) {
+              push({ lane: 'opponent', speaker: step.ruling.speaker, text: step.ruling.upheld });
+            }
             push({ lane: 'coach', text: CARDS[step.rule].name, card: step.rule });
             after(CARD_BEFORE_PAY_MS, () => {
               push({ lane: 'coach', text: step.onCall });
               // The card sets the price. Judging is a double penalty, so a good
               // judging call moves two; the other two move one (defect 3).
-              transfer('opponent', CARDS[step.rule].cost);
+              // `charges` names which purse pays: in the ref seat both belong to
+              // other people, and the one who fouled owes the one they fouled.
+              transfer(step.charges ?? 'opponent', CARDS[step.rule].cost);
               settle();
             });
             return;
@@ -545,6 +561,13 @@ export function useGym(level: LevelDef): Gym {
           // the whistle you never blew is not a foul you committed. Only a bad
           // whistle costs, and only where the economy is live.
           if (step.expected === 'clean') chargeMiss();
+          // A whistle the offendee will not take gets ruled on out loud, and
+          // that "no" is the feedback (ruling 5) — it replaces the coach
+          // explaining which card it should have been, which read like a
+          // rulebook correction rather than a round being played.
+          if (called && step.ruling) {
+            push({ lane: 'opponent', speaker: step.ruling.speaker, text: step.ruling.declined });
+          }
           // Every item is authored with the answer to a wrong turn already in
           // it: on a foul line onPass is what the coach says to someone who let
           // it by, and on a clean line onCall is what he says to a bad whistle.
@@ -552,13 +575,15 @@ export function useGym(level: LevelDef): Gym {
           // put words in his mouth that did not match the line on the table.
           const missText =
             step.expected === 'clean'
-              ? tokensLive
+              ? tokensLive && !isRef
                 ? `${step.onCall} A bad whistle costs you one.`
                 : step.onCall
               : called
-                ? `That was a foul, but not that one. ${CARDS[step.rule].tell}`
+                ? step.ruling
+                  ? ''
+                  : `That was a foul, but not that one. ${CARDS[step.rule].tell}`
                 : step.onPass;
-          push({ lane: 'coach', text: missText });
+          if (missText) push({ lane: 'coach', text: missText });
           settle();
           return;
         }
@@ -677,7 +702,7 @@ export function useGym(level: LevelDef): Gym {
           return;
       }
     },
-    [cursor, seq, level.slug, push, transfer, tokensLive],
+    [cursor, seq, level.slug, push, transfer, tokensLive, isRef],
   );
 
   return {
