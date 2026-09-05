@@ -80,7 +80,13 @@ for n in $(seq "$first" "$last"); do
 Read docs/gym-rebuild/PROGRESS.md before the brief; its Carried state section is
 binding. Finish by running npm run build, updating PROGRESS.md (flip step $n to
 **done**, rewrite Carried state for the next step), and committing everything in
-one commit. Do not push."
+one commit. Do not push.
+
+Nathan, 2026-09-05: this round is committed and pushed but NOT pull-requested.
+If your brief tells you to open a PR, skip it and say so in your summary - he
+pushes and handles the PR himself. If your brief tells you to spawn playtest
+agents, skip that too: the playtest runs separately, against a local dev server,
+from the session that started you."
 
   before=$(git rev-parse HEAD)
   log="$LOG_DIR/step-$n.log"
