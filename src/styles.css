@@ -667,6 +667,27 @@ p  { margin: 0 0 0.75rem; }
 }
 .composer-row textarea:focus { outline: 2px solid var(--teal); outline-offset: -1px; }
 
+/* The confirm dialogue: two buttons and an optional note. The note is quieter
+   than a real answer box on purpose — one row, no send button of its own —
+   because it is a rider on the verdict and most players will not use it. */
+.composer-confirm textarea {
+  resize: none;
+  font: inherit;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px dashed var(--rule);
+  background: var(--white);
+  color: inherit;
+  min-height: 2.6rem;
+  max-height: 22vh;
+  overflow-y: auto;
+}
+.composer-confirm textarea:focus {
+  border-style: solid;
+  outline: 2px solid var(--teal);
+  outline-offset: -1px;
+}
+
 /* ---------- the level page ---------- */
 
 /* Header, rail, thread, composer. Only the thread and the open card scroll; the

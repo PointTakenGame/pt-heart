@@ -1,7 +1,7 @@
 // The whole gym is one thread of messages plus a list of steps that produce them.
-// Levels 1 to 3. Both sides carry a seven-token purse from level 1 on, the coach
-// is still the only referee, and every answering step is gated: a wrong or empty
-// answer loops back to the same step instead of advancing the level.
+// Levels 1 to 5. Both sides carry a seven-token purse from level 1 on, and every
+// answering step runs exactly once: the answer is taken, it is paid for or it is
+// not, and the level moves on. There are no retries anywhere (Q6, Q12).
 
 export type FoulType = 'judging' | 'opinion_as_fact' | 'fake_listening';
 
@@ -46,6 +46,15 @@ export type ComposerState =
   | { kind: 'free'; placeholder: string; chips: string[]; nonce?: number }
   /** A sentence frame the player fills in, rather than a blank box plus hints. */
   | { kind: 'template'; segments: TemplateSegment[]; nonce?: number }
+  /** The offendee ruling on a suggested foul: two buttons for the fast path and
+   *  a text box that is always there, because they may want to say something. */
+  | {
+      kind: 'confirm';
+      yes: string;
+      no: string;
+      placeholder: string;
+      nonce?: number;
+    }
   | { kind: 'continue'; label: string };
 
 export interface Revision {
@@ -89,8 +98,9 @@ interface CallOrPassStep {
   expected: 'foul' | 'clean';
   onCall: string;
   onPass: string;
-  /** shown when the player gets it wrong and has to answer again */
-  onWrong?: string;
+  /** which cards are live on the rail for this one call. Defaults to `[rule]`;
+   *  levels 4 and 5 run all three, so the answer is a real choice. */
+  callable?: FoulType[];
 }
 
 interface SortStep {
@@ -124,6 +134,44 @@ interface FreeStep {
   capture: string;
 }
 
+/** The offendee has the last word. A foul has been suggested — by a referee, by
+ *  the coach standing in for one, or by the opponent answering "did I miss
+ *  anything?" — and the person who might have been fouled rules on it: yes, no,
+ *  or their own words. Both replies are authored, so this runs with no API key,
+ *  and neither answer is wrong: soul.md §6 gives the call to the human who was
+ *  there. Denying a call is free and is said out loud. */
+interface ConfirmStep {
+  kind: 'confirm';
+  id: string;
+  rule: FoulType;
+  lane: 'coach' | 'opponent';
+  speaker?: string;
+  /** the suggestion itself, spoken before the buttons open */
+  ask: string;
+  /** what the suggester says when the call is upheld */
+  onYes: string;
+  /** what they say when it is waved off */
+  onNo: string;
+  yesLabel?: string;
+  noLabel?: string;
+  placeholder?: string;
+  /** whose purse pays when the call is upheld. Omit and nothing moves. */
+  pays?: 'player' | 'opponent';
+}
+
+/** A sentence frame with blanks in it. The player is not staring at an empty
+ *  box; the shape of the move is already on screen and they supply the words. */
+interface TemplateStep {
+  kind: 'template';
+  id: string;
+  rule: FoulType;
+  /** what the coach asks for before the frame opens */
+  ask?: string;
+  segments: TemplateSegment[];
+  /** what the coach says back. One pass, no grading. */
+  reply?: string;
+}
+
 interface ModelStep {
   kind: 'model';
   id: string;
@@ -145,13 +193,16 @@ export type Step =
   | SortStep
   | EditStep
   | FreeStep
+  | ConfirmStep
+  | TemplateStep
   | ModelStep
   | ContinueStep;
 
 export interface Beat {
   name: string;
   steps: Step[];
-  /** the boss walks out here: the thread clears and the entrance screen runs */
+  /** the boss walks out here: the entrance screen runs and the thread stays put,
+   *  because the gym is open book and the player can read back (Q23) */
   boss?: boolean;
 }
 
@@ -171,6 +222,12 @@ export interface LevelDef {
   title: string;
   teaches: string;
   rule: FoulType;
+  /** every card the level puts on the rail. One-card levels list their own
+   *  rule; levels 4 and 5 list all three. */
+  cards: FoulType[];
+  /** which chair the player is in. Omitted means the player is arguing; the
+   *  referee level says so, and the word is withheld until then. */
+  seat?: 'player' | 'referee';
   boss: string;
   /** the boss's face, big, on every line they speak */
   bossEmoji: string;

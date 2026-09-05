@@ -33,6 +33,7 @@ export const level1: LevelDef = {
   title: 'The word "You"',
   teaches: 'Judging',
   rule: 'judging',
+  cards: ['judging'],
   boss: 'Verdict Victor',
   bossEmoji: '\u{1F468}\u{1F3FB}\u{200D}\u{2696}\u{FE0F}',
   // The newline is deliberate. Steve, 2026-08-25: "put a new line before

@@ -120,9 +120,6 @@ function renderStep(step: Step): void {
       push(`- **Correct call:** ${step.expected === 'foul' ? 'Foul, call it' : 'Clean, pass'}`);
       push(`- **If the player calls it:** ${step.onCall}`);
       push(`- **If the player passes:** ${step.onPass}`);
-      if (step.onWrong) {
-        push(`- **If the player gets it wrong (asked again):** ${step.onWrong}`);
-      }
       blank();
       break;
     }
@@ -183,6 +180,49 @@ function renderStep(step: Step): void {
 
     case 'continue': {
       push(`**[Continue button: "${step.label}"]**`);
+      blank();
+      break;
+    }
+
+    case 'confirm': {
+      const label = speakerLabel(step.lane, step.speaker);
+      push(`**Confirm** _(id: ${step.id}, card: ${RULE_LABEL[step.rule]})_`);
+      blank();
+      quote(step.ask, label);
+      blank();
+      push(`- **Yes button:** "${step.yesLabel ?? 'Yes, that one landed on me'}"`);
+      push(`- **No button:** "${step.noLabel ?? 'No, I am fine with it'}"`);
+      push(
+        `- **Note box placeholder:** "${step.placeholder ?? 'Say it in your own words, if you want to'}" (never required)`,
+      );
+      push(`- **If they say yes:** ${step.onYes}`);
+      push(`- **If they say no:** ${step.onNo}`);
+      push(
+        `- **Token:** ${
+          step.pays
+            ? `${step.pays === 'player' ? 'the player' : 'the opponent'} pays ${CARDS[step.rule].cost} on a yes`
+            : 'nothing moves either way'
+        }. A no is always free.`,
+      );
+      blank();
+      break;
+    }
+
+    case 'template': {
+      push(`**Template** _(id: ${step.id}, card: ${RULE_LABEL[step.rule]})_`);
+      blank();
+      if (step.ask) {
+        quote(step.ask, 'Coach');
+        blank();
+      }
+      // The frame is the teaching here, so it is printed as the player sees
+      // it: authored words as words, and each blank as its placeholder.
+      push(
+        `- **The frame:** ${step.segments
+          .map((seg) => ('text' in seg ? seg.text : `[${seg.input.placeholder}]`))
+          .join('')}`,
+      );
+      if (step.reply) push(`- **What the coach says back:** ${step.reply}`);
       blank();
       break;
     }

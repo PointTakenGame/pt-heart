@@ -26,6 +26,7 @@ export const level2: LevelDef = {
   title: 'In my head, because',
   teaches: 'Opinions as Facts',
   rule: 'opinion_as_fact',
+  cards: ['opinion_as_fact'],
   boss: 'Obvious Olivia',
   bossEmoji: '\u{1F469}\u{1F3FF}',
   bossEpithet: 'Never says "I think." Everything she believes is simply a fact.',

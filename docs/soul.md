@@ -150,6 +150,7 @@ human. Two hard consequences:
   AI-side rulings through the coach.
 - **No path anywhere in the product lets software decide a foul happened and apply a penalty without
   the wronged party's assent.** No exceptions, no confidence threshold high enough.
+- **Carve-out, the gym only** `[ruled]` (Q7): a scripted opponent's authored reply is an answer key written by a human author, not software deciding a foul, so it binds inside a drill and nowhere else.
 
 **Coach and moderator are one entity, and a thread holds at most three parties** `[ruled]` (Steve,
 2026-08-23). There is no separate referee character. The coach *is* the moderator: one visible third

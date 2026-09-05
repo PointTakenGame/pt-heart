@@ -24,6 +24,12 @@ export const level4: LevelDef = {
   title: 'In the ref seat',
   teaches: 'All three cards',
   rule: 'judging',
+  // All three are live on the rail here, and that is the whole difference
+  // between this level and the three before it: the call is a real choice.
+  // `rule` is a single FoulType and cannot say that, so it stays the level's
+  // headline card and `cards` is what the rail reads. Step 5 writes the level.
+  cards: ['judging', 'opinion_as_fact', 'fake_listening'],
+  seat: 'referee',
   boss: 'The Coach',
   bossEmoji: '\u{1F9D1}\u{1F3FD}\u{200D}\u{1F3EB}',
   bossEpithet: 'Not built yet.',

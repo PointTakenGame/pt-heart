@@ -23,6 +23,7 @@ export const level3: LevelDef = {
   title: 'Did I miss anything?',
   teaches: 'Fake Listening',
   rule: 'fake_listening',
+  cards: ['fake_listening'],
   boss: 'Nodding Noemi',
   bossEmoji: '\u{1F469}\u{1F3FD}',
   bossEpithet: 'Agrees with everything. Heard none of it.',

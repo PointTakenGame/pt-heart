@@ -422,15 +422,14 @@ export function useShowdown(): Match {
           }
         } else {
           // A summarizing turn that carries one of the other two fouls gets ruled
-          // on that card, at that card's price, and then has to be done again:
-          // the summary was never delivered. Three attempts is the ceiling, so a
-          // player who cannot get there does not sit in the loop; the token cost
-          // has already made the point by then.
+          // on that card, at that card's price, and then the round moves on. The
+          // summary was never delivered, and that is what it cost: one pass, no
+          // redo, ever (Q6, Q12).
           //
-          // A while loop rather than a for, because a non-answer does not spend an
-          // attempt. The three attempts are for real tries at a real summary.
-          let attempt = 1;
-          while (attempt <= 3) {
+          // Still a loop, because a non-answer is not an attempt. Thin text is
+          // refused and the same frame comes straight back; a real answer runs
+          // the body once and leaves.
+          for (;;) {
             nonce.current += 1;
             const answer = await ask({
               kind: 'template',
@@ -465,12 +464,10 @@ export function useShowdown(): Match {
             const ruled = await judgeTurn(topic, turn.kind, text, lastSofia);
             const foul = ruled ? ruled.foul : offlineRuling(turn.kind, text);
 
-            // Every attempt is its own row in the corpus. What somebody wrote on
-            // the second pass, after being told what the first one cost, is the
-            // interesting half of this level.
+            // One row in the corpus, because there is only ever one answer.
             record(
               turn,
-              attempt === 1 ? '' : `-redo${attempt - 1}`,
+              '',
               turn.kind === 'summarize' ? 'fake_listening' : 'mixed',
               text,
               foul === null,
@@ -488,11 +485,7 @@ export function useShowdown(): Match {
               await coach(COACH.onPlayerClean);
             }
 
-            const owesRedo =
-              turn.kind === 'summarize' && (foul === 'judging' || foul === 'opinion_as_fact');
-            if (!owesRedo || attempt === 3) break;
-            await coach(COACH.redoSummary(foul));
-            attempt += 1;
+            break;
           }
         }
 

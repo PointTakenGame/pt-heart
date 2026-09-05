@@ -11,7 +11,7 @@ same commit. Keep it short — it is read at the start of every session.
 |---|---|---|
 | 0 | *(restructure — this scaffolding)* | **done** 2026-09-04 |
 | 1 | Ladder scaffold | **done** 2026-09-05 |
-| 2 | Q6/Q7 mechanic — `confirm` + `template` step kinds | not started |
+| 2 | Q6/Q7 mechanic — `confirm` + `template` step kinds | **done** 2026-09-05 |
 | 3 | Level 3 rebuilt as a full round | not started |
 | 4 | Levels 1 and 2 retitled and repaired | not started |
 | 5 | The referee level at 4 | not started |
@@ -40,6 +40,31 @@ same commit. Keep it short — it is read at the start of every session.
 - `.level-card-boss` in `src/styles.css` is now `.level-card-showdown`; there is a
   new `.level-card-live` for the placeholder row.
 - Nothing else in `src/` has been touched. The rest of the tree is pre-rebuild.
+- **`confirm` is the new core component** (Q6/Q7/Q8): `ask` → two buttons and an
+  always-present note box → `onYes` / `onNo`. `pays: 'player' | 'opponent'` moves
+  `CARDS[rule].cost` on a **yes only**; a **no is always free**, which is the ruling
+  that the AI ref must be wrong sometimes and denying it must cost nothing.
+- **Confirm wire format:** `submit()` takes one string, so the value is `'yes'` or
+  `'no'`, optionally followed by `\n` and the offendee's note. A newline is untypeable
+  in the composers, so it is a safe separator. `confirmValue()` / `parseConfirm()` are
+  exported from `src/engine.ts`; `Composer.tsx` imports `confirmValue` (no cycle).
+- **Both new kinds record `correct: null`.** soul.md §6: the offendee's verdict can
+  never be graded. Both are registered in `isItem()` **and** in `submit()`'s switch —
+  a new interactive kind that misses `submit()` silently no-ops in `default:`.
+- **No retries anywhere** (Q12, read as blanket): the `sort`, `edit` and `call_or_pass`
+  ceilings and the showdown summary redo are all gone. A wrong answer still costs a
+  token — that is consequence, not a retry. Non-answers (thin text, an unchanged
+  prefill) still reopen the same step free of charge.
+- `COACH.redoSummary` in `src/content/showdown.ts` is now **dead copy**. Left in place
+  for step 6 to delete along with the rest of the showdown reconciliation.
+- **Defect 4 left deliberately open.** `CallOrPassStep.callable?: FoulType[]` is added
+  as a *type* only; `engine.ts` still passes `[step.rule]` and `App.tsx:425` still has
+  `enabled={[level.rule]}`. Wiring it is step 5's job, and closing the grep early would
+  read as a false all-clear.
+- **Defect 3 left deliberately open.** `chargeMiss()` and the good-call transfer keep
+  their literal `1`. `CARDS[rule].cost` is used only at the new confirm site.
+- `docs/soul.md` has now had **its one permitted edit** — the Q7 carve-out, one line in
+  §6. It is spent. Nothing else in soul.md may change this rebuild.
 
 ## Carried questions
 

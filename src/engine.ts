@@ -5,16 +5,14 @@
 // 2500ms, then the next one lands 400ms later. A tap anywhere skips the current
 // dwell, so a fast reader never waits and a slow one never gets buried.
 //
-// The gym is gated (ruling of 2026-08-24, "don't let the game move on when the
-// player doesn't engage properly"). A wrong call, a wrong sort, an unedited
-// prefill, or a one-character answer loops back to the same step with the coach
-// saying why. Nothing advances until the item is actually done. The edit steps
-// keep a three-attempt ceiling, the same ceiling live play uses, so a player the
-// model keeps failing is never stuck in the drill forever.
+// Every item is answered exactly once. There are no retries anywhere (Q6, Q12):
+// a wrong call costs a token and the level moves on, and the offended party's
+// ruling on a foul is final because it is theirs. What is still gated is a
+// non-answer — an empty box, one character, or a prefill handed straight back
+// is not an attempt at all, so the same step reopens and nothing is charged.
 //
 // Both purses run from level 1, seven tokens a side, same as the printed game.
-// Right on the first try takes one off the opponent; a wrong first try hands one
-// over, once per item, however many attempts it then takes to get it right.
+// A good call takes one off the opponent; a bad whistle hands one over.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ComposerState, FoulType, Message, Revision, Step } from './types.ts';
@@ -31,7 +29,9 @@ function isItem(step: Step): boolean {
     step.kind === 'call_or_pass' ||
     step.kind === 'sort' ||
     step.kind === 'edit' ||
-    step.kind === 'free'
+    step.kind === 'free' ||
+    step.kind === 'confirm' ||
+    step.kind === 'template'
   );
 }
 
@@ -45,6 +45,24 @@ export function tooThin(value: string): boolean {
  *  the token flies. Long enough to read the card's name, short enough that it
  *  does not feel like the game stalled. */
 const CARD_BEFORE_PAY_MS = 950;
+
+/** The confirm dialogue answers on one string, because that is what submit()
+ *  takes: the verdict, then the offendee's own words if they wrote any. Enter
+ *  sends in every composer, so a newline cannot be typed and is safe as the
+ *  separator. */
+export function confirmValue(verdict: 'yes' | 'no', note: string): string {
+  const n = note.trim();
+  return n ? `${verdict}\n${n}` : verdict;
+}
+
+export function parseConfirm(value: string): { verdict: 'yes' | 'no'; note: string } {
+  const nl = value.indexOf('\n');
+  const head = (nl === -1 ? value : value.slice(0, nl)).trim();
+  return {
+    verdict: head === 'no' ? 'no' : 'yes',
+    note: nl === -1 ? '' : value.slice(nl + 1).trim(),
+  };
+}
 
 export const THIN_REPLY =
   'That is not an answer yet. Give me a real sentence, in your own words, and I will read it properly.';
@@ -100,7 +118,6 @@ export function useGym(level: LevelDef): Gym {
   const bossShown = useRef(false);
   const live = useRef(true);
   // Per-item state, reset whenever the cursor moves.
-  const attempts = useRef(0);
   const paidThisItem = useRef(false);
   const nonce = useRef(0);
 
@@ -219,7 +236,6 @@ export function useGym(level: LevelDef): Gym {
       return;
     }
 
-    attempts.current = 0;
     paidThisItem.current = false;
 
     const step = entry.step;
@@ -294,6 +310,28 @@ export function useGym(level: LevelDef): Gym {
           setComposer({ kind: 'free', placeholder: step.placeholder, chips: step.chips });
           return;
 
+        case 'confirm':
+          await say(
+            { lane: step.lane, speaker: step.speaker, text: step.ask },
+            aliveFn,
+          );
+          if (!alive) return;
+          setComposer({
+            kind: 'confirm',
+            yes: step.yesLabel ?? 'Yes, that one landed on me',
+            no: step.noLabel ?? 'No, I am fine with it',
+            placeholder: step.placeholder ?? 'Say it in your own words, if you want to',
+          });
+          return;
+
+        case 'template':
+          if (step.ask) {
+            await say({ lane: 'coach', text: step.ask }, aliveFn);
+            if (!alive) return;
+          }
+          setComposer({ kind: 'template', segments: step.segments });
+          return;
+
         case 'continue':
           setComposer({ kind: 'continue', label: step.label });
           return;
@@ -366,7 +404,7 @@ export function useGym(level: LevelDef): Gym {
             text: called ? `Foul: ${CARDS[value as FoulType]?.name ?? value}` : 'Not a foul',
             isCall: called,
           });
-          record(correct, attempts.current === 0 ? '' : `-redo${attempts.current}`);
+          record(correct);
 
           if (correct) {
             // Letting a clean line stand is right, and it is worth nothing.
@@ -380,34 +418,25 @@ export function useGym(level: LevelDef): Gym {
             // card in teh chat BEFORE the points move." Reading it in that
             // order tells you what you were paid for.
             push({ lane: 'coach', text: CARDS[step.rule].name, card: step.rule });
-            const clean = attempts.current === 0;
             after(CARD_BEFORE_PAY_MS, () => {
               push({ lane: 'coach', text: step.onCall });
-              if (clean) transfer('opponent', 1);
+              transfer('opponent', 1);
               settle();
             });
             return;
           }
 
+          // Wrong, and that is the end of it. The coach names what was actually
+          // there and the round moves on: one check, no second attempt (Q6, Q12).
           chargeMiss();
           push({
             lane: 'coach',
             text:
-              step.onWrong ??
-              (step.expected === 'foul'
-                ? `That one was not clean. Read it again: ${CARDS[step.rule].tell}`
-                : 'That line was clean. A bad whistle costs you one. Read it again.'),
+              step.expected === 'foul'
+                ? `That one was not clean. ${CARDS[step.rule].tell}`
+                : 'That line was clean. A bad whistle costs you one.',
           });
-          push({ lane: 'coach', text: 'Again. Call the foul, or say it is not one.' });
-          attempts.current += 1;
-          nonce.current += 1;
-          setComposer({
-            kind: 'call',
-            hint: 'Press a foul card to call it, or say it is not a foul.',
-            pass: { value: 'clean', label: "I might not agree, but it's not a foul" },
-            callable: [step.rule],
-            nonce: nonce.current,
-          });
+          settle();
           return;
         }
 
@@ -417,17 +446,9 @@ export function useGym(level: LevelDef): Gym {
           setComposer({ kind: 'locked' });
           push({ lane: 'player', text: picked?.label ?? value });
           push({ lane: 'coach', text: step.feedback[value] ?? '' });
-          record(correct, attempts.current === 0 ? '' : `-redo${attempts.current}`);
-
-          if (correct) {
-            settle();
-            return;
-          }
-
-          chargeMiss();
-          push({ lane: 'coach', text: 'Not that one. Look at the line again and pick.' });
-          attempts.current += 1;
-          setComposer({ kind: 'buttons', options: step.options });
+          record(correct);
+          if (!correct) chargeMiss();
+          settle();
           return;
         }
 
@@ -475,31 +496,57 @@ export function useGym(level: LevelDef): Gym {
 
           setComposer({ kind: 'locked' });
           push({ lane: 'player', text: value });
-          const tryNo = attempts.current;
           void (async () => {
             const out = await judgeEdit(step.target, step.prefill, value, step.fallback);
-            record(out.pass, tryNo === 0 ? '' : `-redo${tryNo}`);
+            record(out.pass);
             push({ lane: 'coach', text: out.text });
 
             // pass === null means the coach could not reach the model, so there
-            // is no ruling to hold anybody to. Take it and move on.
-            if (out.pass === false && tryNo < 2) {
-              chargeMiss();
-              push({ lane: 'coach', text: 'Try that again. Fix the part I just named.' });
-              attempts.current = tryNo + 1;
-              nonce.current += 1;
-              setComposer({
-                kind: 'prefilled',
-                // Their own attempt, not the original: nobody should have to
-                // retype the half of it that was already right.
-                prefill: value,
-                chips: step.chips,
-                nonce: nonce.current,
-              });
-              return;
-            }
+            // is no ruling to hold anybody to, and nothing is charged. A false
+            // pass costs a token and the line moves on — there is no retry.
+            if (out.pass === false) chargeMiss();
             settle();
           })();
+          return;
+        }
+
+        case 'confirm': {
+          const { verdict, note } = parseConfirm(value);
+          const label = verdict === 'yes' ? (step.yesLabel ?? 'Yes.') : (step.noLabel ?? 'No.');
+          setComposer({ kind: 'locked' });
+          push({ lane: 'player', text: note ? `${label} ${note}` : label });
+          // record(null) on purpose. soul.md §6: "did I foul?" is answered by
+          // the person who might have been fouled, so neither button can be
+          // wrong and there is nothing here to grade. The answer is corpus.
+          record(null);
+
+          if (verdict === 'yes') {
+            // Same order as a called foul: card first, then the words, then the
+            // token moves, so you can read what you were paid for.
+            push({ lane: 'coach', text: CARDS[step.rule].name, card: step.rule });
+            after(CARD_BEFORE_PAY_MS, () => {
+              push({ lane: step.lane, speaker: step.speaker, text: step.onYes });
+              if (step.pays) transfer(step.pays, CARDS[step.rule].cost);
+              settle();
+            });
+            return;
+          }
+
+          // Waving the call off is free, and it is said out loud. The suggester
+          // is allowed to be wrong; that is the whole reason for asking.
+          push({ lane: step.lane, speaker: step.speaker, text: step.onNo });
+          settle();
+          return;
+        }
+
+        case 'template': {
+          // The blanks are gated in the composer, so whatever arrives here is
+          // an answer. Nothing to grade: the frame did the teaching.
+          setComposer({ kind: 'locked' });
+          push({ lane: 'player', text: value });
+          record(null);
+          if (step.reply) push({ lane: 'coach', text: step.reply });
+          settle();
           return;
         }
 
