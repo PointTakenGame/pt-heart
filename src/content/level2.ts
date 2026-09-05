@@ -33,6 +33,7 @@ export const level2: LevelDef = {
   teaches: 'Opinions as Facts',
   rule: 'opinion_as_fact',
   cards: ['opinion_as_fact'],
+  tokens: 'off',
   boss: 'Obvious Olivia',
   bossEmoji: '\u{1F469}\u{1F3FF}',
   bossEpithet: 'Never says "I think." Everything she believes is simply a fact.',
@@ -63,7 +64,7 @@ export const level2: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'One word on the counter up top. In a real match, saying your opinion like it\'s a fact moves a token, same as any foul, and a wrong call costs you one too. In here it won\'t budge, so you can miss freely and learn the shape. Against Olivia, the calls count.',
+          text: 'One word on the counter up top. In a real match, saying your opinion like it\'s a fact moves a token, same as any foul, and a wrong call costs you one too. Still not in here. It won\'t budge in the drills and it won\'t budge against Olivia either, so you can miss freely and learn the shape. That holds a while longer.',
         },
 
         {

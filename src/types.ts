@@ -228,6 +228,12 @@ export interface LevelDef {
   /** which chair the player is in. Omitted means the player is arguing; the
    *  referee level says so, and the word is withheld until then. */
   seat?: 'player' | 'referee';
+  /** whether the token economy is switched on. Nathan, 2026-09-05: the cost is
+   *  introduced and goes live when the player takes the ref's chair, so levels
+   *  1-3 are `'off'` and the counter genuinely does not move — not for a drill
+   *  and not for a boss call either. Required, not optional, so a new level has
+   *  to make the choice out loud instead of inheriting one. */
+  tokens: 'off' | 'live';
   boss: string;
   /** the boss's face, big, on every line they speak */
   bossEmoji: string;

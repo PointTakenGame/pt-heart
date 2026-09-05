@@ -13,11 +13,12 @@
 // party is the only one who can rule on a foul (soul.md §6), so the two confirm
 // replies are both authored and neither is wrong.
 //
-// The drills cost nothing (Q19: the card played against the player carries no token
-// penalty, and it is never played on a clean summary). The token counter still shows,
-// and the coach says out loud that a dropped reason would normally move a token, so
-// the free period reads as a learning allowance and the real cost at L4/L5 is not a
-// surprise. Only the two boss calls count, exactly as they will in the match.
+// Nothing in this level costs a token (`tokens: 'off'`; Nathan, 2026-09-05). Q19
+// already said the card played against the player carries no penalty and is never
+// played on a clean summary; the ruling extends that to the whole level, boss calls
+// included. The counter still shows, and the coach says out loud that a dropped
+// reason would normally move a token, so the free period reads as a learning
+// allowance and the real cost, which arrives at L4, is not a surprise.
 //
 // L1-L3 never name the referee; the word, the role and the three-player table are all
 // withheld until L4. Nothing here mentions a ref.
@@ -40,6 +41,7 @@ export const level3: LevelDef = {
   teaches: 'Fake Listening',
   rule: 'fake_listening',
   cards: ['fake_listening'],
+  tokens: 'off',
   boss: 'Nodding Noemi',
   bossEmoji: '\u{1F469}\u{1F3FD}',
   bossEpithet: 'Agrees with everything. Heard none of it.',
@@ -70,7 +72,7 @@ export const level3: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'One thing about the counter up top. In a real match, dropping someone\'s reason moves a token. It\'s a foul like any other. In these drills it won\'t cost you a thing, so watch the number sit still. Out there against her, the calls count.',
+          text: 'One thing about the counter up top. In a real match, dropping someone\'s reason moves a token. It\'s a foul like any other. In here it still costs you nothing — not the drills, not Noemi — so watch the number sit still while you learn the third card. The allowance does not last forever.',
         },
         {
           kind: 'say',

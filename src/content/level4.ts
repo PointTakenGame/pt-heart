@@ -68,6 +68,7 @@ export const level4: LevelDef = {
   rule: 'judging',
   cards: ALL,
   seat: 'referee',
+  tokens: 'live',
   boss: 'Victor and Olivia',
   // The opposition is two people sharing one lane, so the face is the pair, not
   // either one; the speaker name on every line is what tells them apart.

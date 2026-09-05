@@ -132,7 +132,15 @@ export function useGym(level: LevelDef): Gym {
 
   // Fouls never burn a token, they move one. Clamped, so a purse cannot go
   // negative and the two sides always add to fourteen.
+  //
+  // The whole economy is switched off in levels 1-3 (`LevelDef.tokens`), and the
+  // switch lives here rather than at the four call sites on purpose: the coach
+  // promises out loud that the number will not move an inch, and a promise that
+  // has to be re-honoured by every future step kind is a promise that will break.
+  // One choke point cannot be forgotten.
+  const tokensLive = level.tokens === 'live';
   const transfer = useCallback((from: 'player' | 'opponent', n: number) => {
+    if (!tokensLive) return;
     const moved = Math.min(n, purse.current[from]);
     if (moved <= 0) return;
     const to = from === 'player' ? 'opponent' : 'player';
@@ -140,7 +148,7 @@ export function useGym(level: LevelDef): Gym {
     purse.current[to] += moved;
     setPlayerTokens(purse.current.player);
     setOpponentTokens(purse.current.opponent);
-  }, []);
+  }, [tokensLive]);
 
   const skip = useCallback(() => {
     skipper.current?.();
@@ -440,7 +448,9 @@ export function useGym(level: LevelDef): Gym {
             text:
               step.expected === 'foul'
                 ? `That one was not clean. ${CARDS[step.rule].tell}`
-                : 'That line was clean. A bad whistle costs you one.',
+                : tokensLive
+                  ? 'That line was clean. A bad whistle costs you one.'
+                  : 'That line was clean. Nothing in it to call.',
           });
           settle();
           return;
@@ -560,7 +570,7 @@ export function useGym(level: LevelDef): Gym {
           return;
       }
     },
-    [cursor, seq, level.slug, push, transfer],
+    [cursor, seq, level.slug, push, transfer, tokensLive],
   );
 
   return {

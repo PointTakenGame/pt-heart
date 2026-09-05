@@ -33,6 +33,7 @@ export const level1: LevelDef = {
   teaches: 'Judging',
   rule: 'judging',
   cards: ['judging'],
+  tokens: 'off',
   boss: 'Verdict Victor',
   bossEmoji: '\u{1F468}\u{1F3FB}\u{200D}\u{2696}\u{FE0F}',
   // The newline is deliberate. Steve, 2026-08-25: "put a new line before
@@ -96,7 +97,7 @@ export const level1: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'And that counter up top. In a real match a foul moves a token, and a wrong call costs you one too. In these drills it won\'t move an inch, so swing freely and learn the difference. Out there against him, the calls count.',
+          text: 'And that counter up top. In a real match a foul moves a token, and a wrong call costs you one too. Not yet, though. For a while yet that number sits still — in the drills and against him too — so swing freely and learn the difference. I will tell you the day it starts counting.',
         },
         {
           kind: 'say',
