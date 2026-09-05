@@ -56,22 +56,25 @@ grep -rn "callable: \[step.rule\]\|enabled={\[level.rule\]}" src/
 As of 2026-09-04: `src/App.tsx:425`, `src/engine.ts:273`, `src/engine.ts:408`.
 Needs `CallOrPassStep.callable?: FoulType[]` and `LevelDef.cards: FoulType[]`.
 
-### 5 — `beginBoss()` wipes the thread (Q23: the gym is open book)
+### 5 — `beginBoss()` wipes the thread (Q23: the gym is open book) — ✅ CLOSED
 
 ```bash
 grep -n "lane: 'crowd', text: crowdRow(0)" src/engine.ts
 ```
 
-As of 2026-09-04: `:176`. The thread must survive the boss entrance.
+Closed step 7, pass 5 (`5fc32b4`). `beginBoss()` now **appends** a crowd row instead
+of wiping the thread, so it survives the boss entrance. The grep locator still hits —
+it matches the crowd-row append itself — but the defect is behaviorally closed.
 
-### 6 — Thread fades old lines by position (Q23)
+### 6 — Thread fades old lines by position (Q23) — ✅ CLOSED
 
 ```bash
 grep -n "back <= 2 ? 'now'" src/ui/Thread.tsx
 ```
 
-As of 2026-09-04: `:117`. Positional, not semantic. Remove it, or make it purely
-cosmetic. Scroll pinning in that file is already correct — leave it alone.
+Closed step 7, pass 5 (`5fc32b4`). The positional fade is now purely cosmetic
+(`opacity: 0.88 / 0.76`, hover restores; the age computation still exists, so the grep
+locator may still hit). Scroll pinning was left alone as instructed.
 
 ### 7 — Attempt ceilings (Q6/Q12: no retries at all, ever)
 
@@ -191,32 +194,32 @@ mouth about themselves).
 
 ## Doc defects (Q30 — these land in the same PR)
 
-### 16 — Docs still rule a six-level ladder
+### 16 — Docs still rule a six-level ladder — ✅ CLOSED
 
 ```bash
 grep -n "six levels\|Six levels\|six-level" docs/rules.md docs/roadmap.md
 ```
 
-As of 2026-09-04: **7 sites**, not the 2 the old defect list named —
-`docs/roadmap.md:251,255,257,269,318,446` and `docs/rules.md:219`. The ladder is
-seven levels. `rules.md:219`'s boss-names line is stale too.
+Closed step 8. `rules.md:219`, `roadmap.md` §6/§7/§8 and the reconciliation note now
+describe the seven-level, player-first ladder (L5 completes the base game; L6/L7 the
+deferred Final Showdowns). `rules.md`'s boss-names line was corrected too. The only
+remaining "six-level" hit is the supersession note in `roadmap.md` naming the interim
+scheme it replaced.
 
-### 17 — Docs still describe half tokens, instant loss, and the forgetful thread
+### 17 — Docs still describe half tokens, instant loss, and the forgetful thread — ✅ CLOSED
 
 ```bash
 grep -rn "half a token\|half token\|instant loss\|forget" docs/rules.md docs/roadmap.md docs/script.md
 ```
 
-As of 2026-09-04: `docs/rules.md:201,206,214,220`, `docs/roadmap.md:41`,
-`docs/script.md:98,285`.
+Closed step 8. All three corrections landed:
+- **Half-token misses** — retired under Q9 (`rules.md` §8/§9); a missed whistle now
+  moves nothing.
+- **Instant loss at zero** — retired under Q11 (`rules.md`, `roadmap.md`, `script.md`);
+  a zero ends nothing and the player climbs back.
+- **The thread's forgetfulness** — reversed under Q23 (`roadmap.md` §5); the gym is
+  open book and the summary gate never leaned on the thread scrolling away.
 
-Three separate corrections live in this pattern:
-- **Half-token misses** — dead under Q9.
-- **Instant loss at zero** — dead under Q11.
-- **"The thread's forgetfulness is load-bearing for Fake Listening"** — dead under Q23.
-  Open book reverses it. This claim must be corrected wherever it appears.
-
-⚠️ **`docs/rules.md:206` and `:220` cite `game/src/showdown.ts:56` and
-`game/src/showdown.ts:399-422`.** The `game/` prefix no longer exists and the line
-numbers are stale. De-line these citations during the doc pass — cite the file, not
-the line.
+`rules.md:206` and `:220` citations were de-lined to `src/showdown.ts`. Remaining
+"instant loss" hits are inside editorial brackets that quote the retired deck wording
+before overruling it.

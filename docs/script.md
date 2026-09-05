@@ -95,8 +95,11 @@ mirror of the same number):
 > name lives in the script and not yet on the card; the glyph is still described as
 > pray-hands in `cards.md` and `ui-components.md`, which describe the artwork
 > rather than the spoken word.]
-> Most tokens at the end wins. If either of you hits zero, that's an instant loss,
-> whatever round we're on.
+> Most tokens at the end wins. Running out of tokens ends nothing — a purse can
+> empty and you can climb back. [The v7 deck's printed HOW TO WIN band reads "If
+> either of you hits zero, that's an instant loss, whatever round we're on." Nathan's
+> Q11 ruling retired the instant loss at zero, in print as well as online, so the
+> moderator no longer says it.]
 
 Topic pick: "Pick a topic (pg 3)" (`deck-content-v7.md:81`) refers players to the
 Sample Topics table, carried in full at Section 5 below.
@@ -281,8 +284,10 @@ Source: `deck-content-v7.md:83-96` (HOW TO WIN band), `320-360` (rubric).
 
 Moderator, at the end of the Final Showdown round:
 
-> Count the tokens. Most tokens at the end wins. If either of you hit zero at any
-> point tonight, that was an instant loss, whatever round it happened in.
+> Count the tokens. Most tokens at the end wins. [The printed deck adds "If either
+> of you hit zero at any point tonight, that was an instant loss, whatever round it
+> happened in." Q11 retired that: a zero ends nothing, a purse that emptied can have
+> climbed back, and the count at the end is all that decides it.]
 
 **Equal tokens at the end is a draw** `[ruled, Nathan]`. There is no tiebreak, and
 Final Showdown bonuses are not counted separately to break one; the game ends level

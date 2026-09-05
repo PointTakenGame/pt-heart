@@ -2,6 +2,10 @@
 
 ## ⚠️ How to use this file
 
+**Post-rebuild (2026-09-05): the rebuild of levels 1–5 is complete, so every anchor
+below is now stale — files moved, split, and renamed across steps 1–8. Treat this
+file as orientation only; the code is ground truth. Do not cite a line number here.**
+
 **The line numbers below were verified on 2026-09-04, against the pre-rebuild tree
 at commit `8adff59`. They go stale on the first commit of the rebuild.**
 

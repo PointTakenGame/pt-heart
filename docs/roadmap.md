@@ -38,8 +38,9 @@ root and are never pushed, so their substance is carried in here.
 Three players. Two disagree; the third is moderator and referee for the whole game `[ruled]`. Three foul cards on
 the table: **Judging**, **Opinions as Facts**, **Fake Listening** `[ruled]`. Each disputant holds seven 🙏 tokens,
 fourteen in play `[ruled]`. A foul **moves** a token to the other side, never destroys one `[ruled]`. Judging costs
-two, the others one each `[ruled]`. Zero tokens is an instant loss exactly as printed, and the proposed softening
-was withdrawn `[ruled]`. Most tokens wins `[ruled]`.
+two, the others one each `[ruled]`. Zero tokens ends nothing: a purse can empty and the player climbs back, purses
+clamp at zero and never go negative `[ruled, Nathan; Q11]`. This retired the earlier "instant loss at zero". Most
+tokens wins `[ruled]`.
 
 The shape of play, identical for the printed deck and for two live humans `[ruled]`:
 
@@ -183,10 +184,12 @@ Three Level 4 constants that look like bugs and are not:
 
 ## 5. Structural facts you will otherwise break
 
-- **Texting thread, not a chat log.** Old messages scroll off and cannot be re-read `[ruled]`. Load-bearing for Fake
-  Listening: an infinite-scroll window lets the player summarize by scrolling up, which deletes the mechanic. One
-  call is left to you: during the summary phase, does the message being summarized stay readable? Decide that
-  deliberately, not by a scroll container's default.
+- **The gym is an open book.** `[ruled, Nathan; Q23]` The conversation scrolls and the player can read back;
+  earlier messages stay reachable. This **reverses** the earlier ruling that old messages scroll off and cannot be
+  re-read, and the claim that that forgetfulness was load-bearing for Fake Listening. It is not: the summary gate
+  works because the player must summarize in their own words and the summarized party confirms, not because the
+  original scrolled out of sight. In the code, `engine.beginBoss()` appends a crowd row rather than wiping the
+  thread, and `Thread.tsx`'s positional fade is purely cosmetic (hover restores it).
 - **A round is one pair of turns, not one turn.** One turn per round silently thirds the match. **A rephrase does
   not create a new turn.** **Tokens move only when a call resolves,** never while a flag is open.
 - **Reform the boss, do not deplete the boss.** A foul called correctly retires that habit for the rest of the
@@ -248,16 +251,16 @@ wronged party there is no judge in the room. **Do not extend this ruling to foul
 where a human is the party who was possibly wronged.** That constraint is what holds the two documents apart, and
 it is a boundary rather than a preference.
 
-**The ladder is six levels** `[ruled, Nathan; Steve's confirmation outstanding]`. Level 5 is the Final Showdown and
-follows the built Level 4 Full Showdown. **Level 5 teaches how to be generous.** Level 6 follows Level 5, and in it
-the player is the referee for two AI agents playing each other; it is not fully designed. Nothing renumbers: the
-Full Showdown stays at 4 and the hardcoded `'4'` stands. A later brief describing the Final Showdown's steps as
-"levels 4 to 6ish" now reads as an early sighting of this six-level ladder rather than an off-by-one.
+**The ladder is seven levels, player-first** `[ruled, Nathan]`: L1 Judging, L2 Opinions as Facts and L3 Fake
+Listening are all in the player seat; L4 is the referee seat with the full round and all three cards; L5 is the
+Showdown in the player seat, and **the base game is complete there**; L6 is the Final Showdown in the referee seat
+and L7 the Final Showdown as player, both **deferred add-ons** the game does not need. L1 to L5 are built. L1 to L3
+withhold the referee entirely, and L4 opens by telling the player they learn as ref first and play it next.
+**Save by slug, never by number** — old saves must not collide. A later brief describing the Final Showdown's steps
+as "levels 4 to 6ish" was an early, off-by-one sighting of this ladder.
 
-GAP: (Steve) confirm the six-level ladder. The ruling above is in force and is what to build against; only his
-sign-off is outstanding. Note that `rules.md` still carries a five-level ladder and a "the numbering itself is
-contested, do not build against it" warning, and its filed ruling request is answered by the above. That document
-has not been swept yet and will disagree with this one until it is.
+This supersedes the interim six-level scheme (which put the Final Showdown at 5 with no separate player-seat Final
+Showdown) and the older five-level ladder. `rules.md` section 9 has been swept to match.
 
 ## 7. Order of work
 
@@ -266,8 +269,9 @@ Sequence and dependency only. No dates, at any confidence.
 **Before the Final Showdown can be built:**
 
 1. Nothing here waits on §6 any longer. In solo play the judge seat goes to a model in an explicit judge role, with
-   the coach holding it inside the gym, and the ladder is six levels with the Final Showdown at 5. Build the
-   ladder UI to six.
+   the coach holding it inside the gym, and the ladder is seven levels with the base game complete at Level 5 (the
+   player-seat Showdown). The Final Showdown is L6 (referee) and L7 (player), both deferred. The built ladder UI
+   runs to Level 5.
 2. Author the three steps' content, matching the shape of `content/level3.ts` including the political balance ledger
    in the header.
 3. Build the positive-scoring path. Everything in `showdown.ts` moves tokens as penalties; nothing awards a bonus.
@@ -315,10 +319,10 @@ exist. Fix it before step 11, not during.
 **Live play unlocks when the player has cleared the first four gym levels** `[ruled, Nathan]`: Levels 1 to 3 plus
 the Full Showdown. Levels 5 and 6 are not part of the gate. What "clear" means for Levels 1 to 3 is ruled in §9.
 
-**Six levels in total**, ruled in §6 and not restated here. What that means for the work in this section: four of
-the six ship or are gated for solo play, Level 6 is a slot on the ladder rather than buildable work until it is
-designed, and the proposed further level in the newest brief is that Level 6 rather than a seventh. The printed deck
-cannot corroborate any of this, having no level vocabulary at all.
+**Seven levels in total**, ruled in §6 and not restated here. What that means for the work in this section: Levels 1
+to 5 ship and the base game is complete at Level 5, while Levels 6 and 7 (the referee-seat and player-seat Final
+Showdowns) are deferred add-on slots on the ladder rather than buildable work until they are designed. The printed
+deck cannot corroborate any of this, having no level vocabulary at all.
 
 **A clock runs in live play, and never in the gym** `[ruled, Nathan]`. The gym having no clock is confirmed rather
 than merely settled-for-now, and live play definitely uses one.
@@ -440,11 +444,11 @@ Precedence, stated in the sources themselves: the soul doc governs everything an
 mechanic; then the teaching-sequence doc; then the level build table; then the online-edition roadmap. **Above all
 of them, on what is true today, sits the code.**
 
-1. **Level numbering.** The build table uses a superseded eight-level scheme with the Full Showdown at 5 and the
-   Final Showdown at 6. Build-table level N is current level N minus 1, for N from 2 to
-   6. The clearest casualty is tokens, which that table says go live "from level 5" and which therefore go live at
-      current Level 4. The current ladder is **six levels** (§6), which does not change the offset above: the Full
-      Showdown is still 4 and the Final Showdown still 5. `rules.md` has not been swept and still says five.
+1. **Level numbering.** The build table uses a superseded eight-level scheme, and every older per-level number in
+   these docs is stale. The current ladder is **seven levels** (§6), player-first: L1–L3 the three player drills,
+   L4 the referee seat, L5 the player-seat Showdown where the base game completes, and L6/L7 the deferred Final
+   Showdowns. Tokens go live from Level 1 in the shipped code, not "from level 5" as the old table claims. `rules.md`
+   section 9 has now been swept to this ladder.
 2. **Boss names.** Vikram, Ottoline, Nils, Sofía in three docs; Victor, Olivia, Noemi, Sofia in the code. The code
    is right.
 3. **Tokens in the gym.** One doc says tokens are off in Levels 1 to 3, and another says no score, no token count,
