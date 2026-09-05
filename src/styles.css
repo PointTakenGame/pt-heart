@@ -50,9 +50,13 @@
   --font-cond: Impact, Haettenschweiler, "Arial Narrow Bold", "Arial Narrow", sans-serif;
 
   /* The heights of the NPC dialogue box, one per class of thing it holds. See
-     .dlg for the arithmetic and for why this is a tier list and not one number. */
-  --dlg-h: 34rem;          /* holds the full printed card */
-  --dlg-h-mug: 33.5rem;    /* holds the opponent's baseball card */
+     .dlg for the arithmetic and for why this is a tier list and not one number.
+     Sized 2026-09-05 so the whole screen — masthead, the box, the foot with its
+     Next button — clears a ~700px laptop viewport at 100% zoom without the stage
+     having to scroll (Nathan was running the build at 75% to see it whole). The
+     card and mug inside were shrunk in the same pass; these heights track them. */
+  --dlg-h: 29rem;          /* holds the full printed card */
+  --dlg-h-mug: 29rem;      /* holds the opponent's baseball card */
   --dlg-h-text: 11rem;     /* a floor for plain talk, not a ceiling */
   --dlg-h-compact: 15rem;  /* training: text, or text plus the small card */
 }
@@ -594,7 +598,7 @@ p  { margin: 0 0 0.75rem; }
   flex-direction: column;
   gap: 0.55rem;
 }
-.composer-locked { min-height: 3.9rem; border-top-color: transparent; }
+.composer-locked { min-height: 3.2rem; border-top-color: transparent; }
 /* Wrap, do not overflow. Four whistle buttons at phone width cannot shrink
    below their longest word, so a single row pushed "Let it stand" off the right
    edge and the player could not decline to call a foul. The 8rem track puts two
@@ -1450,7 +1454,10 @@ p  { margin: 0 0 0.75rem; }
    growing a big picture over the same small caption. The fractions are the
    ratios it already had at 9.5rem. */
 .dlg-mug {
-  --mug: 19rem;
+  /* Scaled down with the card in the 700px-fit pass (2026-09-05). Every
+     dimension inside is a multiple of --mug, so one number resizes the whole
+     baseball card and its text together. */
+  --mug: 16rem;
   width: var(--mug);
   aspect-ratio: 2.5 / 3.5;
   margin: auto auto 0;
@@ -1569,9 +1576,13 @@ p  { margin: 0 0 0.75rem; }
    the largest type that still lets every one of the three cards, including
    Fake Listening with its extra procedure band, fit inside that ratio. */
 .dlg .card-full {
-  --u: 0.85rem;
+  /* Width and --u scale together (2026-09-05): a narrower card with the same
+     unit would clip its own text, so the unit shrinks with the width and the
+     whole card scales uniformly. This is what lets --dlg-h drop to 29rem and the
+     card screen fit a 700px viewport. */
+  --u: 0.71rem;
   flex: 0 0 auto;
-  width: min(100%, 21rem);
+  width: min(100%, 17.5rem);
   aspect-ratio: var(--card-ar);
   /* auto on all four sides, so the card sits in the middle of whatever the
      fixed box has left after the coach's line rather than jammed under it. */
@@ -1680,7 +1691,7 @@ p  { margin: 0 0 0.75rem; }
    the same complaint as the box changing size: the frame moved. */
 .drill-table.is-empty { visibility: hidden; }
 
-.drill-foot { flex: 0 0 auto; padding: 0.5rem 1.25rem 1.5rem; }
+.drill-foot { flex: 0 0 auto; padding: 0.5rem 1.25rem 0.9rem; }
 .drill-count { text-align: center; font-size: 0.72rem; margin: 0.5rem 0 0; }
 /* The composer arrives with its own padding, so it does not get the foot's. */
 .drill-foot .composer { padding: 0; }
