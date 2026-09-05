@@ -8,10 +8,13 @@
 import type { ItemRecord } from './types.ts';
 import { PLAYER_AVATARS } from './avatars.ts';
 
-const KEY = 'humility-showdown.v1';
+// Bumped to v2 for the gym rebuild (Q28). The rebuilt levels carry new slugs,
+// so a v1 blob would report clears against levels that no longer exist. There is
+// no migration on purpose: v1 progress does not describe the v2 ladder.
+const KEY = 'humility-showdown.v2';
 
 export interface SaveFile {
-  version: 1;
+  version: 2;
   /** local-only id. Not an account, not sent anywhere in this build. */
   playerId: string;
   /** level slug -> ISO timestamp of the first clear */
@@ -27,7 +30,7 @@ export interface SaveFile {
 
 function blank(): SaveFile {
   return {
-    version: 1,
+    version: 2,
     playerId: crypto.randomUUID(),
     cleared: {},
     items: [],
@@ -42,9 +45,9 @@ export function load(): SaveFile {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as SaveFile;
-      if (parsed.version === 1) {
+      if (parsed.version === 2) {
         // Shape, not just parseability. A blob written by an older build (or by
-        // a developer seeding localStorage by hand) can carry version 1 and the
+        // a developer seeding localStorage by hand) can carry version 2 and the
         // wrong type in a field, and the first write against it throws in the
         // middle of a level. Repairing the containers costs nothing and keeps
         // the promise the catch below is making.
