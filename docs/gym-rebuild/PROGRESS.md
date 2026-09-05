@@ -16,14 +16,55 @@ same commit. Keep it short — it is read at the start of every session.
 | 4 | Levels 1 and 2 retitled and repaired | **done** 2026-09-05 |
 | 5 | The referee level at 4 | **done** 2026-09-05 |
 | 6 | Showdown renumbered to 5 and reconciled | **done** 2026-09-05 |
-| 7 | The passes | not started |
+| 7 | The passes | **done** 2026-09-05 |
 | 8 | Doc reconciliation and the PR | not started |
 
 ## Carried state
 
-**Step 6 (just done) renumbered the Showdown to level 5 and reconciled the six
-rulings into `src/content/showdown.ts` and `src/showdown.ts`.** No new type, no new
-step kind. Step 7 is "The passes" — it has the full toolbox.
+**Step 7 (just done) ran the six cross-cutting passes over levels 1–5.** Four commits,
+one per pass that changed code (2, 3, 5 were already closed and needed nothing new this
+round). Step 8 is "Doc reconciliation and the PR" — its job is to make the docs agree
+with the code below, then open the PR. **On what is true today, the code still outranks
+every doc.**
+
+- **Pass 1 — Review screen (Q21), done.** `Review` in `src/App.tsx` renders when
+  `gym.finished`: the taught card(s) via `RuleCardFull` (Trains band printed on the card
+  itself), a one-line "what you did" in the coach's register (the `DID` map for player
+  levels; a referee-seat sentence for L4), and "Back to the gym". **No score, no counts,
+  no confetti, no modal.** The referee level lays out all three cards; a one-card level
+  shows its one. **The Showdown (`Match`) has no review screen by design** — it ends on
+  its own win/loss/draw result, which is its close, and it teaches all three cards so
+  there is no single card to show. The old finish state (composer swapped for a lone
+  button) is gone; `Room` early-returns `<Review>`.
+- **Pass 2 — Card-tap teaching (Q22), verified, no change.** L1 still teaches the tap in
+  one coach line (`level1.ts`, the "Your end of it is one gesture… tap it up in the tray"
+  beat). It did not get lost when the conduct screen came off.
+- **Pass 3 — Clock (Q25), verified closed.** The done-check grep returns only the two
+  Steve-quote comments in `styles.css` and `Drill.tsx` about card persistence. **Leave
+  them.**
+- **Pass 4 — Vocabulary (Q26/Q27), done.** "Habit" is gone from all player-facing copy
+  (was on the select screen and in one L3 coach line → now "card" / "move"). Going
+  forward **"habit" is allowed only in a boss's mouth about themselves.** "Whistle",
+  "the tray" and "reflexes" were kept on purpose: everyday words for the ref framing, not
+  invented terms. **The coach's voice is untouched — scale the lingo, never the voice.**
+- **Pass 5 — Open book (Q23), done (committed `5fc32b4`).** `engine.beginBoss()` now
+  **appends** a crowd row instead of wiping the thread (defect 5). `Thread.tsx`'s
+  positional fade is now purely cosmetic (`opacity: 0.88 / 0.76`, hover restores;
+  defect 6); scroll pinning left alone. ⚠️ **The docs still claim the thread's
+  forgetfulness is load-bearing for Fake Listening — that is now WRONG. Step 8 must fix
+  the docs to match.** Note: the defect-5/-6 grep *locators* still hit (they match the
+  crowd-row append and the age computation) but both are behaviorally closed — update
+  `defects.md` in step 8 if it tracks them by grep.
+- **Pass 6 — UI fit (Pass 6 / ~700px), done (committed `2f6a485`).** The four `--dlg-h*`
+  vars dropped to `29 / 29 / 11 / 15rem`; the `.dlg` card shrank (`--u 0.71`, width
+  17.5rem) and mug to `16rem`; `.composer-locked` min-height and `.drill-foot` padding
+  trimmed. **Confirm the fit visually at 100% zoom in the separate playtest** — the build
+  is green but the fit was reasoned, not eyeballed.
+
+---
+
+**Step 6 renumbered the Showdown to level 5 and reconciled the six rulings into
+`src/content/showdown.ts` and `src/showdown.ts`.** No new type, no new step kind.
 
 - **The Showdown is level 5.** `SHOWDOWN_SLUG = 'the-showdown'` (unchanged); the 12
   `TURNS` ids are now `l5-*`, and the result item id is `l5-result`. **Save by slug;
