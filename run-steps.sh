@@ -25,6 +25,17 @@ bold() { printf '\033[1m%s\033[0m\n' "$*"; }
 fail() { printf '\033[31m** %s\033[0m\n' "$*" >&2; }
 ok()   { printf '\033[32mok  %s\033[0m\n' "$*"; }
 
+# --- guard: the spawned CLI can actually talk to Anthropic ---------------------
+# The Claude Code desktop app authenticates its own sessions through the host and
+# leaves no credential behind for a `claude` you start yourself, so the CLI in
+# this terminal may well be logged out even though the app is running. Check up
+# front instead of discovering it a step at a time.
+if ! claude auth status 2>/dev/null | grep -q '"loggedIn": *true'; then
+  fail "the claude CLI is not logged in - run 'claude auth login' in Terminal first"
+  echo "    (a browser window opens; the app's own login does not carry over)" >&2
+  exit 1
+fi
+
 # --- guard: right branch, clean tree ------------------------------------------
 here=$(git rev-parse --abbrev-ref HEAD)
 if [ "$here" != "$BRANCH" ]; then
@@ -42,6 +53,12 @@ if [ -z "$first" ]; then
   if [ -z "$first" ]; then ok "every step is already done"; exit 0; fi
 fi
 last="${2:-8}"
+
+# `seq 6 3` counts down, which would run the briefs in reverse and quietly wreck
+# the carried state. Refuse instead of guessing what was meant.
+if [ "$last" -lt "$first" ]; then
+  fail "last step ($last) is before first step ($first)"; exit 1
+fi
 
 bold "Running steps $first..$last on $BRANCH"
 echo
@@ -73,6 +90,14 @@ one commit. Do not push."
   echo "    log: $log"
   echo
 
+  # Started from the app's own terminal, the child would inherit that session's
+  # harness variables and think it is a nested app session. Give it a plain
+  # environment so it behaves like the standalone CLI it is.
+  env -u CLAUDECODE -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_ENTRYPOINT \
+      -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_HOST_SESSION_ID \
+      -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN \
+      -u CLAUDE_CODE_SDK_HAS_HOST_AUTH_REFRESH -u CLAUDE_CODE_SDK_HAS_OAUTH_REFRESH \
+      -u CLAUDE_CODE_OAUTH_SCOPES -u CLAUDE_AGENT_SDK_VERSION \
   claude -p "$prompt" \
     --permission-mode bypassPermissions \
     --max-budget-usd "$BUDGET" \
