@@ -16,12 +16,11 @@ export interface ThreadHandle {
 interface Props {
   messages: Message[];
   avatars: Avatars;
-  waiting: boolean;
   onSkip: () => void;
   ref?: React.Ref<ThreadHandle>;
 }
 
-export function Thread({ messages, avatars, waiting, onSkip, ref }: Props) {
+export function Thread({ messages, avatars, onSkip, ref }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const pinned = useRef(true);
   const byPlayer = useRef(false);
@@ -101,7 +100,12 @@ export function Thread({ messages, avatars, waiting, onSkip, ref }: Props) {
       onScroll={onScroll}
       onWheel={() => { byPlayer.current = true; }}
       onTouchMove={() => { byPlayer.current = true; }}
-      onClick={() => waiting && onSkip()}
+      // Unguarded, like the Drill's Next since finding 8. `waiting` goes false
+      // for the render tick between two autoplay steps, and a tap in that tick
+      // used to hit nothing at all — the "occasionally freezes" half of Nathan's
+      // finding 11. The engine latches a tap it cannot serve yet and the next
+      // dwell eats it, and it ignores one entirely when a composer is open.
+      onClick={() => onSkip()}
     >
       {messages.map((m, i) => {
         // De-contrast what is behind us. Steve, 2026-08-25: "after it's been on

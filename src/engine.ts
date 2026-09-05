@@ -22,7 +22,7 @@ import type { ComposerState, FoulType, Message, Revision, Step } from './types.t
 import type { LevelDef } from './types.ts';
 import { judgeEdit, restate } from './coach.ts';
 import { markCleared, recordItem } from './storage.ts';
-import { BEAT_GAP, dwellMs } from './pacing.ts';
+import { BEAT_GAP, cardDwellMs, dwellMs, SKIP_LATCH_MS } from './pacing.ts';
 import { CARDS } from './content/cards.ts';
 import { START_TOKENS } from './content/showdown.ts';
 import { crowdRow } from './avatars.ts';
@@ -116,6 +116,22 @@ export function useGym(level: LevelDef): Gym {
 
   const captured = useRef<Record<string, string>>({});
   const skipper = useRef<(() => void) | null>(null);
+  // A tap that arrived with nothing to skip, kept for the next dwell to eat.
+  //
+  // Nathan, 2026-09-05, playtest finding 11: the boss thread "occasionally
+  // freezes". It never actually stopped. `finish()` clears `skipper.current` and
+  // drops `waiting` *before* it resolves, and the effect cleanup clears the
+  // skipper again on every cursor change, so between one step ending and the
+  // next one reaching its `dwell()` there is a tick with no skipper installed. A
+  // tap in that tick hit nothing, and since a boss line can dwell over five
+  // seconds, the thread sat there looking dead for the rest of it. Finding 8
+  // closed the same window in the Drill by dropping its `waiting` guard, but
+  // that fix does not transfer: the Drill's `next()` has a local cursor it can
+  // advance instead, and the Thread has nothing of its own to call. So the tap
+  // is latched here and the next dwell consumes it.
+  const pendingSkip = useRef(0);
+  // What the composer is showing, for `skip` to read without re-subscribing.
+  const composerKind = useRef<ComposerState['kind']>('locked');
   const uid = useRef(0);
   const purse = useRef({ player: START_TOKENS, opponent: START_TOKENS });
   const bossShown = useRef(false);
@@ -154,12 +170,28 @@ export function useGym(level: LevelDef): Gym {
   }, [tokensLive]);
 
   const skip = useCallback(() => {
-    skipper.current?.();
+    if (skipper.current) {
+      skipper.current();
+      return;
+    }
+    // Nothing to skip yet. Latch it only if the gym is mid-autoplay: a tap while
+    // an interactive composer is open is a misfire, and latching it would eat
+    // the first line after the player answers. The stamp expires because the
+    // last autoplay step before a gate opens its composer a tick *after* the
+    // dwell ends, so `composerKind` is still 'locked' in exactly the boundary
+    // tick this is meant to catch, and no longer than that.
+    if (composerKind.current === 'locked') pendingSkip.current = Date.now();
   }, []);
 
   /** dwell for `ms`, or until the player taps. Resolves false if unmounted. */
   const dwell = useCallback((ms: number, alive: () => boolean) => {
     return new Promise<void>((resolve) => {
+      if (Date.now() - pendingSkip.current < SKIP_LATCH_MS) {
+        pendingSkip.current = 0;
+        resolve();
+        return;
+      }
+      pendingSkip.current = 0;
       setWaiting(true);
       let done = false;
       const finish = () => {
@@ -222,6 +254,12 @@ export function useGym(level: LevelDef): Gym {
     [],
   );
 
+  // `skip` is called from an event handler and must not re-subscribe on every
+  // composer change, so it reads the kind off a ref.
+  useEffect(() => {
+    composerKind.current = composer.kind;
+  }, [composer]);
+
   /** A delayed push out of an event handler, dropped if the level unmounts.
    *  The scripted loop has `alive` for this; submit() does not, and item 13
    *  (the card lands before the tokens move) needs a real pause. */
@@ -281,7 +319,14 @@ export function useGym(level: LevelDef): Gym {
         case 'card':
           setComposer({ kind: 'locked' });
           push({ lane: 'coach', text: CARDS[step.rule].name, card: step.rule });
-          await dwell(2200, aliveFn);
+          // The mini card prints the name and the blurb, so that is what the
+          // dwell is measured over — the fixed 2200ms this used to hold was set
+          // before finding 9 slowed every line down, which had quietly left the
+          // card the fastest beat in the gym.
+          await dwell(
+            cardDwellMs(`${CARDS[step.rule].name} ${CARDS[step.rule].blurb}`) + BEAT_GAP,
+            aliveFn,
+          );
           if (alive) setCursor((c) => c + 1);
           return;
 

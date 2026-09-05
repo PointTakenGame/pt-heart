@@ -25,7 +25,7 @@ import type {
   Revision,
   TemplateSegment,
 } from './types.ts';
-import { BEAT_GAP, dwellMs } from './pacing.ts';
+import { BEAT_GAP, dwellMs, SKIP_LATCH_MS } from './pacing.ts';
 import { crowdRow } from './avatars.ts';
 import { judgeTurn, sofiaLine } from './coach.ts';
 import { runPhraseDetectors } from './detectors.ts';
@@ -129,6 +129,13 @@ export function useShowdown(): Match {
 
   const uid = useRef(0);
   const skipper = useRef<(() => void) | null>(null);
+  // Same latch as the gym's engine, for the same reason: `finish()` clears the
+  // skipper before it resolves, so a tap landing between two turns' lines used
+  // to hit nothing and the fight looked frozen for the rest of the line
+  // (Nathan, 2026-09-05, playtest finding 11 — reported against L3, but the
+  // Showdown runs the same Thread with the same dead tick).
+  const pendingSkip = useRef(0);
+  const composerKind = useRef<ComposerState['kind']>('locked');
   const pending = useRef<((v: { value: string; revisions: Revision[] }) => void) | null>(null);
   const started = useRef(false);
   /** Bumped on every re-ask, so the composer remounts and clears itself. */
@@ -148,7 +155,21 @@ export function useShowdown(): Match {
     setMessages((prev) => [...prev, msg]);
   }, []);
 
-  const skip = useCallback(() => skipper.current?.(), []);
+  const skip = useCallback(() => {
+    if (skipper.current) {
+      skipper.current();
+      return;
+    }
+    // Only mid-autoplay: latching a tap made while a composer is open would eat
+    // the first line after the player answers.
+    if (composerKind.current === 'locked') pendingSkip.current = Date.now();
+  }, []);
+
+  // `skip` is called from an event handler and must not re-subscribe on every
+  // composer change, so it reads the kind off a ref.
+  useEffect(() => {
+    composerKind.current = composer.kind;
+  }, [composer]);
 
   const submit = useCallback((value: string, revisions: Revision[] = []) => {
     const resolve = pending.current;
@@ -184,6 +205,12 @@ export function useShowdown(): Match {
     const dwell = (ms: number) =>
       new Promise<void>((resolve) => {
         if (!alive) return;
+        if (Date.now() - pendingSkip.current < SKIP_LATCH_MS) {
+          pendingSkip.current = 0;
+          resolve();
+          return;
+        }
+        pendingSkip.current = 0;
         setWaiting(true);
         let done = false;
         const finish = () => {

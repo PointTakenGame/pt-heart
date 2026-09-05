@@ -18,6 +18,31 @@
 
 export const BEAT_GAP = 700;
 
+/** How long a tap that arrived with nothing to skip stays latched.
+ *
+ *  Both runners clear `skipper.current` and drop `waiting` before the dwell
+ *  resolves, so there is a render tick between two autoplay lines where a tap
+ *  has nothing to act on. It is latched instead, and the next dwell eats it
+ *  (Nathan, 2026-09-05, playtest finding 11: the boss thread "occasionally
+ *  freezes"). Wide enough to cover that tick, narrow enough that a stray tap
+ *  never reaches a line the player has not seen yet. */
+export const SKIP_LATCH_MS = 250;
+
 export function dwellMs(text: string): number {
   return Math.min(5200, Math.max(900, 33 * text.length));
+}
+
+/**
+ * How long a printed rule card sits before the thread moves on.
+ *
+ * The card step used to hold a hand-set 2200ms of its own, outside this module.
+ * That was chosen when a line was 22ms/char capped at 2500; after finding 9
+ * slowed every line down, the card had quietly become the *fastest* beat in the
+ * gym — the one moment that is a new object to look at rather than a sentence to
+ * read went by quicker than the sentences around it. Same formula as a line, run
+ * over the name and blurb the mini card actually prints, with a floor because a
+ * card is a thing to look at and 50 characters understates it.
+ */
+export function cardDwellMs(text: string): number {
+  return Math.max(3000, dwellMs(text));
 }

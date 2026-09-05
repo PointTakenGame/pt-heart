@@ -503,7 +503,6 @@ function Room({
             ref={thread}
             messages={gym.messages}
             avatars={{ coach: COACH_EMOJI, opponent: level.bossEmoji, player: avatar }}
-            waiting={gym.waiting}
             onSkip={gym.skip}
           />
           {composerNode}
@@ -603,7 +602,6 @@ function Match({ avatar, onExit }: { avatar: string; onExit: () => void }) {
         ref={thread}
         messages={match.messages}
         avatars={{ coach: COACH_EMOJI, opponent: SOFIA_EMOJI, player: avatar }}
-        waiting={match.waiting}
         onSkip={match.skip}
       />
       {match.finished ? (

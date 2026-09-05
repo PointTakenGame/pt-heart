@@ -42,9 +42,9 @@ mistake.** Grouped by the fix they need, not by level.
 | 6 | L2 | "that's *his* attack" about Olivia | already fixed in code by `a5e79a3`; docs corrected here |
 | 7 | L2 | duplicated Ray lines at the start of the drills | **done** |
 | 8 | L2 | Next during drills sometimes does not advance | **done** |
-| 9 | global | automated lines arrive too fast, especially 3+ in a row | **done** |
+| 9 | global | automated lines arrive too fast, especially 3+ in a row | **done** (card step swept) |
 | 10 | L3 | "I don't buy full remote" reads as buying a remote control | **done** |
-| 11 | L3 | boss fight races past the first interaction, then freezes | open (C) |
+| 11 | L3 | boss fight races past the first interaction, then freezes | freeze **done**; races-past is **question 1** |
 | 12 | L4 | start button read "In with Olivia" in a two-opponent level | **done** |
 | 13 | L4 | first boss line hands the *player* an opinion and makes Ray ref | open (E) |
 | 14 | L4 | large revamp: Victor vs Olivia, player refs, player holds **no tokens** | open (E) |
@@ -53,8 +53,8 @@ mistake.** Grouped by the fix they need, not by level.
 | 17 | L5 | boss writes the same point three times | open (F) |
 | 18 | L5 | round 3 "She's behind" asserted at 7-7 | **done** |
 
-Groups still open: **C** engine/thread (11 only) · **E** the L4 ref revamp (13, 14) ·
-**F** L5 boss quality (16, 17) · **G** zoom/fit (1).
+Groups still open: **E** the L4 ref revamp (13, 14) · **F** L5 boss quality (16, 17) ·
+**G** zoom/fit (1). Group **C** is closed except for the one content ruling below.
 
 ### Round two of fixes: 2, 5, 7, 8, 9
 
@@ -111,28 +111,62 @@ Two mechanics landed with these copy fixes:
   `string | ((player, sofia) => string)` so the coach reads the live purses
   (finding 18); `scripts/export-script.ts` renders the function form at 7-7.
 
-### Finding 11 — investigation, not yet fixed
+### Finding 11 — the freeze is fixed; the races-past half needs a ruling
 
 Nathan: *"L3 boss fight is broken - it zooms past the first interaction with no user
-input, then occasionally freezes."* Two leads, both read but neither replicated at
-runtime yet. **Nothing in this area has been changed.**
+input, then occasionally freezes."* Two separate defects wearing one sentence.
 
-- **The "zooms past" half looks structural, and it is content.** `Thread.tsx` has **no
-  Next button at all** — the boss stage is pure auto-play with tap-to-skip, by design
-  (Steve, 2026-08-25: the stepper is the corner, the thread is the fight). L3's boss beat
-  then runs **eight consecutive auto-play steps** before its first interactive one
-  (`confirm l3-summarized`): coach warning, Noemi's take, the specimen setup, the
-  specimen, Noemi's reply, the card, the card explanation, and the flip to the gas-stove
-  topic. Eight lines on dwell timers with no gate is exactly what "zooms past the first
-  interaction" describes. The round-two pacing change (33ms/char, cap 5200) slows the
-  feel but does not change the structure. **The other boss beats need the same count
-  before anything is cut** — the fix may be a `continue` gate rather than a trim.
-- **The "occasionally freezes" half has a code suspect.** `Thread.tsx:104` is
-  `onClick={() => waiting && onSkip()}` — the **same `waiting` guard removed from
-  `Drill.tsx`'s `next()`** for finding 8. Folding `BEAT_GAP` into the single dwell closed
-  the window where `waiting` was false mid-run, so this may already be fixed; it has not
-  been checked against the current `engine.ts`. If it is not, the Thread wants the same
-  unguarded call the drill got (`onSkip` is a no-op when there is nothing to skip).
+**The freeze was real, and it was never actually stopped — it was a dead tap.** Both
+runners' `finish()` clears `skipper.current` and drops `waiting` *before* it resolves,
+and the effect cleanup clears the skipper again on every cursor change. So between one
+step ending and the next one reaching its `dwell()` there is a render tick with no
+skipper installed and `waiting` false. `Thread.tsx:104` was `onClick={() => waiting &&
+onSkip()}`, so a tap landing in that tick hit nothing at all — and since a boss line can
+now dwell 5.9s, the thread sat there looking dead for the rest of it.
+
+Removing the guard is not enough on its own. `onSkip()` is a no-op while
+`skipper.current` is null, and unlike `Drill.tsx`'s `next()` — which closed the same
+window for finding 8 by clamping its own local cursor — the Thread has nothing of its own
+to advance. So the tap is **latched**: `skip()` stamps `pendingSkip` when it has nothing
+to serve, and the next `dwell()` consumes the stamp and resolves immediately. Two guards
+on the latch:
+
+- it only arms while `composer.kind === 'locked'`, so a tap made with an interactive gate
+  open cannot eat the first line after the player answers;
+- it expires after `SKIP_LATCH_MS` (250ms), because the last autoplay step before a gate
+  opens its composer a tick *after* the dwell ends — which is exactly the boundary tick
+  this is meant to catch, and no longer than that.
+
+**Swept into `showdown.ts`**, which is the second runner with the identical shape and the
+same now-unguarded Thread. Its `dwell` is a local closure inside the match effect rather
+than a `useCallback`, so the two refs live at hook scope and the consume-check goes inside
+the closure; `SKIP_LATCH_MS` moved to `pacing.ts` so both runners read one number.
+
+Replicated and verified at runtime: tapping the L3 boss thread repeatedly walked it from
+3 rows to 10 and onto the `confirm l3-summarized` gate with no tap swallowed.
+
+**Hypotheses disproven along the way, so nobody re-chases them:** a rail-card or composer
+click bubbling into `.thread`'s `onClick` and consuming a gate (they are siblings, not
+children — `App.tsx:497-529`); and an apparent hard hang at the crowd row, which was
+hidden-tab timer throttling of the recording script, not the gym.
+
+**Sibling of finding 9 found here.** The `card` step held a hardcoded 2200ms that never
+got the finding-9 treatment. It was set when a line was 22ms/char capped at 2500; after
+the slowdown the printed rule card — the one beat that is a new *object* to look at
+rather than a sentence to read — had quietly become the fastest thing in the gym. Now
+`cardDwellMs(name + ' ' + blurb) + BEAT_GAP` in `pacing.ts`, measured over what
+`RuleCardMini` actually prints, with a 3000ms floor because ~50 characters understates a
+card.
+
+**Still open — the "races past" half, and it wants a ruling (question 1).** `Thread.tsx`
+has no Next button by design (Steve, 2026-08-25: the stepper is the corner, the thread is
+the fight). L3's boss beat then runs **eight consecutive auto-play steps** — roughly 34
+seconds by `pacing.ts` arithmetic — before its first gate: coach warning, Noemi's take,
+the specimen setup, the specimen, Noemi's reply, the card, the card explanation, and the
+flip to the gas-stove topic. The sweep says L3 is the sole outlier: **L1 and L2 open with
+one step before their first gate, L4 with three.** So this is not an engine defect and it
+has no siblings; it is L3's content, and the fix is either a `continue` gate (which cuts
+against the thread's design) or a trim (which loses teaching). Nathan's call.
 
 ## Carried state
 
