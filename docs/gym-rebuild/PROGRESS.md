@@ -111,6 +111,29 @@ Two mechanics landed with these copy fixes:
   `string | ((player, sofia) => string)` so the coach reads the live purses
   (finding 18); `scripts/export-script.ts` renders the function form at 7-7.
 
+### Finding 11 — investigation, not yet fixed
+
+Nathan: *"L3 boss fight is broken - it zooms past the first interaction with no user
+input, then occasionally freezes."* Two leads, both read but neither replicated at
+runtime yet. **Nothing in this area has been changed.**
+
+- **The "zooms past" half looks structural, and it is content.** `Thread.tsx` has **no
+  Next button at all** — the boss stage is pure auto-play with tap-to-skip, by design
+  (Steve, 2026-08-25: the stepper is the corner, the thread is the fight). L3's boss beat
+  then runs **eight consecutive auto-play steps** before its first interactive one
+  (`confirm l3-summarized`): coach warning, Noemi's take, the specimen setup, the
+  specimen, Noemi's reply, the card, the card explanation, and the flip to the gas-stove
+  topic. Eight lines on dwell timers with no gate is exactly what "zooms past the first
+  interaction" describes. The round-two pacing change (33ms/char, cap 5200) slows the
+  feel but does not change the structure. **The other boss beats need the same count
+  before anything is cut** — the fix may be a `continue` gate rather than a trim.
+- **The "occasionally freezes" half has a code suspect.** `Thread.tsx:104` is
+  `onClick={() => waiting && onSkip()}` — the **same `waiting` guard removed from
+  `Drill.tsx`'s `next()`** for finding 8. Folding `BEAT_GAP` into the single dwell closed
+  the window where `waiting` was false mid-run, so this may already be fixed; it has not
+  been checked against the current `engine.ts`. If it is not, the Thread wants the same
+  unguarded call the drill got (`onSkip` is a no-op when there is nothing to skip).
+
 ## Carried state
 
 **Step 8 (just done) reconciled the docs with the seven-level, player-first ladder.**
