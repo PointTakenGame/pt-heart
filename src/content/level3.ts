@@ -235,7 +235,7 @@ export const level3: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'And that\'s her fixed. Once someone actually says your reason back, there\'s nothing left to catch. You don\'t drain her down to nothing, you reform her. One good call and the habit\'s retired for the rest of the match.',
+          text: 'And that\'s her fixed. Once someone actually says your reason back, there\'s nothing left to catch. You don\'t drain her down to nothing, you reform her. One good call and the move\'s retired for the rest of the match.',
         },
         {
           kind: 'say',

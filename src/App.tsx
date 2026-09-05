@@ -224,7 +224,7 @@ function Select({
       <Mast slim />
       <h1>The gym</h1>
       <p className="muted">
-        Five levels. One habit and one opponent at a time, then everything you have learned
+        Five levels. One card and one opponent at a time, then everything you have learned
         in one match.
       </p>
 
