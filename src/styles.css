@@ -107,6 +107,45 @@ h2 { font-size: 1.1rem; margin: 1.5rem 0 0.25rem; }
 p  { margin: 0 0 0.75rem; }
 .muted { color: #6d6355; }
 
+/* ---------- the end-of-level review (Q21) ----------
+   One quiet screen after the reps: the card the level taught with its Trains
+   band, a plain line naming what the player did, and the way back. No score, no
+   confetti, no modal. It rides on .page-narrow but tops out its stack rather
+   than centring, so a tall card (or all three, on the ref level) scrolls. */
+.page-review { justify-content: flex-start; }
+.review-body {
+  width: 100%;
+  max-width: 30rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.review-eyebrow {
+  margin: 0;
+  font-family: var(--font-cond);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: var(--teal);
+}
+.review-title { margin: 0; text-align: center; }
+.review-did {
+  margin: 0;
+  text-align: center;
+  max-width: 26rem;
+  color: var(--charcoal);
+}
+.review-cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+.review-cards .card-full { width: min(100%, 20rem); }
+
 /* ---------- the front page ----------
    Harvested from page 1 of the printed deck, 2026-08-25. The vocabulary here is
    the deck's: a navy masthead with a two-colour wordmark, the orange left rule

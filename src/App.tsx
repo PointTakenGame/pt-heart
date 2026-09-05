@@ -9,7 +9,7 @@ import { Composer } from './ui/Composer.tsx';
 import { Thread, type ThreadHandle } from './ui/Thread.tsx';
 import { Drill } from './ui/Drill.tsx';
 import { Header } from './ui/Header.tsx';
-import { RuleCards, RuleCardMini } from './ui/RuleCards.tsx';
+import { RuleCards, RuleCardMini, RuleCardFull } from './ui/RuleCards.tsx';
 import { BossIntro } from './ui/BossIntro.tsx';
 import { Prefight } from './ui/Prefight.tsx';
 import { Mast } from './ui/Mast.tsx';
@@ -307,6 +307,47 @@ function liveCards(kind: string, callable?: FoulType[]): FoulType[] | null {
   return kind === 'call' ? (callable ?? []) : null;
 }
 
+// Q21: one plain sentence naming the rep the player just finished, in the coach's
+// register — no counts, no tokens, no score, the same line for everyone who
+// cleared the level. "Foul" for the act, "card" for the object, nothing invented.
+const DID: Record<FoulType, string> = {
+  judging: 'You caught the jabs at the person and put them back on the argument.',
+  opinion_as_fact:
+    'You caught opinions wearing the costume of a fact, and marked them as your own view.',
+  fake_listening: 'You summarized the other side until they agreed you had it right.',
+};
+
+// The end-of-level review (Q21). One quiet screen: the card the level taught,
+// its Trains band (printed on the card itself), and the line above. No modal, no
+// confetti, no score — the reps are over and this is just the closing card on
+// the table. The referee level taught all three, so it lays out all three; a
+// one-card level shows the one it drilled.
+function Review({ level, onExit }: { level: LevelDef; onExit: () => void }) {
+  const referee = level.seat === 'referee';
+  const cards = referee ? level.cards : [level.rule];
+  const did = referee
+    ? "You sat in the ref's chair and called the fouls on both sides — no arguing, just the calls."
+    : DID[level.rule];
+  return (
+    <div className="page page-narrow page-review">
+      <Mast slim right={<button className="link" onClick={onExit}>Leave</button>} />
+      <div className="review-body">
+        <p className="review-eyebrow">Level cleared</p>
+        <h1 className="review-title">{level.title}</h1>
+        <p className="review-did">{did}</p>
+        <div className="review-cards">
+          {cards.map((rule) => (
+            <RuleCardFull key={rule} rule={rule} />
+          ))}
+        </div>
+        <button className="btn btn-wide" onClick={onExit}>
+          Back to the gym
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Level({
   level,
   avatar,
@@ -347,9 +388,6 @@ function Room({
   const land = useCallback(() => {
     thread.current?.land();
   }, []);
-  // The end-of-level button replaces the composer outright, which is one more
-  // height change with no message behind it.
-  useLayoutEffect(land, [gym.finished, land]);
 
   // True while the drill's cursor is behind the newest line. The rule card rail
   // sits outside the drill and would otherwise offer a call on a specimen the
@@ -378,6 +416,13 @@ function Room({
     );
   }
 
+  // The reps are done: the whole room gives way to the one review screen (Q21),
+  // rather than swapping the composer for a lone "Back to the gym" button under a
+  // thread that has nothing left to do.
+  if (gym.finished) {
+    return <Review level={level} onExit={onExit} />;
+  }
+
   const call = gym.composer.kind === 'call' ? gym.composer : null;
 
   // Training and a fight are two different rooms now. Steve, 2026-08-25: "The
@@ -393,15 +438,7 @@ function Room({
 
   const railLive = inBoss || !drillBehind;
 
-  const composerNode = gym.finished ? (
-    <div className="composer">
-      <button className="btn btn-wide" onClick={onExit}>
-        Back to the gym
-      </button>
-    </div>
-  ) : (
-    <Composer state={gym.composer} onSubmit={gym.submit} onResize={land} />
-  );
+  const composerNode = <Composer state={gym.composer} onSubmit={gym.submit} onResize={land} />;
 
   return (
     <div className={`page page-level${inBoss ? '' : ' page-drill'}`}>
@@ -452,7 +489,7 @@ function Room({
           // his baseball card in a room he is not in. See the Header note above.
           opponent={null}
           composer={composerNode}
-          composerReady={gym.finished || gym.composer.kind !== 'locked'}
+          composerReady={gym.composer.kind !== 'locked'}
           onBehind={setDrillBehind}
         />
       )}
