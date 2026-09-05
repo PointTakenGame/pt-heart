@@ -6,13 +6,16 @@
 // dwell, so a fast reader never waits and a slow one never gets buried.
 //
 // Every item is answered exactly once. There are no retries anywhere (Q6, Q12):
-// a wrong call costs a token and the level moves on, and the offended party's
-// ruling on a foul is final because it is theirs. What is still gated is a
-// non-answer — an empty box, one character, or a prefill handed straight back
-// is not an attempt at all, so the same step reopens and nothing is charged.
+// a wrong call moves the level on, and the offended party's ruling on a foul is
+// final because it is theirs. What is still gated is a non-answer — an empty
+// box, one character, or a prefill handed straight back is not an attempt at
+// all, so the same step reopens.
 //
-// Both purses run from level 1, seven tokens a side, same as the printed game.
-// A good call takes one off the opponent; a bad whistle hands one over.
+// Both purses hold seven tokens a side, same as the printed game: a good call
+// takes one off the opponent, a bad whistle hands one over. But the economy is
+// switched off for levels 1 to 3 (`LevelDef.tokens`), where the coach promises
+// out loud that the number will not move. It starts counting in the ref's
+// chair. See `transfer` below — that gate is the only one there is.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ComposerState, FoulType, Message, Revision, Step } from './types.ts';
