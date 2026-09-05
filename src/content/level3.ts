@@ -19,7 +19,7 @@
 import type { LevelDef } from '../types.ts';
 
 export const level3: LevelDef = {
-  slug: 'did-i-miss-anything',
+  slug: 'the-summary-gate',
   title: 'Did I miss anything?',
   teaches: 'Fake Listening',
   rule: 'fake_listening',

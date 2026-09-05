@@ -296,11 +296,20 @@ p  { margin: 0 0 0.75rem; }
 .level-card:hover { border-color: var(--orange); }
 
 /* The showdown is not another drill, so it does not look like one. */
-.level-card-boss {
+.level-card-showdown {
   border-color: var(--purple);
   background: var(--cream-dark);
 }
-.level-card-boss .level-n { color: var(--purple); }
+.level-card-showdown .level-n { color: var(--purple); }
+
+/* Live play is not on the ladder at all — it is what the ladder leads to — so
+   the row sits apart from the five above it and never lights up on hover. */
+.level-card-live {
+  border-style: dashed;
+  background: transparent;
+  cursor: default;
+}
+.level-card-live:hover { border-color: var(--rule); }
 
 .level-n {
   font-size: 1.4rem;

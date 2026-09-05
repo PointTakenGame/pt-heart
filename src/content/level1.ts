@@ -29,7 +29,7 @@
 import type { LevelDef } from '../types.ts';
 
 export const level1: LevelDef = {
-  slug: 'the-word-you',
+  slug: 'about-the-argument',
   title: 'The word "You"',
   teaches: 'Judging',
   rule: 'judging',

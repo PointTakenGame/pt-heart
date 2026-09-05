@@ -22,7 +22,7 @@
 import type { LevelDef } from '../types.ts';
 
 export const level2: LevelDef = {
-  slug: 'in-my-head-because',
+  slug: 'my-opinion-not-a-fact',
   title: 'In my head, because',
   teaches: 'Opinions as Facts',
   rule: 'opinion_as_fact',

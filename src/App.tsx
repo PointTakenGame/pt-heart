@@ -1,5 +1,5 @@
-// Four screens: the agreement (Beat 0), level select, the gym thread, and the
-// showdown. Everything that carries game state lives in the two thread screens.
+// Four screens: the front page, level select, the gym thread, and the showdown.
+// Everything that carries game state lives in the two thread screens.
 
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { LEVELS } from './content/index.ts';
@@ -17,19 +17,28 @@ import { useShowdown } from './showdown.ts';
 import { SHOWDOWN_PREFIGHT, SHOWDOWN_SLUG, SOFIA_EMOJI } from './content/showdown.ts';
 import { CARD_ORDER } from './content/cards.ts';
 import { COACH_EMOJI, DEFAULT_AVATAR, shuffledAvatars } from './avatars.ts';
-import { getAvatar, isCleared, load, setAvatar } from './storage.ts';
+import { getAvatar, isCleared, setAvatar } from './storage.ts';
+
+/** The Showdown's position on the ladder, read off the ladder rather than typed
+ *  in. It was hardcoded to 4 and was already wrong (defect 9). */
+const SHOWDOWN_NUMBER = LEVELS.findIndex((l) => l.slug === SHOWDOWN_SLUG) + 1;
 
 type Screen =
-  | { name: 'agreement' }
+  | { name: 'front' }
   | { name: 'select' }
   | { name: 'level'; level: LevelDef }
   | { name: 'showdown' };
 
 export function App() {
-  const seen = Object.keys(load().cleared).length > 0;
-  const [screen, setScreen] = useState<Screen>(
-    seen ? { name: 'select' } : { name: 'agreement' },
-  );
+  // Q4: the Level-0 conduct agreement is cut. It moves to signup, and nothing in
+  // the app asks the player to accept anything any more.
+  //
+  // What is cut is the *gate*, not the screen below it. The gate was this route
+  // being conditional on saved progress — a first visit was held here until the
+  // player pressed a button, and a returning one never saw the screen again. It
+  // is now simply the front page: unconditional, always where the app opens,
+  // agreeing to nothing, with a way into the gym.
+  const [screen, setScreen] = useState<Screen>({ name: 'front' });
   const [avatar, setAvatarState] = useState<string>(() => getAvatar() ?? DEFAULT_AVATAR);
 
   const pickAvatar = (emoji: string) => {
@@ -37,7 +46,7 @@ export function App() {
     setAvatarState(emoji);
   };
 
-  if (screen.name === 'agreement') return <Agreement onIn={() => setScreen({ name: 'select' })} />;
+  if (screen.name === 'front') return <FrontPage onIn={() => setScreen({ name: 'select' })} />;
   if (screen.name === 'select') {
     return (
       <Select
@@ -61,7 +70,7 @@ export function App() {
   );
 }
 
-// The first screen, rebuilt 2026-08-25 against page 1 of the printed deck
+// The front page, rebuilt 2026-08-25 against page 1 of the printed deck
 // (docs/reference/print/v7/PointTaken-HumilityShowdown_2026-08-19.pdf). Steve:
 // "first page loaded from ebsite - can make it look more like the pdf front
 // page? suggest elements to harvest."
@@ -87,8 +96,10 @@ export function App() {
 // The masthead is navy, not the pure black page 1 prints. Pages 2 and 3 are
 // navy, and card-anatomy.md §G reads the black as drift rather than intent.
 //
-// Two clauses. Steve cut the other two on 2026-08-23. Do not reintroduce them.
-function Agreement({ onIn }: { onIn: () => void }) {
+// Two clauses. Steve cut the other two on 2026-08-23. Do not reintroduce them,
+// and do not delete these two: the conduct *gate* came off in the rebuild (Q4),
+// the page did not, and these paragraphs are the page's own copy.
+function FrontPage({ onIn }: { onIn: () => void }) {
   return (
     <div className="page page-front">
       <Mast />
@@ -204,7 +215,7 @@ function Select({
 
   // The ladder is a ladder. Steve's ruling of 2026-08-24: level 2 cannot be
   // opened before level 1 is cleared, because each level assumes the card the
-  // one before it taught, and the showdown assumes all three.
+  // one before it taught, and the Showdown assumes all three.
   const cleared = LEVELS.map((l) => isCleared(l.slug));
   const allCleared = cleared.every(Boolean);
 
@@ -213,7 +224,8 @@ function Select({
       <Mast slim />
       <h1>The gym</h1>
       <p className="muted">
-        Three levels, each one habit and one opponent. Then all three at once, for tokens.
+        Five levels. One habit and one opponent at a time, then everything you have learned
+        in one match.
       </p>
 
       <div className="picker picker-done">
@@ -224,42 +236,65 @@ function Select({
         </button>
       </div>
 
+      {/* Every row is data, including the Showdown. It used to be a second,
+          hand-written row sitting outside this map, which is how it drifted out
+          of step with the four above it (defect 9). All that differs now is
+          which screen a row opens.
+
+          A locked row prints "Locked" instead of its title. That is not
+          decoration: level 4 is where the referee is introduced, and CLAUDE.md
+          withholds the word, the role and the three-player structure until then
+          — a locked row showing "In the ref seat" would leak it on the very
+          first screen of the game. Uniform, so no row is a special case. */}
       <ul className="levels">
-        {LEVELS.map((l, i) => {
+        {LEVELS.map((row, i) => {
           const locked = i > 0 && !cleared[i - 1];
+          const done = cleared[i];
           return (
-            <li key={l.slug}>
+            <li key={row.slug}>
               <button
-                className={`level-card${locked ? ' is-locked' : ''}`}
+                className={`level-card${row.screen === 'showdown' ? ' level-card-showdown' : ''}${
+                  locked ? ' is-locked' : ''
+                }`}
                 disabled={locked}
-                onClick={() => onPick(l)}
+                onClick={() => (row.screen === 'showdown' ? onShowdown() : onPick(row.level))}
               >
                 <span className="level-n">{locked ? '\u{1F512}' : i + 1}</span>
                 <span className="level-mid">
-                  <span className="level-title">{l.title}</span>
+                  <span className="level-title">{locked ? 'Locked' : row.title}</span>
+                  {/* Q20: a cleared row reports the rule it taught and nothing
+                      else. No tokens, no foul counts, no time — the same line
+                      for everyone who finished it. */}
                   <span className="level-sub">
-                    {locked ? `clear level ${i} first` : `${l.teaches} \u00b7 ${l.boss}`}
+                    {locked
+                      ? `clear level ${i} first`
+                      : done
+                        ? `Learned: ${row.teaches}`
+                        : `${row.teaches} \u00b7 ${row.boss}`}
                   </span>
                 </span>
-                {cleared[i] && <span className="level-done">cleared</span>}
+                {/* The replay affordance is the row itself: a cleared row stays
+                    live and reopens the level. The badge just says so. */}
+                {done && <span className="level-done">Replay</span>}
               </button>
             </li>
           );
         })}
+        {/* Q5: live play sits behind the whole ladder, and it is not built. The
+            row is here so that clearing level 5 lands on something — the lock
+            comes off and the row changes — rather than on an unchanged screen.
+            It never becomes clickable in this build. */}
         <li>
-          <button
-            className={`level-card level-card-boss${allCleared ? '' : ' is-locked'}`}
-            disabled={!allCleared}
-            onClick={onShowdown}
-          >
-            <span className="level-n">{allCleared ? '4' : '\u{1F512}'}</span>
+          <button className={`level-card level-card-live${allCleared ? '' : ' is-locked'}`} disabled>
+            <span className="level-n">{allCleared ? '\u{1F91D}' : '\u{1F512}'}</span>
             <span className="level-mid">
-              <span className="level-title">The Showdown</span>
+              <span className="level-title">{allCleared ? 'Live play' : 'Locked'}</span>
               <span className="level-sub">
-                {allCleared ? 'All three cards \u00b7 Slippery Sofia' : 'clear all three levels first'}
+                {allCleared
+                  ? 'Unlocked \u00b7 two humans and a referee \u00b7 not built yet'
+                  : 'clear the whole ladder first'}
               </span>
             </span>
-            {isCleared(SHOWDOWN_SLUG) && <span className="level-done">played</span>}
           </button>
         </li>
       </ul>
@@ -454,7 +489,7 @@ function Showdown({ avatar, onExit }: { avatar: string; onExit: () => void }) {
   if (stage === 'intro') {
     return (
       <BossIntro
-        fightNumber={4}
+        fightNumber={SHOWDOWN_NUMBER}
         boss="Slippery Sofia"
         bossEmoji={SOFIA_EMOJI}
         epithet="Never raises her voice. Fouls you twice before you notice once."
