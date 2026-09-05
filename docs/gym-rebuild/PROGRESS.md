@@ -13,7 +13,7 @@ same commit. Keep it short — it is read at the start of every session.
 | 1 | Ladder scaffold | **done** 2026-09-05 |
 | 2 | Q6/Q7 mechanic — `confirm` + `template` step kinds | **done** 2026-09-05 |
 | 3 | Level 3 rebuilt as a full round | **done** 2026-09-05 |
-| 4 | Levels 1 and 2 retitled and repaired | not started |
+| 4 | Levels 1 and 2 retitled and repaired | **done** 2026-09-05 |
 | 5 | The referee level at 4 | not started |
 | 6 | Showdown renumbered to 5 and reconciled | not started |
 | 7 | The passes | not started |
@@ -21,15 +21,34 @@ same commit. Keep it short — it is read at the start of every session.
 
 ## Carried state
 
-**Step 3 (just done) touched only `src/content/level3.ts`.** No engine, type, or UI
-change. It is now a full round built from the existing step kinds — no new machinery.
-Step 4 repairs L1 and L2 and has the same toolbox.
+**Step 4 (just done) touched only `src/content/level1.ts` and `src/content/level2.ts`.**
+No engine, type, or UI change — both rebuilt from the existing step kinds. Step 5 writes
+`src/content/level4.ts` (the referee level) and has the same toolbox, plus defects 3 and
+4 to wire (both left deliberately open below).
 
-- **The Q17 ending is a `free` step with `chips: []`** (unscaffolded, no chips row —
-  the Composer guards `chips.length > 0`). It records `null`, is never rejected past
-  the `tooThin` gate, and is followed by a plain coach `say` (the `free` case emits no
-  reply of its own). **L1 and L2 need this same closing move** — check whether they
-  already end on one; L2 currently ends on an `edit` + `continue`.
+- **L1 retitled to "About the argument, not the person"** (Q13); the word "you" is now
+  one of two tells (mind-reading a motive, and a character verdict), with a new
+  character-verdict specimen `l1-i-character` aimed at the anti-forgiveness side. The
+  card-tap gesture is taught in L1 (Q22, one coach line). **L1/L2 slugs unchanged** —
+  `about-the-argument`, `my-opinion-not-a-fact`.
+- **L2 Q18 closed**: the Olivia boss beat now has one `expected: 'clean'` owned line
+  (`l2-boss-clean`) and a scripted concession, replacing the flat defiance ending. L2's
+  personal-experience/deep-canvass framing (Q14/Q16) is now said out loud: a story is an
+  opinion, never a fact that settles it for everyone.
+- **The Q17 `free`-close is now in all of L1, L2, L3** — `{ kind: 'free', chips: [] }`
+  (unscaffolded, Composer guards `chips.length > 0`), records `null`, never rejected past
+  the `tooThin` gate, followed by a plain coach `say`. Whether the referee seat (L4) gets
+  the same closing sentence is step 5's call.
+- **Both L1 and L2 now carry the token-counter `say`** (a spoken coach line, not a
+  mechanic): a mistake would normally move a token, the drills are free, only the boss
+  calls count. Keep this framing consistent into L4/L5, where the counter finally moves.
+- **Defect 8 (clock) is closed in L1/L2 only.** The remaining player-facing clock hits
+  live in `src/ui/Prefight.tsx` ("all night") and `src/content/showdown.ts` — not step 4's
+  files; they belong to the showdown/pass work.
+- **Political balance:** L1's judging column is now 4:1 against forgiveness (was 4:0 —
+  one counterweight added openly under Q13, Steve's item-4 text untouched); L2's boss
+  ledger note now records Olivia's two right fouls offset by her left-leaning owned line.
+  Both ledgers rewritten to match. `HEART-T260823-33` is still Nathan's call in the PR.
 - **The token-counter line is a spoken coach `say`, not a mechanic.** L3 says out loud
   that a dropped reason *would* move a token but the drills are free, and that only the
   boss calls count. `call_or_pass` still charges a wrong call via `chargeMiss()`, so the

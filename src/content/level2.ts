@@ -18,6 +18,12 @@
 //   and the closing edit puts a pro-return-to-office line in the player's own
 //   mouth. Two left, two right, and the one the player has to author is the
 //   right-leaning one.
+//   Boss (step 4): Olivia's two fouls both lean right, the market sorting out crypto
+//   and wage floors killing jobs. Her one clean, owned line, added under Q18 so the
+//   player has a call to decline, leans left (the wage should go up, because her
+//   niece works two jobs and can't make rent) and offsets them. The token-counter,
+//   the personal-experience framing, and the closing-sentence lines added in step 4
+//   carry no position.
 
 import type { LevelDef } from '../types.ts';
 
@@ -41,7 +47,7 @@ export const level2: LevelDef = {
     },
     {
       kind: 'line',
-      text: 'Two minutes. One habit: saying your opinion like it\'s the weather.',
+      text: 'One move to watch for: she says her opinion like it\'s the weather.',
     },
     { kind: 'card', rule: 'opinion_as_fact' },
   ],
@@ -53,6 +59,11 @@ export const level2: LevelDef = {
           kind: 'say',
           lane: 'coach',
           text: 'I\'m going to say four things. Some are fair. Some are me passing off my opinion as fact. Call the ones that cross the line.',
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'One word on the counter up top. In a real match, saying your opinion like it\'s a fact moves a token, same as any foul, and a wrong call costs you one too. In here it won\'t budge, so you can miss freely and learn the shape. Against Olivia, the calls count.',
         },
 
         {
@@ -206,10 +217,16 @@ export const level2: LevelDef = {
         },
 
         {
+          kind: 'say',
+          lane: 'coach',
+          text: 'Own it and it\'s the strongest thing in the round: "In my head, the minimum wage should go up, because the diner near me lost three cooks to a warehouse paying more." That diner is your story, something you actually saw. But hear what it is: it\'s yours. An experience, an opinion built from it. It is not a fact that settles the wage for the whole country. You offer it as your reason. You don\'t drop it like the last word.',
+        },
+
+        {
           kind: 'edit',
           id: 'l2-3b-i4',
           rule: 'opinion_as_fact',
-          ask: 'Your turn, and I have done the typing. Replace the reason with one somebody could go and check.',
+          ask: 'Your turn, and I have done the typing. Swap that "obviously" for a real reason, something you saw or lived that somebody could go and check.',
           prefill:
             "Federal workers should be back in the office five days a week, because that's obviously how real work gets done.",
           chips: ['because I noticed', 'because the last time', 'because in my team'],
@@ -217,6 +234,11 @@ export const level2: LevelDef = {
             'The edit must replace the reason with something checkable: a specific observation, a number, an event, an experience. "Obviously", "everyone knows", and simply saying the claim over again all fail.',
           fallback:
             'Something like: "because the two projects we ran remote last year both slipped a month." Small, specific, and somebody could argue with it.',
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'And here\'s the rule that rides with a story like that: it\'s a tool, not a trump card. It\'s yours, your experience, your read. You offer it, you don\'t drop it on the table like it ends the argument for everyone. Frame it as your opinion and it opens the other person up. Wave it around as the fact and you\'ve just done Olivia\'s move with a better anecdote.',
         },
         { kind: 'continue', label: 'Face her' },
       ],
@@ -263,7 +285,49 @@ export const level2: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Nothing she said was rude and nothing she said was hers.',
+          text: 'Nothing rude yet, and nothing of hers either. Hold on, she\'s got one more.',
+        },
+        {
+          kind: 'call_or_pass',
+          id: 'l2-boss-clean',
+          rule: 'opinion_as_fact',
+          lane: 'opponent',
+          speaker: 'Obvious Olivia',
+          line: 'Look, in my head I actually think the wage should go up, because my niece works two jobs and still can\'t make her rent. That\'s just what I\'ve seen.',
+          expected: 'clean',
+          onCall:
+            'Hold the whistle. "In my head" up front, and a real reason behind it, her niece, two jobs. She finally did it right. A bad call costs you.',
+          onPass:
+            'Nothing to call. She owned it and backed it with something real. First honest thing she\'s said all round.',
+        },
+        {
+          kind: 'say',
+          lane: 'opponent',
+          speaker: 'Obvious Olivia',
+          text: '...huh. "In my head." Saying it out loud like that, it felt smaller. Less like the weather and more like, well, mine. Maybe that\'s the thing I\'ve been missing.',
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'There it is. Nothing she said all round was rude, that\'s what made her hard. And the second she owned one, she heard herself. That\'s the card doing its job.',
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'Last one, no frame, your words. In one sentence: what turns your opinion into something you\'re passing off as a fact?',
+        },
+        {
+          kind: 'free',
+          id: 'l2-close',
+          rule: 'opinion_as_fact',
+          capture: 'l2_close',
+          placeholder: 'In your own words.',
+          chips: [],
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'However you put it, the tell is three words on the front. "In my head." Put them there and your opinion stays yours, no argument. Leave them off and you\'re reporting the weather.',
         },
         { kind: 'continue', label: 'Finish' },
       ],
