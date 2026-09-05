@@ -35,14 +35,14 @@ mistake.** Grouped by the fix they need, not by level.
 | # | Level | Finding | Status |
 |---|---|---|---|
 | 1 | global | Zoom broken; he must sit at ~80% to fit the screen | open (G) |
-| 2 | L1 | "I only care about one rule…" then the rule goes unaddressed for pages | open (D) |
+| 2 | L1 | "I only care about one rule…" then the rule goes unaddressed for pages | **done** |
 | 3 | all | "counter up top" is confusing — name the two token stacks | **done** |
 | 4 | L1 | "when you catch his card" should be "his foul" (act vs object) | **done** |
-| 5 | L1–L3 | drill chat must **not** carry into the boss fight | open (C) |
+| 5 | L1–L3 | drill chat must **not** carry into the boss fight | **done** |
 | 6 | L2 | "that's *his* attack" about Olivia | already fixed in code by `a5e79a3`; docs corrected here |
-| 7 | L2 | duplicated Ray lines at the start of the drills | open (C) — no authored cause found |
-| 8 | L2 | Next during drills sometimes does not advance | open (C) |
-| 9 | global | automated lines arrive too fast, especially 3+ in a row | open (C) |
+| 7 | L2 | duplicated Ray lines at the start of the drills | **done** |
+| 8 | L2 | Next during drills sometimes does not advance | **done** |
+| 9 | global | automated lines arrive too fast, especially 3+ in a row | **done** |
 | 10 | L3 | "I don't buy full remote" reads as buying a remote control | **done** |
 | 11 | L3 | boss fight races past the first interaction, then freezes | open (C) |
 | 12 | L4 | start button read "In with Olivia" in a two-opponent level | **done** |
@@ -53,8 +53,51 @@ mistake.** Grouped by the fix they need, not by level.
 | 17 | L5 | boss writes the same point three times | open (F) |
 | 18 | L5 | round 3 "She's behind" asserted at 7-7 | **done** |
 
-Groups still open: **C** engine/thread (5, 7, 8, 9, 11) · **D** L1 structure (2) ·
-**E** the L4 ref revamp (13, 14) · **F** L5 boss quality (16, 17) · **G** zoom/fit (1).
+Groups still open: **C** engine/thread (11 only) · **E** the L4 ref revamp (13, 14) ·
+**F** L5 boss quality (16, 17) · **G** zoom/fit (1).
+
+### Round two of fixes: 2, 5, 7, 8, 9
+
+- **Finding 8 — two dead windows.** `say()` in both `engine.ts` and `showdown.ts` ran the
+  inter-beat gap as a second bare `setTimeout`. For those milliseconds `waiting` was
+  false and `skipper.current` was null, so a tap or a Next click landing in the window
+  hit nothing and a live-looking button did not respond. The gap is now folded into the
+  one dwell, so every wait a player can see is skippable. `Drill.tsx`'s `next()` also
+  calls `onSkip()` when it is already caught up, because guarding on `waiting` clamped
+  the cursor straight back.
+- **Finding 9 — pacing.** `pacing.ts` was 22ms/char with a **2500ms cap**, and the cap
+  was the real culprit: every line longer than about 110 characters arrived at the same
+  speed no matter how long it was, so a run of three long lines read as a flood. Now
+  33ms/char, floor 900, cap 5200, `BEAT_GAP` 700.
+- **Finding 5 — the boss seam.** `beginBoss()` appended the crowd row to the drill's
+  thread; it now **replaces** the message list. The drill's worked examples must not read
+  as things the boss said. Open book still holds *within* the fight.
+- **Findings 2 and 7 share one root cause, and it is content, not code.** The fiber dump
+  of the engine's live `messages` array proved there is no duplicate push anywhere, and
+  the step-runner effect is clean. The real defect: the **prefight stepper** (Steve,
+  2026-08-25) was bolted on after the drills were written, and **the drill openers were
+  never trimmed**, so the drill's first coach panels restate the corner's last ones.
+  Trimmed in all four levels plus the Showdown:
+  - **L1** — the corner named both of Victor's tells and the drill named them again; the
+    drill also recited the card dealt on the previous panel. Two `say` steps merged into
+    one. The "I care about one rule" promise moved off panel 3 and onto Victor's panel,
+    and the payoff now rides the card panel's `text` override, so promise and rule are
+    adjacent (that is finding 2).
+  - **L2** — one idea stated three times in three consecutive panels: the `bossEpithet`
+    on the mug, then panel 2, then panel 3. `namesOpponent()` puts the mug on any panel
+    naming her, so **two of the three were on screen at once**. Panels 2 and 3 are now
+    one; L2's prefight is three panels, down from four.
+  - **L3** — the corner gave both the move and the rep; the drill's first line gave both
+    again. Rewritten to carry only the rep.
+  - **L4** — the drill opened by restating "the ref never takes a side, you watch both
+    people". Now carries only what is new: no word from you about the highway.
+  - **The Showdown** is clean at this seam — `COACH.intro[2]` hands off to a first turn
+    that says something else.
+- **Sibling of finding 6 swept in the Showdown**: two card captions opened by naming the
+  card's original owner and then said "she", which read as Olivia and Noemi rather than
+  Sofia. Both now name Sofia.
+- The literal markdown `*really*` in `level1.ts`, a long-standing open defect that
+  rendered as visible asterisks, went out with the merged line.
 
 **Q29 political balance is closed** — Nathan, 2026-09-05: *"the political balance is
 fine, you can leave it."* The per-level ledger comments stay accurate; the debt is not.

@@ -412,11 +412,13 @@ function Room({
   // hooks than expected" and took the whole room down with it.
   const [drillBehind, setDrillBehind] = useState(false);
 
-  // The gym is open book (Q23): the conversation scrolls and the player can read
-  // back. The review screen (Q21) is the closing card on the table, not a wipe -
-  // taking it as one meant a level's whole transcript vanished two seconds after
-  // its last line, including the one beat the referee level is built around.
-  // This flips between the two views; the thread itself is never thrown away.
+  // The fight is open book (Q23): the conversation scrolls and the player can
+  // read back through it. The review screen (Q21) is the closing card on the
+  // table, not a wipe - taking it as one meant a level's whole transcript
+  // vanished two seconds after its last line, including the one beat the referee
+  // level is built around. This flips between the two views; the thread itself is
+  // never thrown away. (The one seam that does clear is the walk-out into the
+  // boss - engine.beginBoss, Nathan 2026-09-05.)
   const [reading, setReading] = useState(false);
 
   const fightNumber = LEVELS.findIndex((l) => l.slug === level.slug) + 1;
@@ -449,9 +451,10 @@ function Room({
   // stepper. Like the discussion with the coach. It can't be in the chat room.
   // The chat room is only for The actual bosses."
   //
-  // The engine does not change. Every level's last beat is its boss beat, and
-  // beginBoss appends to the thread rather than clearing it, so the switch is a
-  // view choice made off the beat we are standing in.
+  // The engine does not change. Every level's last beat is its boss beat, so the
+  // switch of rooms is a view choice made off the beat we are standing in.
+  // beginBoss clears the thread on the way through, so the fight opens empty and
+  // the drill's worked examples cannot read as things the boss just said.
   const inBoss = level.beats[gym.beatIndex]?.boss === true;
 
   const railLive = inBoss || !drillBehind;

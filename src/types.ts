@@ -201,8 +201,9 @@ export type Step =
 export interface Beat {
   name: string;
   steps: Step[];
-  /** the boss walks out here: the entrance screen runs and the thread stays put,
-   *  because the gym is open book and the player can read back (Q23) */
+  /** the boss walks out here: the entrance screen runs and the thread starts
+   *  over, because the drill's worked examples must not read as things the boss
+   *  said (Nathan, 2026-09-05). Open book still holds within the fight. */
   boss?: boolean;
 }
 

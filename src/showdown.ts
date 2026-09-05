@@ -205,11 +205,11 @@ export function useShowdown(): Match {
     const say = async (m: Omit<Message, 'id'>) => {
       if (!alive) return;
       push(m);
-      await dwell(dwellMs(m.text));
-      await new Promise<void>((r) => {
-        if (!alive) return;
-        after(BEAT_GAP, r);
-      });
+      // One dwell with the gap folded in. The gap used to be a second, bare
+      // timer, and for its 400ms `waiting` was false and `skipper.current` was
+      // null, so a tap in that window did nothing (playtest finding 8; the same
+      // shape was in engine.ts and is fixed there too).
+      await dwell(dwellMs(m.text) + BEAT_GAP);
     };
 
     const coach = (text: string) => say({ lane: 'coach', text });

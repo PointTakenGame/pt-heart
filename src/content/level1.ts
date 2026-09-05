@@ -55,7 +55,7 @@ export const level1: LevelDef = {
     },
     {
       kind: 'line',
-      text: 'You can take either side in here. I don\'t care which. I care about one rule.',
+      text: 'You can take either side in here. I don\'t care which.',
     },
     // Steve, 2026-08-25: "start with 'your opponent is...' then show the card
     // that is your defense against his attack." So: the man, his move, and
@@ -67,10 +67,16 @@ export const level1: LevelDef = {
     },
     {
       kind: 'line',
-      text: 'He has one move. He tells you what you\'re thinking, and what kind of person that makes you. Says it flat, like he\'s reading it off a chart.',
+      text: 'He has one move, and he plays it flat, like he\'s reading it off a chart: he comes at you instead of at your argument. That\u2019s the one thing I care about in here.',
     },
-    // Pinned in the tray from here on.
-    { kind: 'card', rule: 'judging' },
+    // Pinned in the tray from here on. The caption is overridden because the
+    // default reads as a bare first meeting; here it has a promise to keep.
+    {
+      kind: 'card',
+      rule: 'judging',
+      text:
+        'That\u2019s the attack, and here\u2019s the rule: you go after the argument, never the person. This card is your defense. It stays on the wall the whole match.',
+    },
   ],
   beats: [
     {
@@ -82,12 +88,7 @@ export const level1: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'One line you can\'t cross in here: you go after the argument, never the person. That\'s the whole card. Victor crosses it two ways, so learn both.',
-        },
-        {
-          kind: 'say',
-          lane: 'coach',
-          text: 'Tell one, he reads your mind: he tells you why you *really* think what you think. Tell two, he hands down a verdict on your character, what kind of person that makes you. The word "you" is usually how both start, but it\'s the move underneath that\'s the foul, not the word.',
+          text: 'Victor crosses that line two ways, so learn both. Tell one, he reads your mind: he tells you the real reason you think what you think. Tell two, he hands down a verdict on your character, what kind of person that makes you. The word "you" is usually how both start, but it\'s the move underneath that\'s the foul, not the word.',
         },
         {
           kind: 'say',

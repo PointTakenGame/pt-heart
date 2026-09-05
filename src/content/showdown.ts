@@ -269,12 +269,12 @@ export const SHOWDOWN_PREFIGHT: PrefightStep[] = [
   {
     kind: 'card',
     rule: 'opinion_as_fact',
-    text: 'Olivia\'s. One token. She will not say it as loudly as Olivia did, so listen for the missing "in my head".',
+    text: 'Olivia\'s. One token. Sofia will not say it as loudly as Olivia did, so listen for the missing "in my head".',
   },
   {
     kind: 'card',
     rule: 'fake_listening',
-    text: 'And Noemi\'s. One token. This is the one she is best at, because she will say your point back beautifully and leave your reason on the floor.',
+    text: 'And Noemi\'s. One token. This is the one Sofia is best at, because she will say your point back beautifully and leave your reason on the floor.',
   },
   { kind: 'line', text: COACH.intro[2] },
 ];

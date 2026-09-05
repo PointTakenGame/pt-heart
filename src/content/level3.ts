@@ -67,7 +67,7 @@ export const level3: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Her whole move is to agree with the easy half of what you said and quietly drop the half she can\'t answer. So we practice keeping the reason in.',
+          text: 'So that\u2019s the rep: keep the reason in. The rest of a summary is easy. That\u2019s the part that goes missing.',
         },
         {
           kind: 'say',

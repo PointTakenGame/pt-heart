@@ -182,26 +182,36 @@ export function useGym(level: LevelDef): Gym {
   const say = useCallback(
     async (m: Omit<Message, 'id'>, alive: () => boolean) => {
       push(m);
-      await dwell(dwellMs(m.text), alive);
-      if (alive()) await new Promise((r) => setTimeout(r, BEAT_GAP));
+      // One dwell, gap folded in, because the gap used to be its own bare
+      // setTimeout. For those 400ms `waiting` was false and `skipper.current`
+      // was null, so a tap or a Next click landing in that window hit nothing
+      // and the player pressed a live-looking button that did not respond
+      // (Nathan, 2026-09-05, playtest finding 8). Every wait a player can see
+      // has to be skippable, so there is only one wait.
+      await dwell(dwellMs(m.text) + BEAT_GAP, alive);
     },
     [push, dwell],
   );
 
-  /** The boss walks out, and the thread carries over.
+  /** The boss walks out, and the practice round does not follow them in.
    *
-   *  Re-reversed on 2026-09-05 for Q23: the gym is open book. It briefly cleared
-   *  the log at the boss entrance (Steve, 2026-08-25: "when fight chat comes
-   *  online, clear the chat log from the practice round"), but open book restores
-   *  Steve's earlier call — "just decontrast old/done material, don't delete it,
-   *  one big scroll." The practice round stays on the scroll so the player can
-   *  read back to it; the de-contrast is cosmetic, in the stylesheet. The crowd
-   *  row is appended as the first beat of the fight, not a fresh start. */
+   *  Settled 2026-09-05 by Nathan, playtest finding 5: "no chat history from the
+   *  drill should carry into the boss fight", in every level. That restores
+   *  Steve's instruction of 2026-08-25 — "when fight chat comes online, clear the
+   *  chat log from the practice round" — over the open-book reading of Q23 that
+   *  briefly made this append instead. Open book still holds inside a stretch:
+   *  the drill scrolls, the fight scrolls, and the player can read back through
+   *  either. It is the seam between them that clears, because walking out to face
+   *  someone is a new room, and the drill's worked examples read as things the
+   *  boss said if they are still sitting above her first line.
+   *
+   *  The crowd row is the whole thread at this point, so the fight opens on an
+   *  empty room with a crowd in it. */
   const beginBoss = useCallback(() => {
     bossShown.current = true;
     uid.current += 1;
     const id = `m${uid.current}`;
-    setMessages((prev) => [...prev, { id, lane: 'crowd', text: crowdRow(0) }]);
+    setMessages([{ id, lane: 'crowd', text: crowdRow(0) }]);
     setBossPending(false);
   }, []);
 

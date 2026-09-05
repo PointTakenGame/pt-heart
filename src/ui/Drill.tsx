@@ -117,7 +117,12 @@ export function Drill({
 
   const next = () => {
     setCursor(i + 1);
-    if (!behind && waiting) onSkip();
+    // Caught up, so the click has to reach the engine even when `waiting` is
+    // false. It can be false for a beat between two scripted lines, and guarding
+    // on it meant the cursor clamped straight back and the click did nothing
+    // while the button still read "go on" (Nathan, 2026-09-05, finding 8).
+    // onSkip is a no-op when there is nothing to skip, so this is always safe.
+    if (!behind) onSkip();
   };
 
   if (!m) {

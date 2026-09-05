@@ -100,7 +100,7 @@ export const level4: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'In the ref seat you say nothing about the topic. You are not arguing the highway. You are watching how these two treat each other and calling it when one of them fouls.',
+          text: 'So: not one word from you about the highway. Whichever of them is right about it is not your problem tonight.',
         },
         {
           kind: 'say',

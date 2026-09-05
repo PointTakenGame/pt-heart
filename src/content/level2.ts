@@ -44,11 +44,7 @@ export const level2: LevelDef = {
     },
     {
       kind: 'line',
-      text: 'Her move is that she never says "I think". Everything is just how it is, and everybody knows it, and you\'re the only one being difficult.',
-    },
-    {
-      kind: 'line',
-      text: 'One move to watch for: she says her opinion like it\'s the weather.',
+      text: 'She says her opinion like it\'s the weather. Just how it is, everybody knows it, and you\'re the only one being difficult.',
     },
     { kind: 'card', rule: 'opinion_as_fact' },
   ],
