@@ -436,9 +436,10 @@ meant to be regenerated from source, not hand-maintained.
 - In-match token header (`ui/Header.tsx:25`, `57`, `156`): token glyph is the
   literal 🙏 character; side labels are the literal strings `"them"` and `"you"`.
 - Pre-fight stepper (`ui/Prefight.tsx:86-88`, `98`, `120`): renders `COACH_NAME`
-  and `COACH_LINE` on the first panel; fixed transition line "That's his attack.
-  This card is your defense. It stays on the wall all night."; default button
-  label `"Next"` when a level has not set its own `enterLabel`.
+  and `COACH_LINE` on the first panel; default transition line "That's the attack.
+  This card is your defense. It stays on the wall the whole match.", which a
+  card panel overrides with its own `text`; default button label `"Next"` when
+  a level has not set its own `enterLabel`.
 - Drill dialogue lane (`ui/Drill.tsx:152`): the player's display name in the
   transcript is the literal string `"You"`.
 - Showdown composer frames (`showdown.ts:69-83`): speak frame is "The way I see

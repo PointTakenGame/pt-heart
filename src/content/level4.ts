@@ -14,7 +14,7 @@
 //      the line through. Defect 4 is what makes this true: CallOrPassStep.callable
 //      carries the set, and every boss call here lists all three.
 //   2. The tokens are real. L1-L3 said out loud that the drills were a learning
-//      allowance and the counter would sit still; that allowance ends here. A good
+//      allowance and the token stacks would sit still; that allowance ends here. A good
 //      call earns, a bad whistle costs, and Judging is the double penalty it has
 //      always been on the card: a good Judging call moves TWO tokens, not one
 //      (defect 3 — the engine reads CARDS[rule].cost now, not a hardcoded 1).
@@ -70,6 +70,7 @@ export const level4: LevelDef = {
   seat: 'referee',
   tokens: 'live',
   boss: 'Victor and Olivia',
+  enterLabel: 'In with Victor and Olivia',
   // The opposition is two people sharing one lane, so the face is the pair, not
   // either one; the speaker name on every line is what tells them apart.
   bossEmoji: '\u{1F465}',
@@ -104,7 +105,7 @@ export const level4: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'And the counter up top is live now. For three levels I told you the drills were free and the number would sit still. That is over. In here every call counts: catch a foul and a token comes to your side, blow a bad whistle and one goes back.',
+          text: 'And those two stacks of tokens up top are live now. For three levels I told you the drills were free and both stacks would sit still. That is over. In here every call counts: catch a foul and a token comes to your side, blow a bad whistle and one goes back.',
         },
         {
           kind: 'say',

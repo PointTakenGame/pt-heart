@@ -59,7 +59,7 @@ export interface Turn {
   /** Sofia only. Used verbatim when the model is unreachable. */
   fallback?: string;
   /** the coach speaks before this turn */
-  intro?: string;
+  intro?: string | ((player: number, sofia: number) => string);
 }
 
 // Round order. Round 1 opens on Sofia, on Steve's ruling of 2026-08-24: a player
@@ -158,7 +158,14 @@ export const TURNS: Turn[] = [
     actor: 'player',
     kind: 'speak',
     foul: null,
-    intro: 'Last round. She\'s behind. Watch her get sloppy, and don\'t get sloppy with her.',
+    // Nathan, 2026-09-05: this used to assert "She's behind" at 7-7. The coach
+    // reads the actual purses now.
+    intro: (p, s) =>
+      p > s
+        ? `Last round. You're up, ${p} to ${s}. Watch her get sloppy, and don't get sloppy with her.`
+        : p < s
+          ? `Last round. You're down, ${p} to ${s}. Watch her get sloppy, and don't get sloppy with her.`
+          : `Last round. Dead even at ${p} apiece. Watch her get sloppy, and don't get sloppy with her.`,
   },
   {
     id: 'l5-r3-sofia-summary',
@@ -224,7 +231,7 @@ export const COACH = {
   onPlayerClean: 'Clean.',
   ledger: (p: number, s: number) => `End of the round. You ${p}, her ${s}.`,
   win: 'You took it. Not because you were right about the policy; I have no idea who was right about the policy. You took it because you stayed on the argument and she didn\'t.',
-  loss: 'She took it. Go back and drill the card she kept getting past you.',
+  loss: 'She took it. Go back and drill the foul she kept getting past you.',
   draw: 'Dead even. Which, in this game, isn\'t a bad night.',
 };
 
@@ -251,8 +258,23 @@ export const SOFIA_THIN = [
 export const SHOWDOWN_PREFIGHT: PrefightStep[] = [
   { kind: 'line', text: COACH.intro[0] },
   { kind: 'line', text: COACH.intro[1] },
-  { kind: 'card', rule: 'judging' },
-  { kind: 'card', rule: 'opinion_as_fact' },
-  { kind: 'card', rule: 'fake_listening' },
+  // Nathan, 2026-09-05: these three are not introductions. The player cleared a
+  // level on each one and reffed all three, so the captions are a roll call, not
+  // a first meeting.
+  {
+    kind: 'card',
+    rule: 'judging',
+    text: 'All three go on the wall tonight, and they stay there the whole match. You know this one. Victor\'s. It is the expensive one — two tokens.',
+  },
+  {
+    kind: 'card',
+    rule: 'opinion_as_fact',
+    text: 'Olivia\'s. One token. She will not say it as loudly as Olivia did, so listen for the missing "in my head".',
+  },
+  {
+    kind: 'card',
+    rule: 'fake_listening',
+    text: 'And Noemi\'s. One token. This is the one she is best at, because she will say your point back beautifully and leave your reason on the floor.',
+  },
   { kind: 'line', text: COACH.intro[2] },
 ];

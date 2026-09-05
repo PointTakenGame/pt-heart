@@ -21,7 +21,7 @@
 //   Boss (step 4): Olivia's two fouls both lean right, the market sorting out crypto
 //   and wage floors killing jobs. Her one clean, owned line, added under Q18 so the
 //   player has a call to decline, leans left (the wage should go up, because her
-//   niece works two jobs and can't make rent) and offsets them. The token-counter,
+//   niece works two jobs and can't make rent) and offsets them. The token-stack,
 //   the personal-experience framing, and the closing-sentence lines added in step 4
 //   carry no position.
 
@@ -64,7 +64,7 @@ export const level2: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'One word on the counter up top. In a real match, saying your opinion like it\'s a fact moves a token, same as any foul, and a wrong call costs you one too. Still not in here. It won\'t budge in the drills and it won\'t budge against Olivia either, so you can miss freely and learn the shape. That holds a while longer.',
+          text: 'One word on those two stacks of tokens up top, hers and yours. In a real match, saying your opinion like it\'s a fact moves a token across, same as any foul, and a wrong call costs you one too. Still not in here. Neither stack budges in the drills and neither budges against Olivia either, so you can miss freely and learn the shape. That holds a while longer.',
         },
 
         {

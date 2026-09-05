@@ -375,7 +375,7 @@ function Level({
     return (
       <Prefight
         steps={level.prefight}
-        enterLabel={`In with ${level.boss.split(' ').slice(-1)[0]}`}
+        enterLabel={level.enterLabel ?? `In with ${level.boss.split(' ').slice(-1)[0]}`}
         onEnter={() => setInRoom(true)}
         onExit={onExit}
         opponent={{ emoji: level.bossEmoji, name: level.boss, epithet: level.bossEpithet }}

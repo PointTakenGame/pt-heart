@@ -336,7 +336,10 @@ function renderShowdown(): void {
   push('|---|---|---|---|---|---|');
   for (const turn of TURNS) {
     const foul = turn.foul ? RULE_LABEL[turn.foul] : 'none';
-    const intro = turn.intro ? turn.intro.replace(/\|/g, '\\|') : '_(none)_';
+    // A score-aware intro is a function now; render it at the opening 7-7 so the
+    // exported script still shows the line the coach would say.
+    const introText = typeof turn.intro === 'function' ? turn.intro(7, 7) : turn.intro;
+    const intro = introText ? introText.replace(/\|/g, '\\|') : '_(none)_';
     const fallback = turn.fallback ? turn.fallback.replace(/\|/g, '\\|') : '_(none, live turn has no fallback)_';
     push(`| ${turn.round} | ${turn.actor} | ${turn.kind} | ${foul} | ${intro} | ${fallback} |`);
   }

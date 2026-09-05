@@ -340,7 +340,12 @@ export function useShowdown(): Match {
           setPhase(`Round ${currentRound} of 3`);
         }
 
-        if (turn.intro) await coach(turn.intro);
+        if (turn.intro)
+          await coach(
+            typeof turn.intro === 'function'
+              ? turn.intro(purse.current.player, purse.current.sofia)
+              : turn.intro,
+          );
 
         if (turn.actor === 'sofia') {
           const out = await sofiaLine(topic, lastPlayer, turn.kind, turn.foul, turn.fallback ?? '');

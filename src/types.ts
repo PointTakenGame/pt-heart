@@ -213,7 +213,11 @@ export interface Beat {
  *  lines". By the time the room opens it is the player and the opponent. */
 export type PrefightStep =
   | { kind: 'line'; text: string }
-  | { kind: 'card'; rule: FoulType };
+  /** `text` overrides the coach's caption on the card panel. The default reads
+   *  as a first meeting ("that's the attack, this is your defense"), which is
+   *  wrong the moment a level deals a card the player already cleared a whole
+   *  level on (Nathan, 2026-09-05, on the Showdown's three). */
+  | { kind: 'card'; rule: FoulType; text?: string };
 
 export interface LevelDef {
   /** Saved progress names levels by this, never by number (ruling B3,
@@ -230,11 +234,15 @@ export interface LevelDef {
   seat?: 'player' | 'referee';
   /** whether the token economy is switched on. Nathan, 2026-09-05: the cost is
    *  introduced and goes live when the player takes the ref's chair, so levels
-   *  1-3 are `'off'` and the counter genuinely does not move — not for a drill
+   *  1-3 are `'off'` and the two token stacks genuinely do not move — not for a drill
    *  and not for a boss call either. Required, not optional, so a new level has
    *  to make the choice out loud instead of inheriting one. */
   tokens: 'off' | 'live';
   boss: string;
+  /** the button that opens the door. Defaults to "In with <last word of boss>",
+   *  which is right for a one-word opponent and wrong the moment a level fields
+   *  two of them (Nathan, 2026-09-05: level 4 read "In with Olivia"). */
+  enterLabel?: string;
   /** the boss's face, big, on every line they speak */
   bossEmoji: string;
   /** one line of trash talk for the entrance screen */

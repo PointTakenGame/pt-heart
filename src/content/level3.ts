@@ -16,7 +16,7 @@
 // Nothing in this level costs a token (`tokens: 'off'`; Nathan, 2026-09-05). Q19
 // already said the card played against the player carries no penalty and is never
 // played on a clean summary; the ruling extends that to the whole level, boss calls
-// included. The counter still shows, and the coach says out loud that a dropped
+// included. Both token stacks still show, and the coach says out loud that a dropped
 // reason would normally move a token, so the free period reads as a learning
 // allowance and the real cost, which arrives at L4, is not a surprise.
 //
@@ -72,7 +72,7 @@ export const level3: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'One thing about the counter up top. In a real match, dropping someone\'s reason moves a token. It\'s a foul like any other. In here it still costs you nothing — not the drills, not Noemi — so watch the number sit still while you learn the third card. The allowance does not last forever.',
+          text: 'One thing about those two stacks of tokens up top, hers and yours. In a real match, dropping someone\'s reason moves a token across. It\'s a foul like any other. In here it still costs you nothing — not the drills, not Noemi — so watch both stacks sit still while you learn the third card. The allowance does not last forever.',
         },
         {
           kind: 'say',
@@ -110,7 +110,7 @@ export const level3: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Your turn to say one back. Take this: "I don\'t buy full remote. I trained three juniors standing at a whiteboard, and I can\'t picture doing that over video." I\'ll give you the frame. Keep both halves in.',
+          text: 'Your turn to say one back. Take this: "I\'m not sold on working from home full time. I trained three juniors standing at a whiteboard, and I can\'t picture doing that over video." I\'ll give you the frame. Keep both halves in.',
           isSpecimen: true,
         },
         {
@@ -211,7 +211,7 @@ export const level3: LevelDef = {
           onCall:
             'Good whistle. "Against the stadium" is the easy half. The two hundred empty nights, your reason, she left it out.',
           onPass:
-            'That one dropped your reason. Two hundred empty nights, gone, and only the opinion came back. That was the card.',
+            'That one dropped your reason. Two hundred empty nights, gone, and only the opinion came back. That was the foul.',
         },
         {
           kind: 'say',

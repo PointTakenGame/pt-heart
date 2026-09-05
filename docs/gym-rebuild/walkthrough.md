@@ -95,7 +95,7 @@ Then, one panel at a time:
 
 Then the full **Judging** card is dealt into the panel, with the fixed line:
 
-> That's his attack. This card is your defense. It stays on the wall all night.
+> That's the attack. This card is your defense. It stays on the wall the whole match.
 
 From here the card is pinned to a **rail at the bottom of the screen** for the
 rest of the level. The rail is both the reference and the whistle: pressing a

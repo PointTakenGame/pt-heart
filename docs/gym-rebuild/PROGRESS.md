@@ -26,6 +26,48 @@ The remaining work is not a step: it is the PR, the playtest, and — later — 
 Final Showdown (levels 6 and 7). **On what is true today, the code still outranks every
 doc.**
 
+## Playtest round — Nathan's 18 findings (2026-09-05)
+
+Nathan played the five levels and filed eighteen items. His instruction: **replicate the
+error, fix the root cause, then sweep the rest of the level system for the same
+mistake.** Grouped by the fix they need, not by level.
+
+| # | Level | Finding | Status |
+|---|---|---|---|
+| 1 | global | Zoom broken; he must sit at ~80% to fit the screen | open (G) |
+| 2 | L1 | "I only care about one rule…" then the rule goes unaddressed for pages | open (D) |
+| 3 | all | "counter up top" is confusing — name the two token stacks | **done** |
+| 4 | L1 | "when you catch his card" should be "his foul" (act vs object) | **done** |
+| 5 | L1–L3 | drill chat must **not** carry into the boss fight | open (C) |
+| 6 | L2 | "that's *his* attack" about Olivia | already fixed in code by `a5e79a3`; docs corrected here |
+| 7 | L2 | duplicated Ray lines at the start of the drills | open (C) — no authored cause found |
+| 8 | L2 | Next during drills sometimes does not advance | open (C) |
+| 9 | global | automated lines arrive too fast, especially 3+ in a row | open (C) |
+| 10 | L3 | "I don't buy full remote" reads as buying a remote control | **done** |
+| 11 | L3 | boss fight races past the first interaction, then freezes | open (C) |
+| 12 | L4 | start button read "In with Olivia" in a two-opponent level | **done** |
+| 13 | L4 | first boss line hands the *player* an opinion and makes Ray ref | open (E) |
+| 14 | L4 | large revamp: Victor vs Olivia, player refs, player holds **no tokens** | open (E) |
+| 15 | L5 | "That's the attack…" wrong for three already-earned cards | **done** |
+| 16 | L5 | boss summaries do not read what the player wrote | open (F) |
+| 17 | L5 | boss writes the same point three times | open (F) |
+| 18 | L5 | round 3 "She's behind" asserted at 7-7 | **done** |
+
+Groups still open: **C** engine/thread (5, 7, 8, 9, 11) · **D** L1 structure (2) ·
+**E** the L4 ref revamp (13, 14) · **F** L5 boss quality (16, 17) · **G** zoom/fit (1).
+
+**Q29 political balance is closed** — Nathan, 2026-09-05: *"the political balance is
+fine, you can leave it."* The per-level ledger comments stay accurate; the debt is not.
+
+Two mechanics landed with these copy fixes:
+- `LevelDef.enterLabel?` — the door button defaults to "In with &lt;last word of boss&gt;"
+  and a level fielding two opponents overrides it (finding 12).
+- `{ kind: 'card', text? }` — a card panel overrides the coach's first-meeting caption,
+  because the Showdown deals three cards the player already cleared levels on
+  (finding 15). `Turn.intro` in `content/showdown.ts` also widened to
+  `string | ((player, sofia) => string)` so the coach reads the live purses
+  (finding 18); `scripts/export-script.ts` renders the function form at 7-7.
+
 ## Carried state
 
 **Step 8 (just done) reconciled the docs with the seven-level, player-first ladder.**

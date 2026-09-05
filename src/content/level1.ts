@@ -20,7 +20,7 @@
 //   (it argues the cost figure down), and both Victor's cost line and the half of
 //   item 4 that survives the player's edit are anti-forgiveness — 3:1 against
 //   forgiveness, unchanged.
-//   The card-tap, token-counter and closing-sentence teaching added in step 4 carry
+//   The card-tap, token-stack and closing-sentence teaching added in step 4 carry
 //   no position and do not move either column.
 // Whether 4:1 is enough is still Nathan's call (HEART-T260823-33). The counterweight
 // also sits in level 2's ledger, which opens on the right.
@@ -92,12 +92,12 @@ export const level1: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Your end of it is one gesture. When you catch his card, tap it up in the tray. That\'s you calling the foul. See it, tap it.',
+          text: 'Your end of it is one gesture. When you catch his foul, tap the card up in the tray. That\'s you calling it. See it, tap it.',
         },
         {
           kind: 'say',
           lane: 'coach',
-          text: 'And that counter up top. In a real match a foul moves a token, and a wrong call costs you one too. Not yet, though. For a while yet that number sits still — in the drills and against him too — so swing freely and learn the difference. I will tell you the day it starts counting.',
+          text: 'And those two stacks of tokens up top, his and yours. In a real match a foul moves a token from one stack to the other, and a wrong call costs you one too. Not yet, though. For a while yet both stacks sit still — in the drills and against him too — so swing freely and learn the difference. I will tell you the day they start moving.',
         },
         {
           kind: 'say',
@@ -132,7 +132,7 @@ export const level1: LevelDef = {
           onCall:
             'That\'s a verdict on who they are, not an answer to what they argued. "Selfish" isn\'t a rebuttal.',
           onPass:
-            'That one crossed. It sentenced their character, "selfish", instead of taking on the argument. Same card, other direction.',
+            'That one crossed. It sentenced their character, "selfish", instead of taking on the argument. Same foul, other direction.',
         },
         {
           kind: 'call_or_pass',
@@ -236,7 +236,7 @@ export const level1: LevelDef = {
           line: 'Though let\'s be honest about who I\'m arguing with. People who want these loans wiped are all the same. They want somebody else to carry what they signed for.',
           expected: 'foul',
           onCall: 'Called it. He just sentenced a few million people in one line.',
-          onPass: 'He did it to your entire side at once. That is the card. Call it.',
+          onPass: 'He did it to your entire side at once. That is the foul. Call it.',
         },
         {
           kind: 'say',
