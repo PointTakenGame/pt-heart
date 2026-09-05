@@ -34,7 +34,7 @@ mistake.** Grouped by the fix they need, not by level.
 
 | # | Level | Finding | Status |
 |---|---|---|---|
-| 1 | global | Zoom broken; he must sit at ~80% to fit the screen | open (G) |
+| 1 | global | Zoom broken; he must sit at ~80% to fit the screen | **done** |
 | 2 | L1 | "I only care about one rule…" then the rule goes unaddressed for pages | **done** |
 | 3 | all | "counter up top" is confusing — name the two token stacks | **done** |
 | 4 | L1 | "when you catch his card" should be "his foul" (act vs object) | **done** |
@@ -53,9 +53,10 @@ mistake.** Grouped by the fix they need, not by level.
 | 17 | L5 | boss writes the same point three times | **done** |
 | 18 | L5 | round 3 "She's behind" asserted at 7-7 | **done** |
 
-Groups still open: **G** zoom/fit (1). Group **E** (the L4 ref revamp, 13 and 14) is
-**closed** — see below. Group **F** (L5 boss quality, 16 and 17) is **closed**. Group
-**C** is closed except for the one content ruling below.
+**All eighteen findings are now closed.** Group **G** (zoom/fit, 1) is closed — see
+below. Group **E** (the L4 ref revamp, 13 and 14) is **closed**. Group **F** (L5 boss
+quality, 16 and 17) is **closed**. Group **C** is closed except for the one content
+ruling below.
 
 ### Round two of fixes: 2, 5, 7, 8, 9
 
@@ -325,6 +326,80 @@ carried as work. The tab-backgrounding burst stays a known, accepted behaviour.
 
 Touched `src/types.ts`, `src/engine.ts`, `src/content/level4.ts`, `src/ui/Thread.tsx`,
 `src/ui/Drill.tsx`, `src/ui/Header.tsx`, `src/App.tsx`.
+
+### Group G — finding 1, the fit ("zoom still doesn't work")
+
+Nathan, twice: *"zoom still doesn't work, I have to sit at 80% to fit my screen."*
+`src/styles.css` only. **Root cause: the stylesheet has exactly one size.** It is laid
+out almost entirely in `rem` against the browser's fixed 16px root, and the earlier pass
+(`2f6a485`) chased the symptom by shrinking individual blocks against a *guessed* ~700px
+viewport. Measured on his real range the guess was simply wrong: at 620px the fighter
+picker's Done button sat **190px below the fold** and the gym clipped level 5. Zooming
+out to 80% *enlarges* the CSS viewport, so a design that fits at 80% needs about
+780 × 0.8 ≈ **620px** — that, not 700, is the height to build for.
+
+**The fix is to make `rem` itself track the viewport height**, which is what browser
+zoom does, automatically and only in the direction needed:
+
+```css
+html { font-size: clamp(12px, 2.05vh, 16px); }
+```
+
+It reaches the 16px design size at about 780px and is capped there, so **nothing changes
+on a tall screen**; the 12px floor is where the body copy stops being pleasant, and below
+it the pages scroll rather than shrink further. `body`'s hard-coded `font: 16px/1.55`
+became `1rem/1.55` so it follows. **Media queries are untouched by design:** `rem` inside
+a media query always resolves against the initial 16px, never this value, so the phone
+breakpoints stay exactly where they were. Anything already in `vh` was already
+viewport-relative and was left alone.
+
+Root scaling alone did not close it. Four structural defects only appear on a short
+viewport, and each was measured before it was fixed:
+
+- **`.page-narrow` overflowed upward, unreachably.** Plain `justify-content: center` on
+  a flex column whose content is taller than the box overflows in **both** directions,
+  and nothing scrolls above the top — the picker's top row of faces was cut off with no
+  way to reach it. Now `justify-content: safe center`, which centres while it fits and
+  falls back to flex-start the moment it does not, so overflow only ever goes down.
+- **`.roster` is the one block whose height is driven by its own width** — three rows of
+  the fixed `3.985/4.948` card ratio, so it is always ~1.235× as tall as it is wide.
+  Nine cards is a lot of vertical, and the page width alone overran even the scaled root.
+  The width is now also capped by what is left of the viewport:
+  `width: min(100%, calc((100vh - 15.5rem) / 1.235))`. The cap binds only on a short
+  screen; at about 900px tall it lands on the same 33rem the grid already used.
+- **The level room clipped 57px whenever a rail card was open**, with no scrollbar to
+  recover it (`.page-level` is `overflow: hidden`). `.thread` is `flex: 1` — basis 0, so
+  its **shrink weight is zero and it gives nothing back**; the composer freezes at its
+  own min-content; and `.rail-wrap` was pinned `flex: 0 0 auto`. Nothing on the page
+  could absorb the difference. `.rail-wrap` is now `flex: 0 1 auto` and a flex column,
+  `.rail`/`.rail-pass` stay `0 0 auto` so the cards can never be squeezed, and the
+  squeeze lands on **`.rail-open`** (`flex: 0 1 auto; min-height: 0`), which has scrolled
+  inside its own box since it was written. `max-height: 44vh` is now a cap, not a height.
+- **The rail hover preview ran off the top of the window.** `.rail-tip` is one printed
+  card, so its height is its width × 4.948/3.985; at 620px it laid out **102px above the
+  viewport**, taking its emoji, eyebrow, title and penalty with it. Width is now also
+  capped by remaining viewport height (`calc((100vh - 9rem) / 1.242)`, binding only below
+  ~530px), and the preview is suppressed entirely while a card is open —
+  `.rail-wrap:has(.rail-open) .rail-tip { display: none; }` — because that is the one
+  geometry that cannot fit *and* the open card below is the same card, larger.
+
+**Swept, then verified live** at emulated 1280×620, ×560 and ×460 (stress), card-open and
+card-closed, with `.page-level` scrollHeight equal to clientHeight and no clipped or
+below-fold controls anywhere: the showdown room, an L1 engine room, the fighter picker
+and the gym. The rail markup lives in exactly one component (`src/ui/RuleCards.tsx`) with
+exactly two call sites — `App.tsx` engine Room and showdown Room — and **both were
+exercised**, so the rail fix covers all five levels by construction; the showdown's
+`template` composer is the tallest composer kind and is the case that was measured.
+Re-checked at 700 and back up: root is 14.35px there, every element strictly smaller than
+the version already known to fit at 700 with a 16px root, so the mid-range cannot regress.
+
+**Three scrolls are accepted, not defects.** The **review screens** are read-back
+reference pages and scroll by design (*"the gym is open book"*): L1's review needs 13px
+of scroll at 620 to reach its **secondary** link — "Back to the gym" is above the fold —
+and L4's review needs ~683px, which is inherent content length (all three cards) and was
+worse at a 16px root. At 560 L1's primary button falls 10px below the fold; the
+recoverable padding there measures ~30px against a 62px overflow, so trimming cannot
+close it, and 560 is below Nathan's range anyway.
 
 ## Carried state
 

@@ -52,9 +52,11 @@
   /* The heights of the NPC dialogue box, one per class of thing it holds. See
      .dlg for the arithmetic and for why this is a tier list and not one number.
      Sized 2026-09-05 so the whole screen — masthead, the box, the foot with its
-     Next button — clears a ~700px laptop viewport at 100% zoom without the stage
-     having to scroll (Nathan was running the build at 75% to see it whole). The
-     card and mug inside were shrunk in the same pass; these heights track them. */
+     Next button — clears a ~700px laptop viewport without the stage having to
+     scroll. The card and mug inside were shrunk in the same pass; these heights
+     track them. These are rem, so on a shorter viewport the root scaling under
+     `html` below carries them down proportionally; 700px is the height at which
+     they are exactly these numbers, not a floor they depend on. */
   --dlg-h: 29rem;          /* holds the full printed card */
   --dlg-h-mug: 29rem;      /* holds the opponent's baseball card */
   --dlg-h-text: 11rem;     /* a floor for plain talk, not a ceiling */
@@ -62,6 +64,31 @@
 }
 
 * { box-sizing: border-box; }
+
+/* ---------- the fit (finding 1) ----------
+
+   Nathan, playtest 2026-09-05: "zoom still doesn't work, I have to sit at 80%
+   to fit my screen." The earlier pass (2f6a485) chased the symptom by shrinking
+   individual blocks against a guessed ~700px viewport. Measured at 620px the
+   picker's Done button still sat 190px below the fold and the gym clipped its
+   last level row, so the guess was simply wrong for his laptop.
+
+   The real cause is that this stylesheet is laid out almost entirely in rem
+   against a fixed 16px root, so the design has exactly one size and a viewport
+   shorter than it has nowhere to go. The fix is to make rem itself track the
+   viewport height: that is the same thing browser zoom does, done automatically
+   and only in the direction we need. 2.05vh reaches the 16px design size at
+   about 780px of viewport and is capped there, so nobody on a tall screen sees
+   anything change; the 12px floor is where the body copy stops being pleasant
+   to read, and below it the pages scroll instead of shrinking further.
+
+   Media queries are unaffected: `rem` inside a media query is always the
+   initial 16px, never this value, so the phone breakpoints stay where they
+   were. Anything already sized in vh (the thread's max-heights) was already
+   viewport-relative and is left alone. */
+html {
+  font-size: clamp(12px, 2.05vh, 16px);
+}
 
 html, body, #root {
   height: 100%;
@@ -71,7 +98,7 @@ html, body, #root {
 body {
   background: var(--cream);
   color: var(--charcoal);
-  font: 16px/1.55 ui-serif, Georgia, "Iowan Old Style", serif;
+  font: 1rem/1.55 ui-serif, Georgia, "Iowan Old Style", serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -87,7 +114,14 @@ button { font: inherit; cursor: pointer; }
 
 .page-narrow {
   position: relative;
-  justify-content: center;
+  /* `safe` matters: plain `center` on a flex column whose content is taller
+     than the box overflows in BOTH directions, and the part above the top is
+     unreachable — no scrollbar goes there. Measured on the fighter picker at a
+     620px viewport, the top row of faces was cut off with no way to scroll to
+     it. `safe center` centres while it fits and falls back to flex-start the
+     moment it does not, so overflow only ever goes downward, where the
+     overflow-y below can reach it. */
+  justify-content: safe center;
   padding: 3.4rem 1.25rem 2rem;
   overflow-y: auto;
 }
@@ -760,10 +794,28 @@ p  { margin: 0 0 0.75rem; }
   position: relative;
   border-top: 1px solid var(--rule);
   background: var(--cream);
-  flex: 0 0 auto;
+  /* Shrinkable, and a flex column so the squeeze reaches the open card.
+
+     Nathan, playtest 2026-09-05 (finding 1, the fit): with a card opened on the
+     showdown at a 620px viewport the page overflowed by 57px and the bottom of
+     the tray was cut off — .page-level is `overflow: hidden`, so there was no
+     scrollbar to recover it. The thread is `flex: 1` (basis 0), so it cannot
+     give anything back under shrink, and the composer freezes at its own
+     min-content; with the tray fixed at `0 0 auto` nothing on the page could
+     absorb the difference and the browser simply clipped it.
+
+     Making the tray `0 1 auto` hands the leftover to .rail-open below, which
+     has scrolled inside its own box since it was written. The rail row itself
+     stays `0 0 auto`, so the cards can never be squeezed — only the opened
+     card gives, and it gives to a scrollbar rather than to a clip. */
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 .rail-pass {
   display: block;
+  flex: 0 0 auto;
   width: calc(100% - 2rem);
   margin: 0.6rem 1rem 0;
   padding: 0.55rem 0.75rem;
@@ -781,6 +833,7 @@ p  { margin: 0 0 0.75rem; }
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
+  flex: 0 0 auto;
 }
 /* The chip and its hover preview, boxed together. The slot carries the width
    the chip used to carry, so the tray looks the same as it did. */
@@ -846,8 +899,15 @@ p  { margin: 0 0 0.75rem; }
   /* Steve, 2026-08-25: "it does pop up, but it needs to be about twice as big.
      It's too small. The text size should be this at least as big as the other
      text on the screen." Width and --u move together, so the card keeps its
-     printed proportion and every line on it doubles with the frame. */
-  width: min(29rem, 94vw);
+     printed proportion and every line on it doubles with the frame.
+
+     The third term is the fit pass (2026-09-05). The preview is one printed
+     card, so its height is its width times 4.948/3.985; left to the width alone
+     it ran 102px off the top of a 620px window and took its whole header —
+     emoji, eyebrow, title, penalty — with it. Capping the width by what is left
+     of the viewport keeps the frame whole; the term only binds below about
+     530px of viewport, so nothing changes on the screens this already fit. */
+  width: min(29rem, 94vw, calc((100vh - 9rem) / 1.242));
   z-index: 40;
   pointer-events: none;
   opacity: 0;
@@ -869,6 +929,12 @@ p  { margin: 0 0 0.75rem; }
    the foul card focused and the preview is now big enough to cover the whole
    room while the player is trying to read what their call did. Keyboard focus
    still opens it. */
+/* Not while a card is open. The opened card below is the same printed card at
+   a readable size, so the hover preview is redundant there — and it is the one
+   case that cannot fit: the open tray pushes the preview's anchor halfway up
+   the window, leaving less room above it than the card is tall. */
+.rail-wrap:has(.rail-open) .rail-tip { display: none; }
+
 .rail-slot:hover .rail-tip,
 .rail-slot:has(:focus-visible) .rail-tip {
   opacity: 1;
@@ -880,6 +946,11 @@ p  { margin: 0 0 0.75rem; }
    inside its own box if it runs long on a phone. */
 .rail-open {
   padding: 0.25rem 1rem 0.75rem;
+  /* 44vh is the cap, not the height: under the flex chain above this box is
+     what shrinks when the room runs out of vertical, and it scrolls instead of
+     being clipped. */
+  flex: 0 1 auto;
+  min-height: 0;
   max-height: 44vh;
   overflow-y: auto;
 }
@@ -1498,9 +1569,10 @@ p  { margin: 0 0 0.75rem; }
    growing a big picture over the same small caption. The fractions are the
    ratios it already had at 9.5rem. */
 .dlg-mug {
-  /* Scaled down with the card in the 700px-fit pass (2026-09-05). Every
-     dimension inside is a multiple of --mug, so one number resizes the whole
-     baseball card and its text together. */
+  /* Scaled down with the card in the fit pass (2026-09-05). Every dimension
+     inside is a multiple of --mug, so one number resizes the whole baseball
+     card and its text together — and because that number is rem, the root
+     scaling under `html` resizes it again on a short viewport. */
   --mug: 16rem;
   width: var(--mug);
   aspect-ratio: 2.5 / 3.5;
@@ -1623,7 +1695,8 @@ p  { margin: 0 0 0.75rem; }
   /* Width and --u scale together (2026-09-05): a narrower card with the same
      unit would clip its own text, so the unit shrinks with the width and the
      whole card scales uniformly. This is what lets --dlg-h drop to 29rem and the
-     card screen fit a 700px viewport. */
+     card screen fit a 700px viewport; shorter viewports are handled by the root
+     scaling under `html`, which moves --u and the width together. */
   --u: 0.71rem;
   flex: 0 0 auto;
   width: min(100%, 17.5rem);
@@ -1764,6 +1837,18 @@ p  { margin: 0 0 0.75rem; }
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.7rem;
+  /* The one place on the site whose height is driven by its own width: three
+     rows of a fixed 3.985/4.948 card ratio, so the grid is always about 1.235
+     times as tall as it is wide. Left to the page width alone it overran even
+     the scaled root — nine cards is simply a lot of vertical — so the width is
+     also capped by what is left of the viewport after the rest of this screen
+     (about 15.5rem of masthead, two lines of copy, the Done button and the
+     page's own padding, all of which scale with the root). The cap only binds
+     on a short viewport: at about 900px tall it lands on the same 33rem the
+     grid already used, so nothing changes on a full-height screen. */
+  width: min(100%, calc((100vh - 15.5rem) / 1.235));
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 1.5rem;
 }
 .fighter {
