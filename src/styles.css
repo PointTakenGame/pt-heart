@@ -525,16 +525,18 @@ p  { margin: 0 0 0.75rem; }
 }
 .msg-call .msg-speaker { color: var(--orange); }
 
-/* Fade what is behind us, so the eye lands on the part of the thread that still
-   wants something (Steve, 2026-08-25: "the old stuff that's no longer relevant
-   should be decontrasted"). Distance from the end of the thread, not a guess at
-   where the current exchange began: the engine does not publish an item
-   boundary, and a rule that invents one will eventually fade a live line. */
-.msg-row[data-age='recent'] { opacity: 0.62; }
-.msg-row[data-age='old'] { opacity: 0.38; }
+/* Gently de-contrast what is behind us, so the eye lands on the part of the
+   thread that still wants something (Steve, 2026-08-25: "the old stuff that's no
+   longer relevant should be decontrasted"). Purely cosmetic: the gym is open
+   book (Q23), so an old line must stay comfortably readable when the player
+   scrolls back to it — this is a whisper of de-emphasis, not a fade toward gone.
+   Distance from the end of the thread, not a guess at where the current exchange
+   began: the engine does not publish an item boundary, and a rule that invents
+   one will eventually fade a live line. */
+.msg-row[data-age='recent'] { opacity: 0.88; }
+.msg-row[data-age='old'] { opacity: 0.76; }
 .msg-row { transition: opacity 260ms ease; }
-/* Reading back through the thread should not mean squinting: hovering one faded
-   line brings that line back, not the whole thread. */
+/* Reading back through the thread brings the line fully forward. */
 .msg-row:hover { opacity: 1; }
 
 /* the line actually under test, not ordinary speech. It is a coach-lane message

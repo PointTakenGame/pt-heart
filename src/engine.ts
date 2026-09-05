@@ -185,20 +185,20 @@ export function useGym(level: LevelDef): Gym {
     [push, dwell],
   );
 
-  /** The boss walks out, and the thread starts empty.
+  /** The boss walks out, and the thread carries over.
    *
-   *  Reversed on 2026-08-25. It used to keep the drill lines, on Steve's "the
-   *  scroll is gone? just decontrast old/done material, don't delete it, one big
-   *  scroll in teh match." That ruling was written when training and the fight
-   *  shared one room. They do not any more: training is the stepper (Drill.tsx)
-   *  and the scroll now belongs to the fight alone, so the same words became
-   *  "when fight chat comes online, clear the chat log from the practice round."
-   *  The crowd row is the first thing in the room. */
+   *  Re-reversed on 2026-09-05 for Q23: the gym is open book. It briefly cleared
+   *  the log at the boss entrance (Steve, 2026-08-25: "when fight chat comes
+   *  online, clear the chat log from the practice round"), but open book restores
+   *  Steve's earlier call — "just decontrast old/done material, don't delete it,
+   *  one big scroll." The practice round stays on the scroll so the player can
+   *  read back to it; the de-contrast is cosmetic, in the stylesheet. The crowd
+   *  row is appended as the first beat of the fight, not a fresh start. */
   const beginBoss = useCallback(() => {
     bossShown.current = true;
     uid.current += 1;
     const id = `m${uid.current}`;
-    setMessages([{ id, lane: 'crowd', text: crowdRow(0) }]);
+    setMessages((prev) => [...prev, { id, lane: 'crowd', text: crowdRow(0) }]);
     setBossPending(false);
   }, []);
 
