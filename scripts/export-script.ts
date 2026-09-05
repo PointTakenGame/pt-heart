@@ -32,6 +32,7 @@ import {
   SHOWDOWN_SLUG,
   foulCost,
   START_TOKENS,
+  type Turn,
 } from '../src/content/showdown.ts';
 import type { FoulType } from '../src/types.ts';
 
@@ -281,8 +282,9 @@ function renderShowdown(): void {
   blank();
   quote(OPENING.ask, 'Coach');
   blank();
-  push(`- **Placeholder:** "${OPENING.placeholder}"`);
-  push(`- **Topic chips:** ${TOPICS.map((t) => `"${t}"`).join(', ')}`);
+  push('The player picks one of three; there is no text box (Nathan, 2026-09-05).');
+  blank();
+  for (const t of TOPICS) push(`- **${t.label}** (\`${t.id}\`)`);
   blank();
 
   push("### Coach's intro");
@@ -330,6 +332,23 @@ function renderShowdown(): void {
   quote(COACH.draw, 'Match result: draw');
   blank();
 
+  // A fallback is either one authored line or a function of the player's last
+  // sentence and the topic. The per-topic ones get all three rendered, because the
+  // point of the export is that a human can read every line the game can say.
+  const renderFallback = (fb: Turn['fallback']): string => {
+    const esc = (t: string) => t.replace(/\|/g, '\\|');
+    if (!fb) return '_(none, live turn has no fallback)_';
+    if (typeof fb === 'string') return esc(fb);
+    const sample = 'The way I see it, it is worth doing because the alternative is worse.';
+    const byTopic = TOPICS.map((t) => `**${t.label}:** ${esc(fb(sample, t.id))}`);
+    const distinct = new Set(byTopic.map((x) => x.slice(x.indexOf(':**'))));
+    // Topic-independent (the playback summary): render it once, with the sample
+    // player sentence it was built from, so the reader knows what fed it.
+    if (distinct.size === 1)
+      return `${esc(fb(sample, TOPICS[0].id))}<br><br>_(topic-independent; shown for the player line "${esc(sample)}")_`;
+    return byTopic.join('<br><br>');
+  };
+
   push('### The turn order (`TURNS`)');
   blank();
   push('| Round | Actor | Kind | Foul | Coach intro | Fallback if the model is unreachable |');
@@ -340,7 +359,7 @@ function renderShowdown(): void {
     // exported script still shows the line the coach would say.
     const introText = typeof turn.intro === 'function' ? turn.intro(7, 7) : turn.intro;
     const intro = introText ? introText.replace(/\|/g, '\\|') : '_(none)_';
-    const fallback = turn.fallback ? turn.fallback.replace(/\|/g, '\\|') : '_(none, live turn has no fallback)_';
+    const fallback = renderFallback(turn.fallback);
     push(`| ${turn.round} | ${turn.actor} | ${turn.kind} | ${foul} | ${intro} | ${fallback} |`);
   }
   blank();

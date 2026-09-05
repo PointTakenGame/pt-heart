@@ -49,12 +49,13 @@ mistake.** Grouped by the fix they need, not by level.
 | 13 | L4 | first boss line hands the *player* an opinion and makes Ray ref | open (E) |
 | 14 | L4 | large revamp: Victor vs Olivia, player refs, player holds **no tokens** | open (E) |
 | 15 | L5 | "That's the attack…" wrong for three already-earned cards | **done** |
-| 16 | L5 | boss summaries do not read what the player wrote | open (F) |
-| 17 | L5 | boss writes the same point three times | open (F) |
+| 16 | L5 | boss summaries do not read what the player wrote | **done** |
+| 17 | L5 | boss writes the same point three times | **done** |
 | 18 | L5 | round 3 "She's behind" asserted at 7-7 | **done** |
 
-Groups still open: **E** the L4 ref revamp (13, 14) · **F** L5 boss quality (16, 17) ·
-**G** zoom/fit (1). Group **C** is closed except for the one content ruling below.
+Groups still open: **E** the L4 ref revamp (13, 14) · **G** zoom/fit (1). Group **F**
+(L5 boss quality, 16 and 17) is **closed** — see below. Group **C** is closed except for
+the one content ruling below.
 
 ### Round two of fixes: 2, 5, 7, 8, 9
 
@@ -167,6 +168,64 @@ flip to the gas-stove topic. The sweep says L3 is the sole outlier: **L1 and L2 
 one step before their first gate, L4 with three.** So this is not an engine defect and it
 has no siblings; it is L3's content, and the fix is either a `continue` gate (which cuts
 against the thread's design) or a trim (which loses teaching). Nathan's call.
+
+### Group F — findings 16 and 17, and Nathan's ruling 6 (L5)
+
+**Root cause of both, and it was authoring, not plumbing.** `src/showdown.ts` has always
+passed the player's last sentence into `sofiaLine`, and `src/coach.ts` has always
+forwarded it as `playerText`. The wiring is correct — do not "fix" it. What is true is
+that **`/api/coach` returns 503 under `npm run dev`**, because Vite does not run the
+Vercel serverless function. So every Sofia line in a local playtest is the *authored
+fallback*, and the fallbacks were the defect.
+
+**Finding 17 ("she writes essentially the same point three times").** `l5-r1-sofia-open`
+and `l5-r2-sofia-speak` were both arguing "the cost falls on people who had no say" —
+one argument wearing two costumes, with a summary in between that made no argument at
+all. They are now two different moves: a **tradeoff** claim (name the bill, refuse to say
+who pays it) and a **precedent** claim (object to settling it *this way*, not to either
+answer).
+
+**Finding 16 ("are they actually reading what the user writes?").** The worst offender
+was `l5-r2-sofia-summary` — the match's one *clean* summary, the beat whose own coach
+intro says "Nothing she just said was a foul, which is the hard part." Its fallback
+invented a position for the player. In the no-key path the clean turn was arguably a
+foul. It now runs `playback()` and quotes the player verbatim, which is topic-agnostic
+by construction and is the one thing that answers "is she reading me?" with a yes the
+player can see on screen. (`l5-r3-sofia-summary` stays deliberately terrible — that one
+*is* the Fake Listening card being dealt. Do not improve it.)
+
+**Ruling 6 — authored variants per topic, and the player picks one of three.** `OPENING`
+was a free-text box with the three as chips; a typed topic meant every authored line had
+to survive any subject at all, and lines that survive anything are about nothing. That is
+how 16 and 17 happened. `TOPICS` is now typed `{ id, label }` pairs with `TopicId`,
+`topicLabel()` and a `byTopic()` helper; `Turn.fallback` widened to
+`string | ((playerText, topic) => string)`; the opening is a `buttons` composer. The
+length/`/[a-z]/i` validation loop is gone with the text box — a button cannot be a typo.
+
+**Balance, and it is load-bearing.** Round 1 opens on Sofia, so she speaks *before* the
+player has revealed a side. Authored per-topic lines therefore cannot take a side without
+the boss becoming partisan on every run. Every new line is **topic-specific and
+side-neutral**: she argues about who pays, what becomes precedent, and how the player is
+arguing, never about which answer is right, and both her fouls are aimed at the player's
+reasoning rather than at a position. The ledger comment in `src/content/showdown.ts`
+says this, and tells the next author to hold the line if they add a topic.
+
+**One new defect, found on the way and not in Nathan's eighteen: nobody answered the
+summary gate.** `SUMMARY_FRAME` ends "Did I miss anything?" and the only response was the
+coach saying "Clean." — a gate with no gatekeeper. That breaks `rules.md` §5, where the
+person summarized answers and *that answer* is the ground truth for Fake Listening, and
+it cuts against `soul.md` §6 by making software the arbiter of whether the summary
+landed. Sofia now rules first and the coach prices it after, both derived from the same
+`foul` value so the two can never contradict. **Swept:** `grep -rn "Did I miss anything"
+src/` hits `level3.ts` (drill template, carries a `reply`), `level4.ts` (spoken by
+characters with authored responses adjacent), `cards.ts` (card examples) and `types.ts`
+(a doc comment). The unanswered gate was unique to L5.
+
+Touched `src/content/showdown.ts`, `src/showdown.ts`, and `scripts/export-script.ts` —
+the last because **`npm run build` type-checks `scripts/` too**, so any change to an
+exported shape in `src/content/` has to be swept into the exporter. Its fallback column
+now renders all three topic variants, or renders once labelled topic-independent for the
+playback summary.
 
 ## Carried state
 

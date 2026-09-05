@@ -36,10 +36,14 @@ import {
   OPENING,
   RULE_LABEL,
   SHOWDOWN_SLUG,
+  SOFIA_HEARD,
+  SOFIA_NOT_HEARD,
   SOFIA_THIN,
   START_TOKENS,
   TURNS,
   foulCost,
+  topicLabel,
+  type TopicId,
   type Turn,
 } from './content/showdown.ts';
 
@@ -296,6 +300,9 @@ export function useShowdown(): Match {
     let missedCount = 0;
     /** Walks SOFIA_THIN in order, across the whole match. Never random. */
     let thinCount = 0;
+    /** Which of the player's three summaries of her this is. Walks
+     *  SOFIA_HEARD / SOFIA_NOT_HEARD in order, same reason. */
+    let summaryCount = 0;
 
     const end = async (result: Outcome, why: string) => {
       await coach(why);
@@ -326,27 +333,18 @@ export function useShowdown(): Match {
       // (src/ui/Prefight.tsx), so the room opens on the crowd and the first ask.
       push({ lane: 'crowd', text: crowdRow(0) });
 
-      // The opening. Whatever the player names here is the topic, and Sofia takes
-      // the other side of it, which is how this level stays politically balanced
-      // without anybody authoring a position.
+      // The opening. Three topics, pick one — not a text box (Nathan, 2026-09-05).
+      // A closed list is what makes per-topic authoring possible, and the loop that
+      // used to guard a typed answer for length and stray keystrokes is gone with
+      // it: a button cannot be empty or a typo.
+      //
+      // Balance still does not depend on anybody's authored position. She argues
+      // about who pays and what becomes precedent, never about which answer is
+      // right, so whichever side the player takes she is across the table from it.
       await coach(OPENING.ask);
-      let topic = '';
-      for (;;) {
-        nonce.current += 1;
-        const opening = await ask({
-          kind: 'free',
-          placeholder: OPENING.placeholder,
-          chips: OPENING.chips,
-          nonce: nonce.current,
-        });
-        topic = opening.value.trim();
-        // Lighter than the guard on the turns themselves, on purpose: "nuclear
-        // power" is a whole topic in two words, and the offered chips are two and
-        // three words long. All this has to stop is an empty box and a stray
-        // keystroke.
-        if (topic.length >= 3 && /[a-z]/i.test(topic)) break;
-        await coach('That is not a topic yet. Name the thing you two disagree about.');
-      }
+      const opening = await ask({ kind: 'buttons', options: OPENING.options });
+      const topicId = opening.value as TopicId;
+      const topic = topicLabel(topicId);
       push({ lane: 'player', text: topic });
       await coach('Good. She will take the other side of that, whichever side you are on.');
 
@@ -375,7 +373,14 @@ export function useShowdown(): Match {
           );
 
         if (turn.actor === 'sofia') {
-          const out = await sofiaLine(topic, lastPlayer, turn.kind, turn.foul, turn.fallback ?? '');
+          // A fallback may be a plain string or a function of the player's last
+          // sentence and the topic; resolve it before the call, so the model path
+          // and the offline path are handed the same finished line.
+          const fb =
+            typeof turn.fallback === 'function'
+              ? turn.fallback(lastPlayer, topicId)
+              : (turn.fallback ?? '');
+          const out = await sofiaLine(topic, lastPlayer, turn.kind, turn.foul, fb);
           lastSofia = out.text;
           await say({ lane: 'opponent', speaker: SOFIA, text: out.text, isSpecimen: true });
 
@@ -478,6 +483,23 @@ export function useShowdown(): Match {
               foul === null,
               answer.revisions,
             );
+
+            // The summary frame ends "Did I miss anything?" and until now nobody
+            // answered it — the coach said "Clean." and she said nothing, which is
+            // a gate with no gatekeeper. rules.md §5: the person summarized answers,
+            // and that answer is the ground truth for Fake Listening. She goes
+            // first and the coach prices it after, both off the same `foul`, so the
+            // two can never contradict and software is never seen overruling the
+            // person who was in the room (soul.md §6).
+            if (turn.kind === 'summarize') {
+              const bank = foul ? SOFIA_NOT_HEARD : SOFIA_HEARD;
+              await say({
+                lane: 'opponent',
+                speaker: SOFIA,
+                text: bank[summaryCount % bank.length],
+              });
+              summaryCount += 1;
+            }
 
             if (foul) {
               const { moved } = transfer('player', foulCost(foul));
