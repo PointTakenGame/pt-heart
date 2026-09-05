@@ -322,7 +322,15 @@ const DID: Record<FoulType, string> = {
 // confetti, no score — the reps are over and this is just the closing card on
 // the table. The referee level taught all three, so it lays out all three; a
 // one-card level shows the one it drilled.
-function Review({ level, onExit }: { level: LevelDef; onExit: () => void }) {
+function Review({
+  level,
+  onExit,
+  onRead,
+}: {
+  level: LevelDef;
+  onExit: () => void;
+  onRead: () => void;
+}) {
   const referee = level.seat === 'referee';
   const cards = referee ? level.cards : [level.rule];
   const did = referee
@@ -342,6 +350,9 @@ function Review({ level, onExit }: { level: LevelDef; onExit: () => void }) {
         </div>
         <button className="btn btn-wide" onClick={onExit}>
           Back to the gym
+        </button>
+        <button className="link review-read" onClick={onRead}>
+          Read the round back
         </button>
       </div>
     </div>
@@ -401,6 +412,13 @@ function Room({
   // hooks than expected" and took the whole room down with it.
   const [drillBehind, setDrillBehind] = useState(false);
 
+  // The gym is open book (Q23): the conversation scrolls and the player can read
+  // back. The review screen (Q21) is the closing card on the table, not a wipe -
+  // taking it as one meant a level's whole transcript vanished two seconds after
+  // its last line, including the one beat the referee level is built around.
+  // This flips between the two views; the thread itself is never thrown away.
+  const [reading, setReading] = useState(false);
+
   const fightNumber = LEVELS.findIndex((l) => l.slug === level.slug) + 1;
 
   if (gym.bossPending) {
@@ -419,8 +437,8 @@ function Room({
   // The reps are done: the whole room gives way to the one review screen (Q21),
   // rather than swapping the composer for a lone "Back to the gym" button under a
   // thread that has nothing left to do.
-  if (gym.finished) {
-    return <Review level={level} onExit={onExit} />;
+  if (gym.finished && !reading) {
+    return <Review level={level} onExit={onExit} onRead={() => setReading(true)} />;
   }
 
   const call = gym.composer.kind === 'call' ? gym.composer : null;
@@ -432,13 +450,21 @@ function Room({
   // The chat room is only for The actual bosses."
   //
   // The engine does not change. Every level's last beat is its boss beat, and
-  // beginBoss already clears the thread on the way in, so the switch is a view
-  // choice made off the beat we are standing in.
+  // beginBoss appends to the thread rather than clearing it, so the switch is a
+  // view choice made off the beat we are standing in.
   const inBoss = level.beats[gym.beatIndex]?.boss === true;
 
   const railLive = inBoss || !drillBehind;
 
-  const composerNode = <Composer state={gym.composer} onSubmit={gym.submit} onResize={land} />;
+  const composerNode = gym.finished ? (
+    <div className="composer composer-done">
+      <button className="btn btn-wide" onClick={() => setReading(false)}>
+        Back to the card
+      </button>
+    </div>
+  ) : (
+    <Composer state={gym.composer} onSubmit={gym.submit} onResize={land} />
+  );
 
   return (
     <div className={`page page-level${inBoss ? '' : ' page-drill'}`}>

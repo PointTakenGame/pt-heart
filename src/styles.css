@@ -131,6 +131,8 @@ p  { margin: 0 0 0.75rem; }
   color: var(--teal);
 }
 .review-title { margin: 0; text-align: center; }
+/* Open book (Q23): the round does not disappear when it ends. */
+.review-read { font-size: 0.9rem; }
 .review-did {
   margin: 0;
   text-align: center;
@@ -638,6 +640,9 @@ p  { margin: 0 0 0.75rem; }
   gap: 0.55rem;
 }
 .composer-locked { min-height: 3.2rem; border-top-color: transparent; }
+/* The reps are over and the player has come back to read the round. Nothing
+   left to type, so the composer's slot holds the way back to the card. */
+.composer-done { padding-bottom: 1.1rem; }
 /* Wrap, do not overflow. Four whistle buttons at phone width cannot shrink
    below their longest word, so a single row pushed "Let it stand" off the right
    edge and the player could not decline to call a foul. The 8rem track puts two
