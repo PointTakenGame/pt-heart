@@ -23,6 +23,17 @@ interface Props {
   epithet: string;
   playerEmoji: string;
   onStart: () => void;
+  /*  Set only in the referee seat. Nathan, 2026-09-05: "making it victor vs
+   *  olivia with a spot on the top or bottom noting the user as the ref." The
+   *  player is not in this fight, so their avatar cannot stand on one of the
+   *  halves: both halves get a fighter, at the same size because neither of
+   *  them is the boss, and the avatar moves down into the name plate, which
+   *  stops naming an opponent and starts naming the player's seat. `left` and
+   *  `right` are the same two the header purses use (LevelDef.fighters). */
+  bout?: {
+    left: { name: string; emoji: string };
+    right: { name: string; emoji: string };
+  };
 }
 
 const TICK_MS = 620;
@@ -34,6 +45,7 @@ export function BossIntro({
   epithet,
   playerEmoji,
   onStart,
+  bout,
 }: Props) {
   // null while waiting on the button, then 3, 2, 1, 0 (0 prints FIGHT).
   const [count, setCount] = useState<number | null>(null);
@@ -50,17 +62,23 @@ export function BossIntro({
   }, [count, onStart]);
 
   return (
-    <div className="vs">
+    <div className={bout ? 'vs vs-bout' : 'vs'}>
       {/* The two halves are full-bleed layers cut by a clip-path, so the seam
           between them is a single diagonal and nothing has to be measured. Each
           one slams in from its own side, 90ms apart, which is the whole
           Smash-Bros effect: the screen assembles itself in front of you instead
           of fading up. */}
       <div className="vs-half vs-you" aria-hidden="true">
-        <span className="vs-face">{playerEmoji}</span>
+        <span className="vs-side">
+          <span className="vs-face">{bout ? bout.right.emoji : playerEmoji}</span>
+          {bout ? <span className="vs-name">{bout.right.name}</span> : null}
+        </span>
       </div>
       <div className="vs-half vs-boss" aria-hidden="true">
-        <span className="vs-face">{bossEmoji}</span>
+        <span className="vs-side">
+          <span className="vs-face">{bout ? bout.left.emoji : bossEmoji}</span>
+          {bout ? <span className="vs-name">{bout.left.name}</span> : null}
+        </span>
       </div>
       <div className="vs-flash" aria-hidden="true" />
 
@@ -80,6 +98,12 @@ export function BossIntro({
       </button>
 
       <div className="vs-front">
+        {/* Both halves are decorative, so in the ref seat the matchup lives
+            only on screen and the plate names the seat, not the fighters. This
+            is the one line that says both out loud. It uses the authored `boss`
+            string rather than the two `bout` names, which are lowercase keys
+            for the purse header and read badly spoken. */}
+        {bout ? <p className="sr-only">{boss}. You are the ref.</p> : null}
         <div className="vs-top">
           <div className="vs-crowd" aria-hidden="true">
             {crowdRow(fightNumber)}
@@ -92,8 +116,18 @@ export function BossIntro({
         </span>
 
         <div className="vs-bottom">
+          {/* The plate names whoever the player is about to be. In a fight
+              that is the boss; refereeing one, it is the whistle. */}
           <div className="vs-plate">
-            <span>{boss}</span>
+            <span>
+              {bout ? (
+                <>
+                  <span aria-hidden="true">{playerEmoji}</span> You are the ref
+                </>
+              ) : (
+                boss
+              )}
+            </span>
           </div>
           <p className="vs-epithet">{epithet}</p>
           {/* Steve, 2026-08-25: "need some fanfare pre-fight midi 8-bit music

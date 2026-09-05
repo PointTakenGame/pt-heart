@@ -1176,6 +1176,28 @@ p  { margin: 0 0 0.75rem; }
 .vs-boss .vs-face { font-size: clamp(3.8rem, 18vw, 6.4rem); }
 .vs-face { line-height: 1; }
 
+/* The referee card (`.vs-bout`). Nathan, 2026-09-05: "making it victor vs
+   olivia with a spot on the top or bottom noting the user as the ref." Neither
+   half is the player here, so neither half is the boss either: the two fighters
+   land at the same size, and each carries its name under the face because they
+   are two heads the player has only met one level at a time. The player's own
+   avatar is in the name plate at the bottom, holding the whistle. */
+.vs-bout .vs-you .vs-face,
+.vs-bout .vs-boss .vs-face { font-size: clamp(3.4rem, 15vw, 5.4rem); }
+.vs-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+.vs-name {
+  font-family: var(--font-cond);
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+
 @keyframes slam-left {
   from { transform: translateX(-110%); }
   70% { transform: translateX(2%); }

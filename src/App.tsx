@@ -432,6 +432,11 @@ function Room({
         epithet={level.bossEpithet}
         playerEmoji={avatar}
         onStart={gym.beginBoss}
+        /*  In the ref seat the walk-out is not the player's fight: it is Victor
+         *  against Olivia with the player holding the whistle. Gated on the seat
+         *  and not on `fighters` alone, so a future level that names two purses
+         *  without handing over the whistle still gets the ordinary card. */
+        bout={level.seat === 'referee' ? level.fighters : undefined}
       />
     );
   }

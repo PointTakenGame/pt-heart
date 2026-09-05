@@ -401,6 +401,36 @@ worse at a 16px root. At 560 L1's primary button falls 10px below the fold; the
 recoverable padding there measures ~30px against a 62px overflow, so trimming cannot
 close it, and 560 is below Nathan's range anyway.
 
+### The ref-seat walk-out card (L4)
+
+Nathan, after the Group E/G round: *"change that VS card screen, making it victor vs
+olivia with a spot on the top or bottom noting the user as the ref."* On L4 the VS card
+still put the **player's** avatar on one half against the generic pair glyph on the
+other, under a plate reading "Victor and Olivia" — a matchup the player is not in.
+
+`BossIntro` now takes an optional **`bout`** prop (`{ left, right }`, the same two the
+header purses use — `LevelDef.fighters`). When it is set:
+
+- both halves carry a fighter, **at the same size**, because neither of them is the boss;
+- each face gets a `.vs-name` caption under it, which binds emoji → name *before* the
+  thread starts (the same confusion finding 14 was about);
+- the orange name plate stops naming an opponent and names the seat instead —
+  `👩🏽 YOU ARE THE REF`, with the player's own avatar beside it. That plate is the
+  strongest anchor on the screen and is the "bottom spot" Nathan offered;
+- one `.sr-only` line carries the matchup for screen readers, since both halves are
+  `aria-hidden`. It uses the authored `level.boss` string, **not** the two `bout` names —
+  those are lowercase purse-header keys and read badly spoken.
+
+Gated in `App.tsx` on **`level.seat === 'referee'`**, not on the presence of `fighters`,
+so a future level that names two purses without handing over the whistle still gets the
+ordinary card, and the word "ref" cannot leak below L4.
+
+**Verified live at 800×450:** L4 shows Victor (navy left) and Olivia (teal right) at equal
+size with legible captions on both grounds, the 3 → 1 → FIGHT countdown still runs, and
+the screen-reader line reads "Victor and Olivia. You are the ref." **No regression:** L1's
+walk-out is unchanged (player avatar teal right, Verdict Victor navy left, plate "VERDICT
+VICTOR", no captions). The L5 Sofia call site passes no `bout` and takes that same path.
+
 ## Carried state
 
 **Step 8 (just done) reconciled the docs with the seven-level, player-first ladder.**
