@@ -241,7 +241,7 @@ export const level1: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'That is the job, start to finish. Two whistles, and you let the honest one through.',
+          text: 'That is the job, start to finish. Two of those were fouls and one was honest, and telling them apart is the whole trick.',
         },
         {
           kind: 'say',

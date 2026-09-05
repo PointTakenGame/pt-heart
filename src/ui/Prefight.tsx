@@ -95,7 +95,7 @@ export function Prefight({ steps, enterLabel, onEnter, onExit, opponent }: Props
             // so it arrives as the answer to a problem the player already has.
             // Steve, 2026-08-25: "show the card that is your defense against
             // his attack."
-            text="That's his attack. This card is your defense. It stays on the wall the whole match."
+            text="That's the attack. This card is your defense. It stays on the wall the whole match."
             card={panel.rule}
             tone="coach"
           />

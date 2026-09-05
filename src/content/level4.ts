@@ -181,13 +181,6 @@ export const level4: LevelDef = {
           text: 'That is the whole shape of it. Now flip the whistle to your hand. You are the ref for these two, and the highway is back on the table. Watch how they treat each other, and call what you see. All three cards are yours.',
         },
         {
-          kind: 'say',
-          lane: 'opponent',
-          speaker: 'Verdict Victor',
-          text: 'You only want the trains because you have never had to haul three kids and a week of groceries in your life. You do not live in the real world the rest of us drive around in.',
-          isTake: true,
-        },
-        {
           kind: 'call_or_pass',
           id: 'l4-victor-judging',
           rule: 'judging',
@@ -200,13 +193,6 @@ export const level4: LevelDef = {
             'Good whistle, and it is the double. He never touched her argument. He handed down a verdict on her whole life, "you do not live in the real world," and that is Judging every time. Two tokens.',
           onPass:
             'That was the big one and it got past you. Not a word about transit, just a verdict on who she is and how she lives. Judging, the double penalty. You leave two on the table when you swallow that one.',
-        },
-        {
-          kind: 'say',
-          lane: 'opponent',
-          speaker: 'Obvious Olivia',
-          text: 'Everyone knows widening a highway just fills it back up. Induced demand, it is settled. There is nothing to argue about.',
-          isTake: true,
         },
         {
           kind: 'call_or_pass',
@@ -223,12 +209,6 @@ export const level4: LevelDef = {
             'That was Opinions as Facts. "Everyone knows, it is settled" — she took a contested read and stamped it closed. Victor disagrees, which is the whole definition of contested. One you could have had.',
         },
         {
-          kind: 'say',
-          lane: 'opponent',
-          speaker: 'Verdict Victor',
-          text: 'So what I am hearing is you want to force everyone out of their cars. That is it, right? Anything else?',
-        },
-        {
           kind: 'call_or_pass',
           id: 'l4-victor-fake',
           rule: 'fake_listening',
@@ -241,13 +221,6 @@ export const level4: LevelDef = {
             'Sharp. He dressed a summary up as listening and dropped everything under it, her reason, the whole case for transit, and handed back the version he could swat. Fake Listening. One token.',
           onPass:
             'He made it sound like a summary, but he kept none of her reason and turned it into a thing he could knock down. "Force everyone out of their cars" was never her point. Fake Listening, and it slipped by.',
-        },
-        {
-          kind: 'say',
-          lane: 'opponent',
-          speaker: 'Obvious Olivia',
-          text: 'The way I see it, transit is the better bet here, because the last time this stretch got widened it was jammed again inside two years.',
-          isTake: true,
         },
         {
           kind: 'call_or_pass',
@@ -268,12 +241,6 @@ export const level4: LevelDef = {
           lane: 'opponent',
           speaker: 'Obvious Olivia',
           text: 'And fine, I said "everyone knows" earlier. That was me closing the door. It is my read, not the last word. I will own it.',
-        },
-        {
-          kind: 'say',
-          lane: 'opponent',
-          speaker: 'Verdict Victor',
-          text: 'What I heard is you would back transit here because the last widening filled right back up inside two years. Did I miss anything?',
         },
         {
           kind: 'call_or_pass',
@@ -298,7 +265,7 @@ export const level4: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'That is a whole round called. You caught the double when it counted, took the two lighter ones, and you let the two honest lines walk. That last part matters as much as the whistle: a ref who calls everything is as useless as one who calls nothing.',
+          text: 'That is a whole round called. A double, two lighter ones, and two honest lines that had every right to walk. That last part matters as much as the whistle: a ref who calls everything is as useless as one who calls nothing.',
         },
         {
           kind: 'say',

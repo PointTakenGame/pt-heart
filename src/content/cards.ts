@@ -44,7 +44,11 @@ export interface PrintedFace {
   eyebrow: string;
   /** "PENALTY" or "DOUBLE PENALTY" */
   penalty: string;
-  /** Fake Listening only: its penalty is per missing point, not flat */
+  /**
+   * The printed deck charged Fake Listening per missing point. Online there
+   * are no half tokens and no stacking (Q9): a foul moves one, judging moves
+   * two, and that is the whole price list. Nothing sets this today.
+   */
   penaltyNote?: string;
   intro: IntroSeg[];
   /** Fake Listening only: the mint procedure strip under the intro */
@@ -224,7 +228,6 @@ export const CARDS: Record<FoulType, RuleCard> = {
     printed: {
       eyebrow: 'SUMMARIZATION FOUL',
       penalty: 'PENALTY',
-      penaltyNote: 'For each missing major point',
       intro: [
         {
           t: 'Before you respond: show you actually heard them, instead of nodding, while loading your mic-drop rebuttal.',

@@ -125,7 +125,7 @@ export const level3: LevelDef = {
             { text: '. Did I miss anything?' },
           ],
           reply:
-            'That\'s the whole move. You kept the whiteboard in, the reason, not just the opinion. Nothing left to add, so no card comes out. That\'s a clean summary.',
+            'That\'s the whole move. The point and the reason both survive the trip, not just the opinion. Nothing left to add, so no card comes out. That\'s the shape of a clean summary.',
         },
         { kind: 'continue', label: 'Face her' },
       ],
@@ -198,7 +198,7 @@ export const level3: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Two more from her, and these count. You just told her the new stadium\'s a waste of public money, because the last one the city built sits empty two hundred nights a year. Same question each time: did she keep your reason, or drop it? Card if she dropped it, wave it off if she didn\'t.',
+          text: 'Two more from her, and this is the real thing. You just told her the new stadium\'s a waste of public money, because the last one the city built sits empty two hundred nights a year. Same question each time: did she keep your reason, or drop it? Card if she dropped it, wave it off if she didn\'t.',
         },
         {
           kind: 'call_or_pass',

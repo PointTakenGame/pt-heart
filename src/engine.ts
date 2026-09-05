@@ -445,16 +445,24 @@ export function useGym(level: LevelDef): Gym {
 
           // Wrong, and that is the end of it. The coach names what was actually
           // there and the round moves on: one check, no second attempt (Q6, Q12).
-          chargeMiss();
-          push({
-            lane: 'coach',
-            text:
-              step.expected === 'foul'
-                ? `That one was not clean. ${CARDS[step.rule].tell}`
-                : tokensLive
-                  ? 'That line was clean. A bad whistle costs you one.'
-                  : 'That line was clean. Nothing in it to call.',
-          });
+          // A *missed* foul moves nothing - there are no half tokens (Q9), and
+          // the whistle you never blew is not a foul you committed. Only a bad
+          // whistle costs, and only where the economy is live.
+          if (step.expected === 'clean') chargeMiss();
+          // Every item is authored with the answer to a wrong turn already in
+          // it: on a foul line onPass is what the coach says to someone who let
+          // it by, and on a clean line onCall is what he says to a bad whistle.
+          // Reaching for the card's generic tell instead threw that away and
+          // put words in his mouth that did not match the line on the table.
+          const missText =
+            step.expected === 'clean'
+              ? tokensLive
+                ? `${step.onCall} A bad whistle costs you one.`
+                : step.onCall
+              : called
+                ? `That was a foul, but not that one. ${CARDS[step.rule].tell}`
+                : step.onPass;
+          push({ lane: 'coach', text: missText });
           settle();
           return;
         }
