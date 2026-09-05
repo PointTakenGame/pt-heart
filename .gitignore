@@ -6,5 +6,8 @@ dist/
 
 # local test driver, injected into the dev server by hand
 _driver.js
+
+# run-steps.sh transcripts and build logs
+.rebuild-runs/
 .vercel
 .env*

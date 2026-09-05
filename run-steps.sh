@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# Drive the gym-rebuild step briefs, one fresh Claude session per step.
+#
+#   ./run-steps.sh            # next unfinished step through step 8
+#   ./run-steps.sh 3          # step 3 only
+#   ./run-steps.sh 3 6        # steps 3 through 6
+#
+# Each step runs in its own `claude -p` process, so each gets a clean context
+# window — the same thing as opening a new chat, minus the typing. The loop
+# stops the moment a step fails any of the four gates below, so a broken step
+# never becomes the input to the next one.
+
+set -uo pipefail
+cd "$(dirname "$0")" || exit 1
+
+STEPS_DIR="docs/gym-rebuild/steps"
+PROGRESS="docs/gym-rebuild/PROGRESS.md"
+LOG_DIR=".rebuild-runs"
+BRANCH="NathanGymLadderRebuild"
+BUDGET="${BUDGET_USD:-15}"
+
+mkdir -p "$LOG_DIR"
+
+bold() { printf '\033[1m%s\033[0m\n' "$*"; }
+fail() { printf '\033[31m** %s\033[0m\n' "$*" >&2; }
+ok()   { printf '\033[32mok  %s\033[0m\n' "$*"; }
+
+# --- guard: right branch, clean tree ------------------------------------------
+here=$(git rev-parse --abbrev-ref HEAD)
+if [ "$here" != "$BRANCH" ]; then
+  fail "on branch '$here', expected '$BRANCH'"; exit 1
+fi
+if [ -n "$(git status --porcelain -- src docs api 2>/dev/null)" ]; then
+  fail "uncommitted changes in src/ docs/ api/ - commit or stash first"
+  git status --short -- src docs api; exit 1
+fi
+
+# --- which steps ---------------------------------------------------------------
+first="${1:-}"
+if [ -z "$first" ]; then
+  first=$(awk -F'|' '/^\| *[1-8] *\|/ && /not started/ {gsub(/ /,"",$2); print $2; exit}' "$PROGRESS")
+  if [ -z "$first" ]; then ok "every step is already done"; exit 0; fi
+fi
+last="${2:-8}"
+
+bold "Running steps $first..$last on $BRANCH"
+echo
+
+for n in $(seq "$first" "$last"); do
+  brief="$STEPS_DIR/step-$n.md"
+  [ -f "$brief" ] || { fail "no brief at $brief"; exit 1; }
+
+  # The prompt is the blockquote under '## Prompt' in the brief itself, so each
+  # brief stays the single source of truth for how its own step is started.
+  prompt=$(awk '/^## Prompt/{f=1;next} f&&/^## /{exit} f&&/^>/{sub(/^> ?/,"");print}' "$brief")
+  [ -n "$prompt" ] || { fail "step $n has no '## Prompt' blockquote"; exit 1; }
+
+  # Carried state has grown load-bearing, and nothing else in this run will tell
+  # the session what the last step decided. Make PROGRESS.md explicit, and make
+  # the finish line explicit too - gate 4 below checks for exactly this.
+  prompt="$prompt
+
+Read docs/gym-rebuild/PROGRESS.md before the brief; its Carried state section is
+binding. Finish by running npm run build, updating PROGRESS.md (flip step $n to
+**done**, rewrite Carried state for the next step), and committing everything in
+one commit. Do not push."
+
+  before=$(git rev-parse HEAD)
+  log="$LOG_DIR/step-$n.log"
+
+  bold "-- step $n ---------------------------------------------"
+  echo "$prompt" | sed 's/^/    /'
+  echo "    log: $log"
+  echo
+
+  claude -p "$prompt" \
+    --permission-mode bypassPermissions \
+    --max-budget-usd "$BUDGET" \
+    --name "gym-rebuild step $n" \
+    2>&1 | tee "$log"
+  rc=${PIPESTATUS[0]}
+
+  echo
+  if [ "$rc" -ne 0 ]; then
+    fail "step $n: claude exited $rc - see $log"; exit 1
+  fi
+
+  # Gate 1: the build compiles.
+  if ! npm run build >"$LOG_DIR/step-$n.build.log" 2>&1; then
+    fail "step $n: npm run build failed - see $LOG_DIR/step-$n.build.log"
+    tail -25 "$LOG_DIR/step-$n.build.log"; exit 1
+  fi
+
+  # Gate 2: something was actually committed.
+  if [ "$(git rev-parse HEAD)" = "$before" ]; then
+    fail "step $n: no commit landed - the step did not finish"; exit 1
+  fi
+
+  # Gate 3: nothing left uncommitted.
+  if [ -n "$(git status --porcelain -- src docs api)" ]; then
+    fail "step $n: left uncommitted changes behind"
+    git status --short -- src docs api; exit 1
+  fi
+
+  # Gate 4: the step marked itself done in PROGRESS.md. This is the one that
+  # catches a session that stopped early but still committed partial work.
+  if ! grep -qE "^\| *$n *\|.*\*\*done\*\*" "$PROGRESS"; then
+    fail "step $n: PROGRESS.md still does not show it done"
+    grep -E "^\| *$n *\|" "$PROGRESS"; exit 1
+  fi
+
+  ok "step $n complete - $(git log --oneline -1)"
+  echo
+done
+
+bold "Steps $first..$last done. Push when you have read the diff:"
+echo "    git push origin $BRANCH"
