@@ -3,9 +3,9 @@
 // it, icons a side, opponent on the left and player on the right.
 //
 // Icons rather than a number, because the printed game is icons and because the
-// thing worth feeling is the pile getting shorter. Halves are real (a missed call
-// costs half), so a half token renders as a clipped icon rather than rounding
-// away the only feedback a passive player gets.
+// thing worth feeling is the pile getting shorter. Tokens are whole (Q9: no half
+// tokens anywhere), so a purse is a plain count of icons and the printed number
+// beside it.
 //
 // Reworked 2026-08-25 on Steve's notes, three of them:
 //   "verdict and player, they're emoji cards. Verdict's are higher for some
@@ -20,7 +20,6 @@
 //    where it moves from one person's stack to the other."  -> flight, below.
 
 import { useLayoutEffect, useRef } from 'react';
-import { formatTokens } from '../content/showdown.ts';
 
 const TOKEN = '\u{1F64F}';
 // Steve, 2026-08-25: "move the closest gratitude from end end to the end of the
@@ -57,26 +56,23 @@ function Purse({
   side: 'them' | 'you';
   stack: React.Ref<HTMLSpanElement>;
 }) {
-  // Only what they still hold. A half token is the last one, clipped.
-  const whole = Math.floor(value);
-  const half = value - whole >= 0.5;
+  // Only what they still hold, drawn as whole tokens.
   return (
-    <div className={`purse purse-${side}`} aria-label={`${label} ${formatTokens(value)}`}>
+    <div className={`purse purse-${side}`} aria-label={`${label} ${value}`}>
       <span className="purse-face" aria-hidden="true">
         {face}
       </span>
       {/* The count rides next to its owner's face, not next to the middle, so the
           two running totals cannot end up side by side reading as one number. */}
       <span className="purse-count" aria-hidden="true">
-        {formatTokens(value)}
+        {value}
       </span>
       <span className="purse-icons" ref={stack} aria-hidden="true">
-        {Array.from({ length: whole }, (_, i) => (
+        {Array.from({ length: value }, (_, i) => (
           <span key={i} className="tok tok-full">
             {TOKEN}
           </span>
         ))}
-        {half && <span className="tok tok-half">{TOKEN}</span>}
       </span>
     </div>
   );

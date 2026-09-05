@@ -40,20 +40,10 @@ import {
   START_TOKENS,
   TURNS,
   foulCost,
-  formatTokens,
   type Turn,
 } from './content/showdown.ts';
 
 const SOFIA = 'Slippery Sofia';
-
-/**
- * What a foul you failed to whistle costs you. Half a token, not a whole one:
- * Steve's ruling of 2026-08-24 on a player who calls nothing and so watches a
- * completely still scoreboard for three rounds. It is a fraction rather than a
- * full token because missing a call is worse than doing nothing and cheaper
- * than committing the foul yourself. Tokens still only move, never burn.
- */
-const MISS_COST = 0.5;
 
 /**
  * The player's turns are sentence frames, not a blank box with hints above it.
@@ -232,23 +222,23 @@ export function useShowdown(): Match {
       });
 
     /**
-     * Move `n` tokens from one purse to the other and report whether that emptied
-     * anybody. Fourteen tokens are on the table at the start and fourteen are on
+     * Move `n` tokens from one purse to the other and report how many actually
+     * moved. Fourteen tokens are on the table at the start and fourteen are on
      * the table at the end; nothing here creates or destroys one.
      */
-    const transfer = (from: 'player' | 'sofia', n: number): { moved: number; bust: boolean } => {
+    const transfer = (from: 'player' | 'sofia', n: number): { moved: number } => {
       const to = from === 'player' ? 'sofia' : 'player';
-      // A purse stops at empty. A two-token foul against a one-token purse moves
-      // one, because a foul moves tokens and never burns them: fourteen are on
-      // the table at the start and fourteen at the end. Without this the header
-      // paints a negative number for a full beat before the bust line lands, and
-      // the bust line says "you are empty" over a ledger reading -1.
+      // A purse stops at empty and never goes negative (Q11). A two-token foul
+      // against a one-token purse moves one, because a foul moves tokens and
+      // never burns them: fourteen are on the table at the start and fourteen at
+      // the end. Emptying a purse ends nothing — the player keeps playing from
+      // zero and can win tokens back.
       const moved = Math.min(n, purse.current[from]);
       purse.current[from] -= moved;
       purse.current[to] += moved;
       setPlayerTokens(purse.current.player);
       setSofiaTokens(purse.current.sofia);
-      return { moved, bust: purse.current[from] <= 0 };
+      return { moved };
     };
 
     const record = (
@@ -286,7 +276,7 @@ export function useShowdown(): Match {
         result === 'win' ? COACH.win : result === 'loss' ? COACH.loss : COACH.draw,
       );
       recordItem({
-        itemId: 'l4-result',
+        itemId: 'l5-result',
         levelSlug: SHOWDOWN_SLUG,
         rule: 'mixed',
         answer: `${result} ${purse.current.player}-${purse.current.sofia}`,
@@ -300,22 +290,6 @@ export function useShowdown(): Match {
       setOutcome(result);
       setFinished(true);
       setComposer({ kind: 'locked' });
-    };
-
-    /** Returns true if the match ended here. */
-    const bankruptCheck = async (): Promise<boolean> => {
-      if (purse.current.player <= 0) {
-        await end('loss', COACH.bankrupt);
-        return true;
-      }
-      // Unreachable, deliberately. See the comment on COACH.bankruptHer: her
-      // authored fouls cannot empty her, because knocking a boss out mid-training
-      // would end the lesson early through no fault of the player.
-      if (purse.current.sofia <= 0) {
-        await end('win', COACH.bankruptHer);
-        return true;
-      }
-      return false;
     };
 
     void (async () => {
@@ -400,25 +374,24 @@ export function useShowdown(): Match {
           record(turn, '-call', turn.foul ?? 'mixed', called, correct, []);
 
           if (turn.foul && called === turn.foul) {
-            const { moved, bust } = transfer('sofia', foulCost(turn.foul));
+            const { moved } = transfer('sofia', foulCost(turn.foul));
             await coach(COACH.onHit(turn.foul, moved));
-            if (bust && (await bankruptCheck())) return;
           } else if (turn.foul && called !== 'stand') {
             // Right instinct, wrong card. Nothing moves: you saw it, which is the
             // hard half. Naming it is what the next three rounds are for.
             missedCount += 1;
             await coach(COACH.onWrongCard(called as FoulType, turn.foul));
           } else if (turn.foul) {
+            // A miss moves nothing (Q9): she simply keeps the token your whistle
+            // would have taken. Letting everything stand costs you the wins you
+            // never claimed, not tokens off a still purse.
             missedCount += 1;
-            const { moved, bust } = transfer('player', MISS_COST);
-            await coach(COACH.onMissed(turn.foul, moved));
-            if (bust && (await bankruptCheck())) return;
+            await coach(COACH.onMissed(turn.foul));
           } else if (called !== 'stand') {
             // A bad whistle is the only way a clean round of hers costs you
             // anything, and it is what makes round 2 expensive.
-            const { bust } = transfer('player', 1);
+            transfer('player', 1);
             await coach(COACH.onFalseCall);
-            if (bust && (await bankruptCheck())) return;
           }
         } else {
           // A summarizing turn that carries one of the other two fouls gets ruled
@@ -475,10 +448,9 @@ export function useShowdown(): Match {
             );
 
             if (foul) {
-              const { moved, bust } = transfer('player', foulCost(foul));
+              const { moved } = transfer('player', foulCost(foul));
               await coach(ruled?.text ?? COACH.onPlayerFoul(foul, moved));
               if (ruled) await coach(COACH.onPlayerFoul(foul, moved));
-              if (bust && (await bankruptCheck())) return;
             } else if (ruled?.text) {
               await coach(ruled.text);
             } else {
@@ -511,7 +483,7 @@ export function useShowdown(): Match {
       const s = purse.current.sofia;
       await end(
         p > s ? 'win' : p < s ? 'loss' : 'draw',
-        `Three rounds. You ${formatTokens(p)}, her ${formatTokens(s)}.`,
+        `Three rounds. You ${p}, her ${s}.`,
       );
     })();
 

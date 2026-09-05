@@ -36,8 +36,8 @@
 // The coach's purse doubles as the player's ref scorecard, the same abstraction
 // L1-L3 used for their boss calls: the engine holds two purses and we did not
 // rewrite it, so a caught foul pays the player's side and a bad whistle pays it
-// back. Purses always sum to fourteen; no half tokens, no instant loss at zero,
-// no negatives.
+// back. Purses always sum to fourteen; tokens are always whole, no instant loss
+// at zero, no negatives.
 //
 // Political balance ledger, keep accurate if you touch the lines:
 //   The round is a highway-widening vs transit argument. Verdict Victor takes the

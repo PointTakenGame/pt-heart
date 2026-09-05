@@ -357,8 +357,8 @@ p  { margin: 0 0 0.75rem; }
 
 /* Two purses, seven icons a side, one row each with its owner's face in front of
    it. The printed game pays in these, so the screen pays in these; a bare number
-   does not give a player who is bleeding half a token at a time anything to
-   watch. Spent slots stay in place and go pale rather than disappearing, so the
+   does not give a player watching one purse shrink and the other grow anything
+   to watch. Spent slots stay in place and go pale rather than disappearing, so the
    pile reads as spent rather than as a shorter purse.
 
    Rebuilt 2026-08-25 on Steve's note: one row of seven at roughly three times the
@@ -391,9 +391,6 @@ p  { margin: 0 0 0.75rem; }
   color: #6d6355;
 }
 .tok { font-size: 1.55rem; line-height: 1; }
-/* A half token is a half token, drawn as one. Clipping the right half keeps the
-   glyph in its slot, so the row never reflows when a miss costs 0.5. */
-.tok-half { clip-path: inset(0 50% 0 0); }
 
 /* A token changing hands, in flight. Steve, 2026-08-25: "there should be some
    quick animation where it moves from one person's stack to the other. If it

@@ -30,7 +30,6 @@ import {
   RULE_LABEL,
   RULE_GLOSS,
   SHOWDOWN_SLUG,
-  formatTokens,
   foulCost,
   START_TOKENS,
 } from '../src/content/showdown.ts';
@@ -264,7 +263,7 @@ function renderShowdown(): void {
   push(`## Level 4: The Showdown (Slippery Sofia)`);
   blank();
   push(`- **Slug:** \`${SHOWDOWN_SLUG}\``);
-  push(`- **Starting tokens per side:** ${START_TOKENS} (prints as "${formatTokens(START_TOKENS)}"; a missed call costs half a token, which prints as "${formatTokens(0.5)}")`);
+  push(`- **Starting tokens per side:** ${START_TOKENS}. Tokens are always whole; a missed call moves nothing (the offendee simply keeps the token the whistle would have taken).`);
   blank();
 
   push('### Card glossary (`RULE_LABEL` / `RULE_GLOSS` / cost)');
@@ -309,7 +308,7 @@ function renderShowdown(): void {
   blank();
   quote(COACH.onFalseCall, 'Player calls a clean line (false call)');
   blank();
-  quote(COACH.onMissed('opinion_as_fact', foulCost('opinion_as_fact')), 'Player lets a foul stand (sample: Opinions as Facts)');
+  quote(COACH.onMissed('opinion_as_fact'), 'Player lets a foul stand (sample: Opinions as Facts)');
   blank();
   quote(
     COACH.onWrongCard('judging', 'fake_listening'),
@@ -322,19 +321,13 @@ function renderShowdown(): void {
   blank();
   quote(COACH.onPlayerClean, "Coach rules the player's turn clean");
   blank();
-  quote(COACH.redoSummary('judging'), 'A costed foul is buried inside a summary turn (sample: Judging)');
-  blank();
-  quote(COACH.ledger(5.5, 4), 'End-of-round ledger (sample: player 5½, Sofia 4)');
+  quote(COACH.ledger(5, 4), 'End-of-round ledger (sample: player 5, Sofia 4)');
   blank();
   quote(COACH.win, 'Match result: win');
   blank();
   quote(COACH.loss, 'Match result: loss');
   blank();
   quote(COACH.draw, 'Match result: draw');
-  blank();
-  quote(COACH.bankrupt, "Player's purse hits zero");
-  blank();
-  quote(COACH.bankruptHer, "Sofia's purse hits zero (unreachable by design, kept for completeness; see the comment in showdown.ts)");
   blank();
 
   push('### The turn order (`TURNS`)');
