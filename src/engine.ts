@@ -297,6 +297,28 @@ export function useGym(level: LevelDef): Gym {
 
     paidThisItem.current = false;
 
+    // Ruling 1 (Nathan, 2026-09-05): "Put in a next button, which should go after
+    // each text blurb or where you see fit. This ensures the player actually
+    // reads and digests each part."
+    //
+    // The drill has always had one; the thread never did, and that is the other
+    // half of playtest finding 11 — L3's boss beat runs eight consecutive
+    // auto-play steps before its first gate, roughly 34 seconds by `pacing.ts`
+    // arithmetic, and the player watched it happen at them. So a narration beat
+    // in a *boss* thread now ends on Next instead of a timer.
+    //
+    // Only narration. A step that opens a composer already has a gate — the
+    // composer — and putting a Next in front of it would cost two presses to
+    // answer one question, which is exactly the thing Steve struck down on
+    // 2026-08-25 ("too many 'next'"). The dwell stays, so the line still lands
+    // with a beat and a tap on the thread still cuts it short; Next appears when
+    // the dwell is done, the same shape as the drill's "go on".
+    //
+    // Drills are untouched: `Drill.tsx` holds its own cursor into the message
+    // list and counts down the backlog, and handing it a live composer on every
+    // line would fight that.
+    const gated = !!beat?.boss;
+
     const step = entry.step;
 
     (async () => {
@@ -313,7 +335,12 @@ export function useGym(level: LevelDef): Gym {
             },
             aliveFn,
           );
-          if (alive) setCursor((c) => c + 1);
+          if (!alive) return;
+          if (gated) {
+            setComposer({ kind: 'continue', label: 'Next' });
+            return;
+          }
+          setCursor((c) => c + 1);
           return;
 
         case 'card':
@@ -327,7 +354,12 @@ export function useGym(level: LevelDef): Gym {
             cardDwellMs(`${CARDS[step.rule].name} ${CARDS[step.rule].blurb}`) + BEAT_GAP,
             aliveFn,
           );
-          if (alive) setCursor((c) => c + 1);
+          if (!alive) return;
+          if (gated) {
+            setComposer({ kind: 'continue', label: 'Next' });
+            return;
+          }
+          setCursor((c) => c + 1);
           return;
 
         case 'model': {
@@ -458,6 +490,15 @@ export function useGym(level: LevelDef): Gym {
 
       switch (step.kind) {
         case 'continue':
+          setComposer({ kind: 'locked' });
+          advance();
+          return;
+
+        // The Next that ends a gated narration beat in the boss thread. Nothing
+        // to score and nothing to record — the player pressed a button that only
+        // means "I have read that".
+        case 'say':
+        case 'card':
           setComposer({ kind: 'locked' });
           advance();
           return;

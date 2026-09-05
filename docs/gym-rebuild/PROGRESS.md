@@ -44,7 +44,7 @@ mistake.** Grouped by the fix they need, not by level.
 | 8 | L2 | Next during drills sometimes does not advance | **done** |
 | 9 | global | automated lines arrive too fast, especially 3+ in a row | **done** (card step swept) |
 | 10 | L3 | "I don't buy full remote" reads as buying a remote control | **done** |
-| 11 | L3 | boss fight races past the first interaction, then freezes | freeze **done**; races-past is **question 1** |
+| 11 | L3 | boss fight races past the first interaction, then freezes | **done** (freeze; races-past by ruling 1) |
 | 12 | L4 | start button read "In with Olivia" in a two-opponent level | **done** |
 | 13 | L4 | first boss line hands the *player* an opinion and makes Ray ref | open (E) |
 | 14 | L4 | large revamp: Victor vs Olivia, player refs, player holds **no tokens** | open (E) |
@@ -112,7 +112,7 @@ Two mechanics landed with these copy fixes:
   `string | ((player, sofia) => string)` so the coach reads the live purses
   (finding 18); `scripts/export-script.ts` renders the function form at 7-7.
 
-### Finding 11 — the freeze is fixed; the races-past half needs a ruling
+### Finding 11 — both halves fixed (freeze, then ruling 1's Next gate)
 
 Nathan: *"L3 boss fight is broken - it zooms past the first interaction with no user
 input, then occasionally freezes."* Two separate defects wearing one sentence.
@@ -159,15 +159,56 @@ rather than a sentence to read — had quietly become the fastest thing in the g
 `RuleCardMini` actually prints, with a 3000ms floor because ~50 characters understates a
 card.
 
-**Still open — the "races past" half, and it wants a ruling (question 1).** `Thread.tsx`
-has no Next button by design (Steve, 2026-08-25: the stepper is the corner, the thread is
-the fight). L3's boss beat then runs **eight consecutive auto-play steps** — roughly 34
-seconds by `pacing.ts` arithmetic — before its first gate: coach warning, Noemi's take,
-the specimen setup, the specimen, Noemi's reply, the card, the card explanation, and the
-flip to the gas-stove topic. The sweep says L3 is the sole outlier: **L1 and L2 open with
-one step before their first gate, L4 with three.** So this is not an engine defect and it
-has no siblings; it is L3's content, and the fix is either a `continue` gate (which cuts
-against the thread's design) or a trim (which loses teaching). Nathan's call.
+**The "races past" half — closed by Nathan's ruling 1.** `Thread.tsx` had no Next by
+design (Steve, 2026-08-25: the stepper is the corner, the thread is the fight), so L3's
+boss beat ran **eight consecutive auto-play steps** — roughly 34 seconds by `pacing.ts`
+arithmetic — before its first gate: coach warning, Noemi's take, the specimen setup, the
+specimen, Noemi's reply, the card, the card explanation, and the flip to the gas-stove
+topic. The sweep put L3 alone in that: **L1 and L2 open with one step before their first
+gate, L4 with three.** Nathan ruled on it globally rather than as an L3 content trim:
+
+> *"Put in a next button, which should go after each text blurb or where you see fit.
+> This ensures the player actually reads and digests each part."*
+
+**Both runners, narration only.** In `engine.ts` the gate is scoped to `const gated =
+!!beat?.boss`, and `case 'say'` / `case 'card'` end on `{ kind: 'continue', label: 'Next'
+}` instead of bumping the cursor; `submit()` gained `case 'say': case 'card':` to advance
+when it is pressed. In `showdown.ts` — one long thread with no stepper in it — the gate
+went inside `say()` itself, so every narration line waits to be dismissed.
+
+Three things the shape depends on:
+
+- **The dwell stays in front of the gate.** The line still lands with a beat, `waiting`
+  is still true while it runs, and a tap on the thread still cuts it short; Next appears
+  when the dwell resolves. That is exactly the drill's "go on", and it keeps the finding-8
+  and finding-11 skip work intact.
+- **Steps that already open a composer are not gated.** `call_or_pass`, `confirm`, `free`,
+  `sort`, `edit`, `template` are their own gate, and a Next in front of one would cost two
+  presses to answer one question — the thing Steve struck down on 2026-08-25 ("too many
+  'next'"). In `showdown.ts` the same rule falls out for free: composers are opened by
+  `ask`, not by `say`.
+- **`gated` must stay scoped to boss beats.** `App.tsx:520` passes
+  `composerReady={gym.composer.kind !== 'locked'}`, and a live composer inside a drill
+  replaces `Drill.tsx`'s own Next — which holds its own cursor into the message list and
+  counts down the backlog. Gating drill narration would fight that stepper.
+
+The boss-beat step census says no other case needs the treatment: boss beats contain only
+`say`, `card`, `call_or_pass`, `confirm`, `free` and `continue` — no `model`, `sort`,
+`edit` or `template`.
+
+Verified at runtime in both runners. L5: after `Start`, the coach's opening line ended on
+a lone Next; pressing it opened the three ruling-6 topic buttons; the coach line and
+Sofia's specimen each gated, and the call composer that followed opened with no double
+gate. L1: played the drill through to `Face him`, and the boss beat's first line ("Here he
+comes. You know his move.") ended on a lone Next where it used to run on; pressing it
+opened `composer-call` on Victor's judging line directly — again no double gate. The
+drill's own Next was confirmed still intact on L1 and L3.
+
+**Side effect worth recording for ruling 8.** A thread can now never run more than one
+dwell ahead of the player, so the tab-backgrounding burst that ruling 8 (pause/resume on
+`visibilitychange`) was meant to stop is already capped at a single line. Ruling 8 is
+still worth doing, but it is now polish rather than a fix — and it will end the ability to
+drive the app in a hidden browser pane, so it is scheduled last.
 
 ### Group F — findings 16 and 17, and Nathan's ruling 6 (L5)
 

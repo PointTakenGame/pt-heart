@@ -241,6 +241,19 @@ export function useShowdown(): Match {
       // null, so a tap in that window did nothing (playtest finding 8; the same
       // shape was in engine.ts and is fixed there too).
       await dwell(dwellMs(m.text) + BEAT_GAP);
+      // Then Next. Ruling 1 (Nathan, 2026-09-05): "Put in a next button, which
+      // should go after each text blurb... This ensures the player actually
+      // reads and digests each part." The Showdown is one long thread with no
+      // stepper in it, so a run of coach and Sofia lines used to play at the
+      // player on a timer; now every line waits to be dismissed. The dwell
+      // stays in front of it, so the line still lands with a beat and a tap on
+      // the thread still cuts that beat short — Next appears when the dwell is
+      // done, which is the same shape the gym's drill has always had.
+      //
+      // Turns that end in a composer are not double-gated: the composer is the
+      // gate, and it is opened by `ask`, not by `say`.
+      if (!alive) return;
+      await ask({ kind: 'continue', label: 'Next' });
     };
 
     const coach = (text: string) => say({ lane: 'coach', text });
