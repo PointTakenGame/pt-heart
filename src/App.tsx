@@ -457,7 +457,7 @@ function Room({
         />
       )}
       <RuleCards
-        enabled={[level.rule]}
+        enabled={level.cards}
         live={railLive ? liveCards(gym.composer.kind, call?.callable) : null}
         onCall={(f) => gym.submit(f, [])}
         pass={

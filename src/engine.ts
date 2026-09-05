@@ -286,7 +286,9 @@ export function useGym(level: LevelDef): Gym {
             kind: 'call',
             hint: 'Press a foul card to call it, or say it is not a foul.',
             pass: { value: 'clean', label: "I might not agree, but it's not a foul" },
-            callable: [step.rule],
+            // One-card levels default to their own rule; levels 4 and 5 name the
+            // set on the step, so the whole rail is live and the call is a choice.
+            callable: step.callable ?? [step.rule],
           });
           return;
 
@@ -379,11 +381,13 @@ export function useGym(level: LevelDef): Gym {
         advance();
       };
 
-      /** A wrong answer costs one token, once, however many tries it then takes. */
-      const chargeMiss = () => {
+      /** A wrong answer costs `n` tokens, once, however many tries it takes. A
+       *  bad whistle is a flat one; the good-call payout below is what scales
+       *  with the card (judging is a double penalty). */
+      const chargeMiss = (n = 1) => {
         if (paidThisItem.current) return;
         paidThisItem.current = true;
-        transfer('player', 1);
+        transfer('player', n);
       };
 
       switch (step.kind) {
@@ -420,7 +424,9 @@ export function useGym(level: LevelDef): Gym {
             push({ lane: 'coach', text: CARDS[step.rule].name, card: step.rule });
             after(CARD_BEFORE_PAY_MS, () => {
               push({ lane: 'coach', text: step.onCall });
-              transfer('opponent', 1);
+              // The card sets the price. Judging is a double penalty, so a good
+              // judging call moves two; the other two move one (defect 3).
+              transfer('opponent', CARDS[step.rule].cost);
               settle();
             });
             return;
