@@ -21,9 +21,20 @@
 // and has heard Ray argue each direction well. Do not add a third level here
 // without flipping again, and do not change one level's sides without changing the
 // other's.
+//
+// LEVEL_4, added 2026-09-06, is the exception to that pairing rule and is allowed
+// to be, because it balances inside itself: both fighters commit exactly the same
+// weight of foul and each one models a repair of the other's. Its own ledger sits
+// above it. It does not enter the level 5 / level 6 offset and must not be counted
+// as one half of it.
+//
+// LEVEL_4 is also the first level where neither arguer is Ray. `RefActor` still
+// says 'ray' and 'figure' because those are the two seats the runner has always
+// had; read them as left seat and right seat. `left` on the level overrides who
+// sits in the left one.
 
 import type { FoulType, PrefightStep } from '../types.ts';
-import { COACH_NAME } from '../avatars.ts';
+import { COACH_EMOJI, COACH_NAME } from '../avatars.ts';
 
 export type RefActor = 'ray' | 'figure';
 
@@ -66,6 +77,16 @@ export interface RefereeLevel {
   figureEmoji: string;
   figureEpithet: string;
   topic: string;
+  /**
+   * Who argues in the left seat, and what they argue.
+   *
+   * Levels 5 and 6 leave `left` unset: Ray gets in the ring himself, and the
+   * runner falls back to his name and his face. Level 4 sets it, because there
+   * the player referees two other people and Ray stays out in the corner where
+   * a coach belongs. `rayStance` is the left seat's stance either way, whoever
+   * is sitting in it; the name is older than the seat being rentable.
+   */
+  left?: { name: string; emoji: string };
   rayStance: string;
   figureStance: string;
   prefight: PrefightStep[];
@@ -95,6 +116,186 @@ const WHY_WE_DISAGREE =
   '"I think we still land in different places because".';
 
 const RAY = COACH_NAME;
+
+/** The left seat's name and face, which is Ray unless the level rents it out.
+ *  One function so the runner, the walk-out and the purse header cannot drift
+ *  apart about who is sitting there. */
+export function leftSeat(level: RefereeLevel): { name: string; emoji: string } {
+  return level.left ?? { name: RAY, emoji: COACH_EMOJI };
+}
+
+// The two faces are the ones the player already met, borrowed from levels 1 and
+// 2 so the pair reads as a reunion rather than two strangers.
+const VICTOR = '\u{1F468}\u{1F3FB}\u{200D}\u{2696}\u{FE0F}';
+const OLIVIA = '\u{1F469}\u{1F3FF}';
+
+// Level 4. The hinge of the ladder (docs/design/ladder-spec.md): levels 1 to 3
+// kept the player inside their own argument and never once said the word
+// referee, and here the third chair is named for the first time. Three things
+// are new and they are the whole level.
+//
+//   1. All three cards are live at once. For three levels the call was never a
+//      real choice, because only one card was ever on the table.
+//   2. The tokens are real and none of them are the player's. The referee holds
+//      no purse, so a missed call costs accuracy and nothing else, and an upheld
+//      call moves tokens between the two fighters. The runner derives who pays
+//      from who spoke, so there is no way to charge the wrong purse here.
+//   3. The whistle only suggests. The fighter the foul landed on rules on it,
+//      out loud, and can wave off even the referee.
+//
+// The beats and most of the copy are a contributor's, from a branch that wrote
+// this as a hardcoded script with nametags; the ladder spec's instruction was to
+// port the beats and not the file. Two things changed on the way in. His version
+// charged a purse named by hand on each call, which pays the wrong fighter with
+// no error the first time someone forgets it; the runner already knows who spoke.
+// And his round was 2 fouls to 1 against the right-coded speaker, flagged in his
+// own ledger as something the reviewer would have to settle. It is even here.
+//
+// POLITICAL BALANCE LEDGER, keep it accurate if you touch these lines. The round
+// is widening a highway against building transit. Victor argues for the lanes,
+// Olivia for the trains. Each of them commits exactly two fouls: one Judging,
+// the double, and one single-token foul. Each pays three tokens across the round.
+// Each gets exactly one clean line, and each clean line is the repaired version
+// of a card the OTHER one fouled, so neither fighter is the one who models good
+// behaviour. Their two Judging fouls are the same move in mirror image: each one
+// tells the other they have never lived the life that would teach them better.
+const LEVEL_4: RefereeLevel = {
+  slug: 'the-third-chair',
+  title: 'The Third Chair',
+  teaches: 'All three cards at once, and the whistle only suggests.',
+  // The marquee card: both of the doubles in this round are Judging, and it is
+  // the first time the player has had to pick a card rather than confirm one.
+  rule: 'judging',
+  left: { name: 'Verdict Victor', emoji: VICTOR },
+  figure: 'Obvious Olivia',
+  figureEmoji: OLIVIA,
+  figureEpithet: 'Never says "I think." Everything she believes is simply a fact.',
+  topic: 'widening the highway',
+  rayStance:
+    'For widening the highway, because the two exits either side of this stretch back up every ' +
+    'morning and a car is the only way to move kids and a week of groceries.',
+  figureStance:
+    'For spending the money on transit instead, because the last time this stretch was widened ' +
+    'it filled back up within two years.',
+  prefight: [
+    {
+      kind: 'line',
+      text:
+        'Three levels, three fouls, all of them from inside the argument. There is a third chair ' +
+        'at that table and you have never sat in it. Tonight you do. The referee.',
+    },
+    {
+      kind: 'line',
+      text:
+        'The referee never takes a side. You watch both people and you call what you see. All ' +
+        'three cards are live at once for the first time, and picking the right one is the job.',
+    },
+    {
+      kind: 'card',
+      rule: 'judging',
+      text:
+        'This one costs double. Two tokens across the table, not one. Biggest thing in the room ' +
+        'to catch, and the one worth being sure about.',
+    },
+    {
+      kind: 'card',
+      rule: 'opinion_as_fact',
+      text: "One token. A contested read, filed as a closed fact, with nobody's name on it.",
+    },
+    {
+      kind: 'card',
+      rule: 'fake_listening',
+      text:
+        'One token, and only on a summary. If the playback drops their reason, it is this one. ' +
+        'On a speaking turn the card is dead and I will grey it out for you.',
+    },
+    {
+      kind: 'line',
+      text:
+        'One thing about the whistle, and it is what most referees get wrong. It only suggests. ' +
+        'The person the foul landed on has the last word, and they can wave off even you.',
+    },
+    {
+      kind: 'line',
+      text:
+        'Two of them tonight. Victor, who you met in level one, and Olivia from level two, going ' +
+        'at it over a highway. You are between them, and you do not have a stack of tokens. The ' +
+        'referee never pays and the referee never earns.',
+    },
+  ],
+  // Item ids are `chair-` and not `l4-`, even though this is rung 4. The
+  // Showdown's items have been `l4-*` since it was level 4 and they are live
+  // keys in the corpus table, so the prefix is spoken for. Slug plus item id is
+  // what makes a corpus row unique, so nothing would have broken; a later
+  // analyst grepping `l4-` for one level and getting two would have.
+  turns: [
+    {
+      id: 'chair-t1',
+      actor: 'ray',
+      kind: 'speak',
+      foul: 'judging',
+      intro: 'Here we go. Victor opens, and the highway is on the table.',
+      fallback:
+        'You only want the trains because you have never had to haul three kids and a week of ' +
+        'groceries in your life. You do not live in the real world the rest of us drive around in.',
+    },
+    {
+      id: 'chair-t2',
+      actor: 'figure',
+      kind: 'speak',
+      foul: 'judging',
+      intro: 'She is not going to let that sit.',
+      fallback:
+        'And you only want the lanes because you have never once waited forty minutes for a bus ' +
+        'you were not sure was coming. You have no idea how anybody else in this city gets around.',
+    },
+    {
+      id: 'chair-t3',
+      actor: 'ray',
+      kind: 'summarize',
+      foul: 'fake_listening',
+      intro: 'Now he plays her back. Listen to what comes out the other side.',
+      fallback:
+        'So what I am hearing is you want to force everyone out of their cars. That is it, right? ' +
+        'Anything else?',
+    },
+    {
+      id: 'chair-t4',
+      actor: 'figure',
+      kind: 'summarize',
+      foul: null,
+      intro: 'Her turn at the same move. Hold her to the same bar you just held him to.',
+      fallback:
+        'What I heard was that the lanes matter to you because a car is the only way you can move ' +
+        'three kids and a week of groceries, and losing that is not a small thing. Did I miss ' +
+        'anything?',
+    },
+    {
+      id: 'chair-t5',
+      actor: 'ray',
+      kind: 'speak',
+      foul: null,
+      intro: 'He gets another swing at it.',
+      fallback:
+        'The way I see it, widening is still the better bet on this stretch, because the two exits ' +
+        'either side of it back up every single morning and nothing we have tried has touched that.',
+    },
+    {
+      id: 'chair-t6',
+      actor: 'figure',
+      kind: 'speak',
+      foul: 'opinion_as_fact',
+      intro: 'Last one. Do not let the last call be the one you sleep through.',
+      fallback:
+        'Everyone knows widening just fills back up. Induced demand. It is settled, there is ' +
+        'nothing here to argue about.',
+    },
+  ],
+  outro:
+    'That is a whole round called. Two doubles, two lighter ones, and two honest lines that had ' +
+    'every right to walk. Letting those two go matters as much as the whistle: a referee who ' +
+    'calls everything is as useless as one who calls nothing.',
+};
 
 // Level 5. The Final Showdown's second step, "tell the other player what you
 // learned", and the specific way it goes wrong: a verdict wearing a learning
@@ -337,10 +538,15 @@ const LEVEL_6: RefereeLevel = {
     'worth a token and one cost two. Now you know which is which.',
 };
 
+/** Rung 4, which sits between the gym and the Showdown and is kept out of
+ *  REFEREE_LEVELS on purpose: that array is the matched political pair, and the
+ *  ladder numbering counts it. */
+export const REF_SEAT_LEVEL = LEVEL_4;
+
 export const REFEREE_LEVELS: RefereeLevel[] = [LEVEL_5, LEVEL_6];
 
 export function refereeLevel(slug: string): RefereeLevel | undefined {
-  return REFEREE_LEVELS.find((l) => l.slug === slug);
+  return [REF_SEAT_LEVEL, ...REFEREE_LEVELS].find((l) => l.slug === slug);
 }
 
 /** The coach's lines out of the ring, where he narrates instead of arguing. */

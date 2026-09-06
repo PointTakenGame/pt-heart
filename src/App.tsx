@@ -20,7 +20,12 @@ import { useFinal } from './final.ts';
 import { useRoom, type Person } from './room.ts';
 import { LIVE_TOPICS, TOPIC_FOOTER, type Seat } from './content/room.ts';
 import { drawPeople } from './avatars.ts';
-import { REFEREE_LEVELS, type RefereeLevel } from './content/referee.ts';
+import {
+  REFEREE_LEVELS,
+  REF_SEAT_LEVEL,
+  leftSeat,
+  type RefereeLevel,
+} from './content/referee.ts';
 import { SHOWDOWN_PREFIGHT, SHOWDOWN_SLUG, SOFIA_EMOJI } from './content/showdown.ts';
 import {
   FINAL_PREFIGHT,
@@ -37,7 +42,8 @@ import { getAvatar, isCleared, load, setAvatar } from './storage.ts';
 // were hardcoded in eight places and two of them were already wrong once. The
 // seven-rung ladder (docs/design/ladder-spec.md) renumbers these again, and
 // when it does the only edits should be to the arrays these count.
-const SHOWDOWN_NUMBER = LEVELS.length + 1;
+const REF_SEAT_NUMBER = LEVELS.length + 1;
+const SHOWDOWN_NUMBER = REF_SEAT_NUMBER + 1;
 const REFEREE_NUMBER_BASE = SHOWDOWN_NUMBER + 1;
 const FINAL_NUMBER = REFEREE_NUMBER_BASE + REFEREE_LEVELS.length;
 
@@ -314,6 +320,30 @@ function Select({
             </li>
           );
         })}
+        {/* Rung 4, the twist. The word "referee" is withheld through levels 1 to
+            3 and lands here, so this sits above the Showdown rather than with
+            the other two referee levels below it. It opens on the same key the
+            Showdown does, the three gym levels, because the ruled ladder
+            (docs/design/ladder-spec.md) has no gym-boss rung at all and where
+            the Showdown ends up sitting is still Steve's call. */}
+        <li>
+          <button
+            className={`level-card${allCleared ? '' : ' is-locked'}`}
+            disabled={!allCleared}
+            onClick={() => onReferee(REF_SEAT_LEVEL)}
+          >
+            <span className="level-n">{allCleared ? REF_SEAT_NUMBER : '\u{1F512}'}</span>
+            <span className="level-mid">
+              <span className="level-title">{REF_SEAT_LEVEL.title}</span>
+              <span className="level-sub">
+                {allCleared
+                  ? 'You referee · Victor and Olivia'
+                  : 'clear all three levels first'}
+              </span>
+            </span>
+            {isCleared(REF_SEAT_LEVEL.slug) && <span className="level-done">cleared</span>}
+          </button>
+        </li>
         <li>
           <button
             className={`level-card level-card-boss${allCleared ? '' : ' is-locked'}`}
@@ -844,7 +874,13 @@ function Referee({
   onExit: () => void;
 }) {
   const [stage, setStage] = useState<'prefight' | 'intro' | 'run'>('prefight');
-  const fightNumber = REFEREE_NUMBER_BASE + REFEREE_LEVELS.indexOf(level);
+  const left = leftSeat(level);
+  // Rung 4 is a referee level that does not sit in REFEREE_LEVELS, so indexOf
+  // would number it 4 and then 4 again for the pair below it.
+  const fightNumber =
+    level === REF_SEAT_LEVEL
+      ? REF_SEAT_NUMBER
+      : REFEREE_NUMBER_BASE + REFEREE_LEVELS.indexOf(level);
   if (stage === 'prefight') {
     return (
       <Prefight
@@ -864,9 +900,9 @@ function Referee({
         bossEmoji={level.figureEmoji}
         epithet={level.figureEpithet}
         // The walk-out is between the two people who are about to argue, and
-        // tonight neither of them is the player. Ray's face goes in the near
-        // corner because Ray is the one getting in the ring.
-        playerEmoji={COACH_EMOJI}
+        // tonight neither of them is the player. The near corner is the left
+        // seat's face: Ray in levels 5 and 6, Victor in level 4.
+        playerEmoji={left.emoji}
         onStart={() => setStage('run')}
       />
     );
@@ -884,6 +920,7 @@ function RefereeRun({
   onExit: () => void;
 }) {
   const run = useReferee(level, avatar);
+  const left = leftSeat(level);
   const thread = useRef<ThreadHandle>(null);
   const land = useCallback(() => {
     thread.current?.land();
@@ -909,16 +946,19 @@ function RefereeRun({
         purses={{
           player: run.rayTokens,
           opponent: run.figureTokens,
-          opponentLabel: level.figure.split(' ')[0].toLowerCase(),
+          // Last word, not first: these figures are all epithet-then-name, so
+          // the first word labelled Edwin's purse "enlightened" and would have
+          // labelled Olivia's "obvious".
+          opponentLabel: level.figure.split(' ').slice(-1)[0].toLowerCase(),
           opponentEmoji: level.figureEmoji,
-          playerEmoji: COACH_EMOJI,
-          playerLabel: 'ray',
+          playerEmoji: left.emoji,
+          playerLabel: left.name.split(' ').slice(-1)[0].toLowerCase(),
         }}
       />
       <Thread
         ref={thread}
         messages={run.messages}
-        avatars={{ coach: COACH_EMOJI, opponent: level.figureEmoji, player: COACH_EMOJI }}
+        avatars={{ coach: COACH_EMOJI, opponent: level.figureEmoji, player: left.emoji }}
         waiting={run.waiting}
         onSkip={run.skip}
       />

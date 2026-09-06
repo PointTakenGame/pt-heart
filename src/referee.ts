@@ -1,4 +1,8 @@
-// The referee-format runner. Levels 5 and 6, one human in the third seat.
+// The referee-format runner. Levels 4, 5 and 6, one human in the third seat.
+//
+// Level 4 seats two AI fighters and leaves Ray in the corner; levels 5 and 6 put
+// Ray himself in the left seat. `leftSeat(level)` is the only place that
+// difference lives.
 //
 // Same shape as showdown.ts and for the same reason: a level whose branches are
 // about money moving between two ledgers reads as one async function that awaits
@@ -26,11 +30,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ComposerState, FoulType, Message } from './types.ts';
 import { BEAT_GAP, dwellMs } from './pacing.ts';
-import { COACH_EMOJI, crowdRow } from './avatars.ts';
+import { crowdRow } from './avatars.ts';
 import { affirmCall, figureLine } from './coach.ts';
 import { markCleared, recordItem } from './storage.ts';
 import { RULE_LABEL, START_TOKENS, foulCost, formatTokens } from './content/showdown.ts';
-import { REF_COACH, REF_PASS_MARK, type RefereeLevel } from './content/referee.ts';
+import { REF_COACH, REF_PASS_MARK, leftSeat, type RefereeLevel } from './content/referee.ts';
 
 export interface RefereeRun {
   messages: Message[];
@@ -158,6 +162,8 @@ export function useReferee(level: RefereeLevel, avatar: string): RefereeRun {
       return moved;
     };
 
+    const left = leftSeat(level);
+
     void (async () => {
       push({ lane: 'crowd', text: crowdRow(0) });
       // The topic, not the level name: the header already carries the name, and
@@ -176,9 +182,12 @@ export function useReferee(level: RefereeLevel, avatar: string): RefereeRun {
         const turn = level.turns[i];
         if (turn.intro) await coach(turn.intro);
 
+        // The left seat is Ray in levels 5 and 6 and a second AI fighter in
+        // level 4, where the player referees two other people and Ray narrates
+        // from the corner. Everything downstream reads the seat, not the man.
         const isRay = turn.actor === 'ray';
-        const speaker = isRay ? REF_COACH.rayName : level.figure;
-        const listener = isRay ? level.figure : REF_COACH.rayName;
+        const speaker = isRay ? left.name : level.figure;
+        const listener = isRay ? level.figure : left.name;
 
         const out = await figureLine(
           speaker,
@@ -193,11 +202,11 @@ export function useReferee(level: RefereeLevel, avatar: string): RefereeRun {
         if (isRay) lastRay = out.text;
         else lastFigure = out.text;
 
-        // Ray is down in the ring on the right, in the lane the human would hold
-        // if they were fighting. They are not: they are in the middle tonight.
+        // The left seat sits in the lane the human would hold if they were
+        // fighting. They are not: they are in the middle tonight.
         await say(
           isRay
-            ? { lane: 'player', speaker, text: out.text, isTake: true, face: COACH_EMOJI }
+            ? { lane: 'player', speaker, text: out.text, isTake: true, face: left.emoji }
             : { lane: 'opponent', speaker, text: out.text, isTake: true },
         );
 
@@ -238,7 +247,7 @@ export function useReferee(level: RefereeLevel, avatar: string): RefereeRun {
           await say(
             isRay
               ? { lane: 'opponent', speaker: listener, text: ruling.text }
-              : { lane: 'player', speaker: listener, text: ruling.text, face: COACH_EMOJI },
+              : { lane: 'player', speaker: listener, text: ruling.text, face: left.emoji },
           );
           good = ruling.upheld;
           if (ruling.upheld) {
