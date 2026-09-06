@@ -44,7 +44,17 @@ export interface PrintedFace {
   eyebrow: string;
   /** "PENALTY" or "DOUBLE PENALTY" */
   penalty: string;
-  /** Fake Listening only: its penalty is per missing point, not flat */
+  /**
+   * Fake Listening only. The printed deck charges it per missing major point,
+   * and docs/reference/print/v7/card-anatomy.md is the authority on what the
+   * card says, so the line stays on the rendered face.
+   *
+   * Online does not price it that way: a foul moves one token, Judging moves
+   * two, and a missed call moves half. So the card is currently describing a
+   * rule the app does not run. Do not resolve that by quietly deleting the
+   * line; it is Steve's call whether the print or the app moves, and it is
+   * entangled with the open half-token question (HEART-T260905-27).
+   */
   penaltyNote?: string;
   intro: IntroSeg[];
   /** Fake Listening only: the mint procedure strip under the intro */
