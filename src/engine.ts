@@ -279,7 +279,7 @@ export function useGym(level: LevelDef): Gym {
             kind: 'call',
             hint: 'Press a foul card to call it, or say it is not a foul.',
             pass: { value: 'clean', label: "I might not agree, but it's not a foul" },
-            callable: [step.rule],
+            callable: step.callable ?? [step.rule],
           });
           return;
 
@@ -417,7 +417,7 @@ export function useGym(level: LevelDef): Gym {
             kind: 'call',
             hint: 'Press a foul card to call it, or say it is not a foul.',
             pass: { value: 'clean', label: "I might not agree, but it's not a foul" },
-            callable: [step.rule],
+            callable: step.callable ?? [step.rule],
             nonce: nonce.current,
           });
           return;

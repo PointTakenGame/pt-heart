@@ -95,6 +95,12 @@ interface CallOrPassStep {
   speaker?: string;
   line: string;
   expected: 'foul' | 'clean';
+  /** Which foul cards the tray lights up for this call. Defaults to `[rule]`,
+   *  which is a single-card non-choice and is right for a level that is
+   *  drilling one card in isolation. Every rung from the referee seat up needs
+   *  all three live, because a real round has no note at the top of it saying
+   *  which foul is about to be committed. */
+  callable?: FoulType[];
   onCall: string;
   onPass: string;
   /** shown when the player gets it wrong and has to answer again */
