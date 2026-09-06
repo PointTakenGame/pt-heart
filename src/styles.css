@@ -1857,6 +1857,21 @@ p  { margin: 0 0 0.75rem; }
 .live-doors { display: flex; gap: 0.6rem; margin-top: 0.75rem; }
 .live-doors .btn { flex: 1; }
 
+/* The unprepared player's warning at the live door. Orange because it is the
+   foul side of the palette and this is the app saying you are about to do
+   something to another person, not a neutral note. It does not block: the
+   topic field and the button below it stay live. */
+.door-warning {
+  margin-top: 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--orange);
+  border-left: 4px solid var(--orange);
+  border-radius: var(--radius);
+  background: var(--cream-dark);
+}
+.door-warning p { margin: 0; }
+.door-warning-ask { margin-top: 0.6rem !important; font-weight: 600; }
+
 .door-label { display: block; margin-top: 1.5rem; font-weight: 600; }
 .door-input {
   width: 100%;

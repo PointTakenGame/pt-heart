@@ -280,7 +280,6 @@ function Select({
   // one before it taught, and the showdown assumes all three.
   const cleared = LEVELS.map((l) => isCleared(l.slug));
   const allCleared = cleared.every(Boolean);
-  const liveOpen = allCleared && isCleared(SHOWDOWN_SLUG);
 
   return (
     <div className="page page-narrow">
@@ -413,21 +412,21 @@ function Select({
         </li>
       </ul>
 
-      {/* Live play. Roadmap section 7: it unlocks on Levels 1 to 3 plus the Full
-          Showdown, and Levels 5 to 7 are not part of that gate. The gate is a
-          localStorage read and that is fine here: the hole it leaves open needs
-          a second human to exploit, and there is not one yet. */}
+      {/* Live play has no gate. Steve's ruling of 2026-09-05 (HEART-T260905-02)
+          overturned the roadmap line that unlocked it behind the gym: anyone can
+          walk straight into a real match. A player who has not fought the
+          Showdown is warned on the way in and then let through, and the warning
+          lives on the Door screen because that is already the step between this
+          button and the room. */}
       <h2 className="live-head">Live play</h2>
       <p className="muted">
-        {liveOpen
-          ? 'A real disagreement, three seats, no lesson. Pick which one you are in.'
-          : 'Clear the first three levels and the Showdown, then the room opens.'}
+        A real disagreement, three seats, no lesson. Pick which one you are in.
       </p>
       <div className="live-doors">
-        <button className="btn btn-wide" disabled={!liveOpen} onClick={() => onLive('player')}>
+        <button className="btn btn-wide" onClick={() => onLive('player')}>
           Play a round
         </button>
-        <button className="btn btn-wide" disabled={!liveOpen} onClick={() => onLive('referee')}>
+        <button className="btn btn-wide" onClick={() => onLive('referee')}>
           Referee a round
         </button>
       </div>
@@ -740,6 +739,13 @@ function Door({
   const [topic, setTopic] = useState('');
   const ready = topic.trim().length >= 3;
 
+  // Steve's ruling of 2026-09-05: warn the unprepared player, then let them
+  // through. Prepared means the Showdown has been fought, because that is the
+  // level the ruling called level 4 on the day it was made; the Third Chair was
+  // inserted below it the next morning and pushed every number above it up one.
+  // If the ladder renumbers again, this reads the slug, not the number.
+  const prepared = isCleared(SHOWDOWN_SLUG);
+
   return (
     <div className="page page-narrow">
       <Mast
@@ -756,6 +762,20 @@ function Door({
           ? 'You argue one side. Somebody takes the other. Ray watches your turns.'
           : 'Two people argue. You call what you see, and the one who got hit decides.'}
       </p>
+
+      {!prepared && (
+        <div className="door-warning">
+          <p>
+            You have not fought the Showdown yet, so you have never had to use all three
+            cards at once against someone who is trying to win. You can go in anyway. You
+            just will not know what you are doing yet, and the person across from you is
+            the one who finds that out.
+          </p>
+          <p className="door-warning-ask">
+            Does the person you are playing with already know how the game works?
+          </p>
+        </div>
+      )}
 
       <label className="door-label" htmlFor="live-topic">
         What is the disagreement?
