@@ -8,9 +8,28 @@
 //
 // Political balance is structural rather than editorial in this level. Sofia has no
 // position of her own: she argues the opposite of whatever the player argued, so
-// whichever side the player picks, the opposition is equally vivid. The authored
-// fallback lines below carry the same property, which is why they are written
-// topic-agnostic and read a little bare. That is the cost of the guarantee.
+// whichever side the player picks, the opposition is equally vivid.
+//
+// Rewritten 2026-09-06 from Nathan's playtest findings 16 and 17: "the boss writes
+// essentially the same point three times" and "are they actually reading what the
+// user writes?". Both were true, and both were this file rather than the plumbing.
+// The runner does pass the player's last sentence to the model, but /api/coach is
+// not served by `npm run dev`, so every line in a local playtest is a fallback from
+// this file. Two things follow. Her three clean turns are now three different moves
+// (a tradeoff claim, then a precedent claim, with a summary between them doing
+// neither), and her round 2 summary quotes the player verbatim, which answers "is
+// she reading me?" with a yes you can see on the screen. Paying for that meant
+// authored variants per topic, which meant the topic had to become a closed list
+// the player picks from rather than a box they type into.
+//
+// BALANCE LEDGER for this level, and it is load-bearing. Round 1 opens on Sofia, so
+// she speaks before the player has revealed a side. Authored per-topic lines
+// therefore cannot take a side without the boss becoming partisan on every run.
+// Every line below is topic-SPECIFIC and side-NEUTRAL: she argues about who pays,
+// what becomes precedent, and how the player is arguing, never about which answer
+// is right. Her two fouls are aimed at the player's reasoning, not at a position.
+// If you add a topic, hold that line: name the tradeoff both sides face, never the
+// side you would pick.
 
 import type { FoulType, PrefightStep } from '../types.ts';
 
@@ -50,12 +69,27 @@ export const RULE_GLOSS: Record<FoulType, string> = {
   fake_listening: 'a summary with no because and no check',
 };
 
-/** Milder end of real public policy. Not immigration, not abortion. */
-export const TOPICS = [
-  'student loan forgiveness',
-  'return to office mandates',
-  'nuclear power',
+/** Milder end of real public policy. Not immigration, not abortion.
+ *
+ *  Closed list, and the player picks from it rather than typing it (2026-09-06).
+ *  A free-text topic meant every authored line had to work for every possible
+ *  subject, and a line that survives any subject is about none of them. */
+export type TopicId = 'loans' | 'rto' | 'nuclear';
+
+export const TOPICS: { id: TopicId; label: string }[] = [
+  { id: 'loans', label: 'student loan forgiveness' },
+  { id: 'rto', label: 'return to office mandates' },
+  { id: 'nuclear', label: 'nuclear power' },
 ];
+
+export function topicLabel(id: TopicId): string {
+  return TOPICS.find((t) => t.id === id)?.label ?? id;
+}
+
+/** Sugar for the common case: one authored line per topic, no player text used. */
+function byTopic(m: Record<TopicId, string>) {
+  return (_playerText: string, topic: TopicId) => m[topic];
+}
 
 export type Actor = 'player' | 'sofia';
 export type TurnKind = 'speak' | 'summarize';
@@ -68,10 +102,15 @@ export interface Turn {
   kind: TurnKind;
   /** Sofia only. null means she plays this turn clean. */
   foul: FoulType | null;
-  /** Sofia only. Used verbatim when the model is unreachable. */
-  fallback?: string;
-  /** the coach speaks before this turn */
-  intro?: string;
+  /** Sofia only. Used when the model is unreachable, which is every local run:
+   *  `npm run dev` does not serve /api/coach. A function is handed the player's
+   *  last sentence and the chosen topic, so a fallback can play the player back
+   *  instead of inventing a position for them, and can be about the actual
+   *  subject instead of about "this". Use `byTopic` for the common case. */
+  fallback?: string | ((playerText: string, topic: TopicId) => string);
+  /** the coach speaks before this turn. A function is handed the two purses, for
+   *  the lines that would otherwise assert a scoreline they cannot know. */
+  intro?: string | ((player: number, sofia: number) => string);
 }
 
 // Round order. Round 1 opens on Sofia, on Steve's ruling of 2026-08-24: a player
@@ -98,8 +137,17 @@ export const TURNS: Turn[] = [
     foul: null,
     intro:
       'She goes first. Watch the shape: a take, then a because. Yours is going to look like that.',
-    fallback:
-      'Here\'s where I land. I think the cost of this ends up on people who had no say in it, because the bill always finds the people with the least room to argue. That\'s my read, and I could be wrong about how big it is.',
+    // The tradeoff move: name the bill and refuse to say who should pay it. Reads
+    // as a real position without being one, which is what lets her open before the
+    // player has picked a side.
+    fallback: byTopic({
+      loans:
+        'Here\'s where I land. Nothing about this is free. The money is already out the door, so the only live question is who eats it: the borrower, the school that set the price, or somebody who never enrolled. Every version I get pitched has the answer as nobody. That\'s my read, and I could be wrong about the size of the bill. I don\'t think I\'m wrong that there is one.',
+      rto:
+        'Here\'s where I land. Nothing about this is free. Either the company carries the cost of a scattered team, or somebody carries two hours a day getting to a desk to do the same work. Every version I get pitched treats one of those as not a real cost. That\'s my read, and I could be wrong about which one is bigger. I don\'t think I\'m wrong that both are real.',
+      nuclear:
+        'Here\'s where I land. Nothing about this is free. You either pay for the plant for thirty years before it returns a cent, or you keep paying for whatever you are burning instead, and somebody lives downwind of whichever one you pick. The pitch always leaves one of those out. That\'s my read, and I could be wrong about the size of the bill. I don\'t think I\'m wrong that there is one.',
+    }),
   },
   {
     id: 'l4-r1-summary',
@@ -123,8 +171,14 @@ export const TURNS: Turn[] = [
     actor: 'sofia',
     kind: 'speak',
     foul: 'opinion_as_fact',
-    fallback:
-      'Here\'s the thing though. That approach obviously doesn\'t work. Everyone knows what happens when you try it, and we have been through this before.',
+    fallback: byTopic({
+      loans:
+        'Here\'s the thing though. That approach obviously doesn\'t work. Everyone knows what happened the last time a chunk of this got written off, the numbers on it are settled, and we have all been through it.',
+      rto:
+        'Here\'s the thing though. That obviously doesn\'t work. Everyone knows what happened to output the moment the badge readers went quiet. It has been measured to death and it isn\'t really up for debate.',
+      nuclear:
+        'Here\'s the thing though. That obviously doesn\'t work. Everyone knows these things never land on budget or on schedule. That is just the record, and the record isn\'t an opinion.',
+    }),
   },
 
   // Round 2. The player opens, and she plays the whole round completely straight.
@@ -142,8 +196,12 @@ export const TURNS: Turn[] = [
     actor: 'sofia',
     kind: 'summarize',
     foul: null,
-    fallback:
-      'Let me play that back to you. It bugs you that the burden sits where it does, because you think the people carrying it didn\'t create it. Have I got that right?',
+    fallback: (p: string) => {
+      const said = playback(p);
+      return said
+        ? `Let me play that back to you. What I heard was: ${said}. That is your reason as much as your point, and the reason is the part I want to get right. Have I got that?`
+        : 'Let me play that back to you, except you have not actually given me anything to play back yet. Say the thing you think, and I will take it down properly.';
+    },
   },
   {
     id: 'l4-r2-sofia-speak',
@@ -151,8 +209,17 @@ export const TURNS: Turn[] = [
     actor: 'sofia',
     kind: 'speak',
     foul: null,
-    fallback:
-      'Let me put my actual reasoning on the table. I think the cost falls on people who had no say in creating it, and I would rather fix the thing that keeps generating the cost than keep moving it around after the fact. That\'s where I land, and I could be wrong about the size of it.',
+    // The precedent move. A different shape from her opener on purpose: she used
+    // to make one argument three times in three costumes. Still sideless, because
+    // she objects to settling it this way, not to either answer.
+    fallback: byTopic({
+      loans:
+        'Let me put my actual reasoning on the table, and it is not really about this round of borrowers. It is about what deciding it this way makes normal. Settle it once like that and you have written the rule for every class that enrolls after, and nobody reopens it when the next bill is bigger. That is what I am arguing against. On this particular cohort, honestly, I could go either way.',
+      rto:
+        'Let me put my actual reasoning on the table, and it is not really about this policy. It is about what deciding it this way makes normal. Whatever you land on here becomes the default the next manager inherits, and nobody relitigates a default. That is what I am arguing against. On the three-days-a-week question itself, honestly, I could go either way.',
+      nuclear:
+        'Let me put my actual reasoning on the table, and it is not really about this one reactor. It is about what approving it this way makes normal. Whatever standard clears this site is the standard the next twelve get built to, and nobody tightens it later. That is what I am arguing against. On this specific site, honestly, I could go either way.',
+    }),
   },
   {
     id: 'l4-r2-summary',
@@ -170,7 +237,15 @@ export const TURNS: Turn[] = [
     actor: 'player',
     kind: 'speak',
     foul: null,
-    intro: 'Last round. She\'s behind. Watch her get sloppy, and don\'t get sloppy with her.',
+    // This used to assert "She's behind" at a scoreline it never checked, which is
+    // wrong at 7-7 and embarrassing when the player is down. The coach reads the
+    // actual purses now.
+    intro: (p, s) =>
+      p > s
+        ? `Last round. You're up, ${formatTokens(p)} to ${formatTokens(s)}. Watch her get sloppy, and don't get sloppy with her.`
+        : p < s
+          ? `Last round. You're down, ${formatTokens(p)} to ${formatTokens(s)}. Watch her get sloppy, and don't get sloppy with her.`
+          : `Last round. Dead even at ${formatTokens(p)} apiece. Watch her get sloppy, and don't get sloppy with her.`,
   },
   {
     id: 'l4-r3-sofia-summary',
@@ -178,7 +253,13 @@ export const TURNS: Turn[] = [
     actor: 'sofia',
     kind: 'summarize',
     foul: 'fake_listening',
-    fallback: 'Right, right. I hear you, you\'re frustrated about the whole thing. Anyway.',
+    // Deliberately terrible. This is the Fake Listening card being dealt to the
+    // player; do not "improve" it.
+    fallback: byTopic({
+      loans: 'Right, right. I hear you, the loan thing bothers you. Anyway.',
+      rto: 'Right, right. I hear you, the office thing bothers you. Anyway.',
+      nuclear: 'Right, right. I hear you, you\'ve got concerns about the nuclear thing. Anyway.',
+    }),
   },
   {
     id: 'l4-r3-sofia-speak',
@@ -186,8 +267,16 @@ export const TURNS: Turn[] = [
     actor: 'sofia',
     kind: 'speak',
     foul: 'judging',
-    fallback:
-      'Look, you\'re only arguing this because it happens to work out well for you. People in your position always land exactly here.',
+    // Judging: aimed at the player rather than at a position, which is both what
+    // the card actually is and what keeps her out of a party.
+    fallback: byTopic({
+      loans:
+        'Look, you\'re only arguing this because of how your own loans happened to land. People who came out of it the way you did always end up exactly here.',
+      rto:
+        'Look, you\'re only arguing this because of how your own commute happens to work out. People with your setup always end up exactly here.',
+      nuclear:
+        'Look, you\'re only arguing this because of where you happen to live relative to one. People in your position always end up exactly here.',
+    }),
   },
   {
     id: 'l4-r3-summary',
@@ -199,15 +288,65 @@ export const TURNS: Turn[] = [
   },
 ];
 
+/**
+ * The player's own sentence, cleaned up enough to be quoted back at them.
+ *
+ * The speak frame assembles as "The way I see it, X because Y ." The lead-in is
+ * the frame's, not theirs, and the floating period is an artefact of the segment
+ * join. Strip both, keep every word they actually chose. Nothing is paraphrased,
+ * on purpose: a fallback that reworded them would be guessing at a position
+ * again, which is the defect this exists to fix.
+ */
+export function playback(playerText: string): string {
+  const t = playerText.trim().replace(/\s+/g, ' ').replace(/\s+([.,!?])/g, '$1');
+  const body = t.replace(/^the way i see it,?\s*/i, '').replace(/[.\s]+$/, '');
+  if (!body) return '';
+  return body.charAt(0).toUpperCase() + body.slice(1);
+}
+
+/**
+ * Her answer to the player's summary of her.
+ *
+ * rules.md §5: the summarized person answers, and that answer is the ground truth
+ * for Fake Listening. Until now the coach said "Clean." and she said nothing,
+ * which left the player typing "Did I miss anything?" at somebody who never
+ * replied, a gate with no gatekeeper. She speaks first and the coach prices it
+ * after, one verdict in two voices, so software is never seen overruling the
+ * person who was in the room (soul.md §6).
+ *
+ * Walked in order, not sampled, like SOFIA_THIN and for the same reason.
+ */
+export const SOFIA_HEARD = [
+  'Yes. That is it, reason and all. Thank you for actually writing it down.',
+  'That is mine. You kept the because, which is the half people drop.',
+  'Yes. And you did it on the round where I did not do it for you.',
+];
+
+export const SOFIA_NOT_HEARD = [
+  'No. You gave me my words back and left the reason on the floor. That is not what I said.',
+  'Close on the words, nowhere near the point. That is not what I am arguing.',
+  'That is not what I said, and I think you could tell as you typed it.',
+];
+
+/**
+ * The topic pick.
+ *
+ * Was a free-text box with the three as chips. Nathan, 2026-09-05: "Don't let the
+ * user type their own topic, just make them select one of three; this can make
+ * sure there are set lines written for each topic." A typed topic meant every
+ * authored line had to survive any subject at all, and lines that survive
+ * anything are about nothing.
+ */
 export const OPENING = {
-  ask: 'What are you two actually disagreeing about? One line is plenty.',
-  placeholder: 'we disagree about...',
-  chips: TOPICS,
+  ask: 'Pick the one you two are actually disagreeing about. I have all three ready.',
+  options: TOPICS.map((t) => ({ value: t.id, label: t.label })),
 };
 
 export const COACH = {
   intro: [
-    'This is the whole thing. Three rounds, both of you on the clock, all three cards live.',
+    // No clock, here or anywhere: nothing in this build is timed, and promising a
+    // clock in the corner is a promise the match does not keep.
+    'This is the whole thing. Three rounds, all three cards live.',
     'Seven tokens each. A foul doesn\'t burn a token, it hands one over. Judging costs two. The other two cost one each. Let one of hers go past you and half a token crosses anyway. Empty and you\'re done, whatever the round says.',
     'She\'s Slippery Sofia. She doesn\'t shout, she doesn\'t insult you, and she will foul you twice before you notice once. You whistle her. I whistle you.',
   ],
@@ -267,7 +406,7 @@ export const COACH = {
 export const SOFIA_THIN = [
   'That\'s not a sentence. I\'m not answering it.',
   'Try that again with words in it. I\'ll wait.',
-  'You are wasting your own clock, not mine.',
+  'You are wasting your own turn, not mine.',
 ];
 
 /** The corner, before the walk-out. Steve, 2026-08-25: the setup and the card
@@ -278,8 +417,22 @@ export const SOFIA_THIN = [
 export const SHOWDOWN_PREFIGHT: PrefightStep[] = [
   { kind: 'line', text: COACH.intro[0] },
   { kind: 'line', text: COACH.intro[1] },
-  { kind: 'card', rule: 'judging' },
-  { kind: 'card', rule: 'opinion_as_fact' },
-  { kind: 'card', rule: 'fake_listening' },
+  // These three are not introductions. The player cleared a level on each one and
+  // reffed all three, so the captions are a roll call, not a first meeting.
+  {
+    kind: 'card',
+    rule: 'judging',
+    text: 'All three go on the wall tonight, and they stay there the whole match. You know this one. Victor\'s. It is the expensive one, two tokens.',
+  },
+  {
+    kind: 'card',
+    rule: 'opinion_as_fact',
+    text: 'Olivia\'s. One token. Sofia will not say it as loudly as Olivia did, so listen for the missing "in my head".',
+  },
+  {
+    kind: 'card',
+    rule: 'fake_listening',
+    text: 'And Noemi\'s. One token. This is the one Sofia is best at, because she will say your point back beautifully and leave your reason on the floor.',
+  },
   { kind: 'line', text: COACH.intro[2] },
 ];

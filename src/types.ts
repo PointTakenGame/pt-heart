@@ -176,7 +176,11 @@ export interface Beat {
  *  lines". By the time the room opens it is the player and the opponent. */
 export type PrefightStep =
   | { kind: 'line'; text: string }
-  | { kind: 'card'; rule: FoulType };
+  /** `text` overrides the coach's default caption. The default introduces the
+   *  card as a defense against the attack just described, which is right the
+   *  first time a player meets it and wrong by the Showdown, where all three
+   *  are already cleared levels and the panel is a roll call. */
+  | { kind: 'card'; rule: FoulType; text?: string };
 
 export interface LevelDef {
   /** Saved progress names levels by this, never by number (ruling B3,

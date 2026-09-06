@@ -26,6 +26,8 @@ import {
   COACH,
   OPENING,
   TOPICS,
+  SOFIA_HEARD,
+  SOFIA_NOT_HEARD,
   SOFIA_THIN,
   RULE_LABEL,
   RULE_GLOSS,
@@ -242,8 +244,8 @@ function renderShowdown(): void {
   blank();
   quote(OPENING.ask, 'Coach');
   blank();
-  push(`- **Placeholder:** "${OPENING.placeholder}"`);
-  push(`- **Topic chips:** ${TOPICS.map((t) => `"${t}"`).join(', ')}`);
+  push(`- **Topics offered:** ${TOPICS.map((t) => `"${t.label}"`).join(', ')}`);
+  push('- The player picks one of the three. There is no free-text topic.');
   blank();
 
   push("### Coach's intro");
@@ -297,15 +299,47 @@ function renderShowdown(): void {
 
   push('### The turn order (`TURNS`)');
   blank();
+  push(
+    'Sofia\'s fallbacks are authored per topic, so the fallback column lists all ' +
+      'three variants. A fallback that reads the player back is shown with a ' +
+      'sample sentence in place of whatever they actually typed, and the coach ' +
+      'intro that reads the purses is shown at a sample scoreline.',
+  );
+  blank();
   push('| Round | Actor | Kind | Foul | Coach intro | Fallback if the model is unreachable |');
   push('|---|---|---|---|---|---|');
+  const SAMPLE_PLAYER_LINE = 'The way I see it, the rule is worth keeping because it protects the people with the least room to argue.';
+  const cell = (text: string) => text.replace(/\|/g, '\\|');
   for (const turn of TURNS) {
     const foul = turn.foul ? RULE_LABEL[turn.foul] : 'none';
-    const intro = turn.intro ? turn.intro.replace(/\|/g, '\\|') : '_(none)_';
-    const fallback = turn.fallback ? turn.fallback.replace(/\|/g, '\\|') : '_(none, live turn has no fallback)_';
+    const intro = turn.intro
+      ? cell(typeof turn.intro === 'function' ? turn.intro(5, 6) : turn.intro)
+      : '_(none)_';
+    let fallback = '_(none, live turn has no fallback)_';
+    if (typeof turn.fallback === 'string') {
+      fallback = cell(turn.fallback);
+    } else if (typeof turn.fallback === 'function') {
+      const fn = turn.fallback;
+      fallback = TOPICS.map((t) => `**${t.label}:** ${cell(fn(SAMPLE_PLAYER_LINE, t.id))}`).join(
+        '<br><br>',
+      );
+    }
     push(`| ${turn.round} | ${turn.actor} | ${turn.kind} | ${foul} | ${intro} | ${fallback} |`);
   }
   blank();
+
+  push('### What she says when the player summarizes her');
+  blank();
+  push('Walked in order, like `SOFIA_THIN`. She answers before the coach prices it.');
+  blank();
+  SOFIA_HEARD.forEach((line, i) => {
+    quote(line, `Sofia, summary ${i + 1} of hers landed`);
+    blank();
+  });
+  SOFIA_NOT_HEARD.forEach((line, i) => {
+    quote(line, `Sofia, summary ${i + 1} of hers did not`);
+    blank();
+  });
 
   push('### `SOFIA_THIN`: what she says to a non-answer');
   blank();
