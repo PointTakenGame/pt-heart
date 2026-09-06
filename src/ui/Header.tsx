@@ -123,6 +123,11 @@ function fly(from: HTMLElement | null, to: HTMLElement | null) {
   );
   anim.onfinish = () => el.remove();
   anim.oncancel = () => el.remove();
+  // Where .tok-flight is display:none (reduced motion), the animation never
+  // runs and neither handler ever fires, so every transfer leaves a token
+  // glued to the header. Sweep it up on a timer either way. Element.remove()
+  // on an already-detached node is a no-op, so this cannot double-remove.
+  window.setTimeout(() => el.remove(), FLIGHT_MS + 200);
 }
 
 export function Header({ title, teaches, beatName, purses }: Props) {
