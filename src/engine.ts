@@ -158,8 +158,13 @@ export function useGym(level: LevelDef): Gym {
   const say = useCallback(
     async (m: Omit<Message, 'id'>, alive: () => boolean) => {
       push(m);
-      await dwell(dwellMs(m.text), alive);
-      if (alive()) await new Promise((r) => setTimeout(r, BEAT_GAP));
+      // The gap between two lines is part of the wait, not a dead zone after it.
+      // It used to be a second, unskippable timer, and for those 400ms `waiting`
+      // was already false: the thread ignored clicks and the drill's Next button
+      // sat there captioned "go on" doing nothing. Folded into the dwell, a tap
+      // is live for the whole beat and lands on the next line instead of the
+      // floor. Timing for a player who never taps is unchanged.
+      await dwell(dwellMs(m.text) + BEAT_GAP, alive);
     },
     [push, dwell],
   );
