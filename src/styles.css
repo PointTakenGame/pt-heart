@@ -51,13 +51,24 @@
 
   /* The heights of the NPC dialogue box, one per class of thing it holds. See
      .dlg for the arithmetic and for why this is a tier list and not one number. */
-  --dlg-h: 34rem;          /* holds the full printed card */
-  --dlg-h-mug: 33.5rem;    /* holds the opponent's baseball card */
+  --dlg-h: 29rem;          /* holds the full printed card */
+  --dlg-h-mug: 29rem;      /* holds the opponent's baseball card */
   --dlg-h-text: 11rem;     /* a floor for plain talk, not a ceiling */
   --dlg-h-compact: 15rem;  /* training: text, or text plus the small card */
 }
 
 * { box-sizing: border-box; }
+
+/* The whole layout is written in rem, so the cheapest way to make a tall design
+   fit a short window is to redefine what a rem is. This scales type, padding,
+   card geometry and hit targets together, and nothing rasterises, so no text
+   blurs the way a transform: scale() would. The ceiling is the old 16px, so a
+   roomy window looks exactly as it did.
+
+   Media features resolve against the initial root font size per spec, not
+   against this one, so the 30rem / 34rem / 40rem breakpoints further down are
+   untouched by it. */
+html { font-size: clamp(12px, 2.05vh, 16px); }
 
 html, body, #root {
   height: 100%;
@@ -67,7 +78,7 @@ html, body, #root {
 body {
   background: var(--cream);
   color: var(--charcoal);
-  font: 16px/1.55 ui-serif, Georgia, "Iowan Old Style", serif;
+  font: 1rem/1.55 ui-serif, Georgia, "Iowan Old Style", serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -83,7 +94,10 @@ button { font: inherit; cursor: pointer; }
 
 .page-narrow {
   position: relative;
-  justify-content: center;
+  /* "safe" so that when the stack is taller than the window the overflow goes
+     off the bottom, where the scrollbar can reach it, instead of off the top,
+     where centring puts it out of reach entirely. */
+  justify-content: safe center;
   padding: 3.4rem 1.25rem 2rem;
   overflow-y: auto;
 }
@@ -586,7 +600,7 @@ p  { margin: 0 0 0.75rem; }
   flex-direction: column;
   gap: 0.55rem;
 }
-.composer-locked { min-height: 3.9rem; border-top-color: transparent; }
+.composer-locked { min-height: 3.2rem; border-top-color: transparent; }
 /* Wrap, do not overflow. Four whistle buttons at phone width cannot shrink
    below their longest word, so a single row pushed "Let it stand" off the right
    edge and the player could not decline to call a foul. The 8rem track puts two
@@ -683,9 +697,17 @@ p  { margin: 0 0 0.75rem; }
   position: relative;
   border-top: 1px solid var(--rule);
   background: var(--cream);
-  flex: 0 0 auto;
+  /* Shrinkable, not fixed. On a short window the tray was the one part of the
+     column that refused to give, so the thread above it collapsed instead and
+     the last thing said went off screen. It gives up the open-card panel first
+     (see .rail-open) and never the buttons. */
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 .rail-pass {
+  flex: 0 0 auto;
   display: block;
   width: calc(100% - 2rem);
   margin: 0.6rem 1rem 0;
@@ -701,6 +723,7 @@ p  { margin: 0 0 0.75rem; }
      as well as three lines of text. */
 }
 .rail {
+  flex: 0 0 auto;
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
@@ -770,7 +793,12 @@ p  { margin: 0 0 0.75rem; }
      It's too small. The text size should be this at least as big as the other
      text on the screen." Width and --u move together, so the card keeps its
      printed proportion and every line on it doubles with the frame. */
-  width: min(29rem, 94vw);
+  /* The third term is the window: the preview keeps the card's printed
+     proportion, so a width the viewport can hold is not enough, the height it
+     implies has to fit too. 9rem is the tray it hangs above plus the header it
+     must not slide under. Without this the top of a tall card is simply cut off
+     on a laptop screen. */
+  width: min(29rem, 94vw, calc((100vh - 9rem) / 1.242));
   z-index: 40;
   pointer-events: none;
   opacity: 0;
@@ -792,6 +820,10 @@ p  { margin: 0 0 0.75rem; }
    the foul card focused and the preview is now big enough to cover the whole
    room while the player is trying to read what their call did. Keyboard focus
    still opens it. */
+/* A card that is already open below has nothing to preview. Leaving the hover
+   tip live meant brushing the tray while reading an opened card covered it with
+   a second copy of a different card. */
+.rail-wrap:has(.rail-open) .rail-tip { display: none; }
 .rail-slot:hover .rail-tip,
 .rail-slot:has(:focus-visible) .rail-tip {
   opacity: 1;
@@ -803,6 +835,10 @@ p  { margin: 0 0 0.75rem; }
    inside its own box if it runs long on a phone. */
 .rail-open {
   padding: 0.25rem 1rem 0.75rem;
+  /* The one part of the tray allowed to shrink, so a short window takes it out
+     of the card panel rather than out of the thread. */
+  flex: 0 1 auto;
+  min-height: 0;
   max-height: 44vh;
   overflow-y: auto;
 }
@@ -1421,7 +1457,7 @@ p  { margin: 0 0 0.75rem; }
    growing a big picture over the same small caption. The fractions are the
    ratios it already had at 9.5rem. */
 .dlg-mug {
-  --mug: 19rem;
+  --mug: 16rem;
   width: var(--mug);
   aspect-ratio: 2.5 / 3.5;
   margin: auto auto 0;
@@ -1536,13 +1572,15 @@ p  { margin: 0 0 0.75rem; }
 /* The card as the coach holds it up, at the printed proportion. Steve,
    2026-08-25: "that card is too wide, match the AR of elements from teh
    pdf/pptx." It used to stretch to the full 34rem of the dialogue box and come
-   out landscape, 1.45:1, where the printed card is 0.805:1. --u: 0.85rem is
-   the largest type that still lets every one of the three cards, including
-   Fake Listening with its extra procedure band, fit inside that ratio. */
+   out landscape, 1.45:1, where the printed card is 0.805:1. --u is the largest
+   type that still lets every one of the three cards, including Fake Listening
+   with its extra procedure band, fit inside that ratio at the dialogue box's
+   current height. It came down with --dlg-h when the box was trimmed to 29rem
+   for short windows. */
 .dlg .card-full {
-  --u: 0.85rem;
+  --u: 0.71rem;
   flex: 0 0 auto;
-  width: min(100%, 21rem);
+  width: min(100%, 17.5rem);
   aspect-ratio: var(--card-ar);
   /* auto on all four sides, so the card sits in the middle of whatever the
      fixed box has left after the coach's line rather than jammed under it. */
@@ -1651,7 +1689,7 @@ p  { margin: 0 0 0.75rem; }
    the same complaint as the box changing size: the frame moved. */
 .drill-table.is-empty { visibility: hidden; }
 
-.drill-foot { flex: 0 0 auto; padding: 0.5rem 1.25rem 1.5rem; }
+.drill-foot { flex: 0 0 auto; padding: 0.5rem 1.25rem 0.9rem; }
 .drill-count { text-align: center; font-size: 0.72rem; margin: 0.5rem 0 0; }
 /* The composer arrives with its own padding, so it does not get the foot's. */
 .drill-foot .composer { padding: 0; }
@@ -1680,6 +1718,18 @@ p  { margin: 0 0 0.75rem; }
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.7rem;
+  /* The one place on the site whose height is driven by its own width: three
+     rows of a fixed 3.985/4.948 card ratio, so the grid is always about 1.235
+     times as tall as it is wide. Left to the page width alone it overran even
+     the scaled root, because nine cards is simply a lot of vertical, so the
+     width is also capped by what is left of the viewport after the rest of this
+     screen (about 15.5rem of masthead, two lines of copy, the Done button and
+     the page's own padding, all of which scale with the root). The cap only
+     binds on a short viewport: at about 900px tall it lands on the same width
+     the grid already used, so nothing changes on a full-height screen. */
+  width: min(100%, calc((100vh - 15.5rem) / 1.235));
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 1.5rem;
 }
 .fighter {
