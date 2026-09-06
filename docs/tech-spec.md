@@ -41,7 +41,9 @@ From `package.json`: name `humility-showdown`, version `0.1.0`, ESM (`"type":
 "module"`). React `^19.2.0`, `react-dom ^19.2.0`. Dev-only: TypeScript `^5.7.0`,
 Vite `^7.0.0`, `@vitejs/plugin-react ^5.0.0`, `@types/node ^26.2.0`, `@types/react
 ^19.2.0`, `@types/react-dom ^19.2.0`, `tsx ^4.23.12`. No test runner, no state
-library, no CSS framework, no ORM, no database driver. `allowScripts` pins
+library, no CSS framework, no ORM, and no database driver. There IS a database:
+`src/corpus.ts` talks to Supabase over PostgREST with plain `fetch`, so no client
+library was needed for it (section 9). `allowScripts` pins
 `esbuild@0.28.2`.
 
 Scripts:
@@ -278,9 +280,40 @@ object; `reset()` clears it; `exportJson()` serializes it for the two
 undocumented-by-design export paths in `main.tsx` (Ctrl/Cmd+Shift+E to
 clipboard, or `window.__export()` from a browser inspector, both deliberately
 invisible to a player since "the save file is the whole research corpus").
-There is no server-side persistence, no accounts, and no database of any kind
-in this repo. The infrastructure-plan design doc names Supabase-backed accounts
-as future work explicitly not built here (section 13).
+There are no accounts. There IS server-side persistence, and has been since
+2026-09-01: `src/corpus.ts` donates every answered item to a Supabase table.
+`recordItem()` calls `donate(record, file.playerId)` after it saves locally, so
+all five runners are covered at a single site.
+
+**What is stored.** One row per answered item, in the `rulings` table: the local
+`playerId`, the item id, the level slug, the rule, the answer text as typed, the
+correctness flag, the `revisions` array, the answer timestamp, and the build's
+commit sha (`VITE_APP_VERSION`, `'dev'` on a laptop). No name, no email, no
+account, no IP retained by us. The `playerId` is a random local string that
+identifies one browser, not a person.
+
+**The outbox.** Rows that fail to send queue in `localStorage` under
+`humility-showdown.outbox`, deliberately a different key from the save file, and
+are retried on the next answered item and on the next page load. Every path
+swallows its own failure: capture never reaches the player's screen and never
+blocks a round.
+
+**The key in the bundle is deliberate.** `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_KEY` are compiled into the client, which is what "publishable"
+means. Row-level security on the table grants insert and nothing else, so that
+key cannot read a row back, its own included, and cannot update or delete. The
+request sends `Prefer: return=minimal` because there is no select policy to
+satisfy. Reading the corpus is a service-role job run from a laptop with a key
+that never enters the bundle. RLS, not secrecy, is what makes the shipped key
+safe.
+
+**Duplicates.** Delivery is best effort rather than at-most-once, so the table
+carries a unique index on player, item, and answer time, and a 409 is treated as
+success because a 409 means the row is already home.
+
+Accounts remain future work: the infrastructure-plan design doc names
+Supabase-backed accounts as not built here (section 13), and that is still true.
+An insert-only corpus table is not an account system.
 
 ## 10. AI and model integration
 
@@ -327,7 +360,9 @@ a degraded one, by design.
 ## 11. The `api/` surface and PDF generation
 
 `api/` contains exactly one file, `coach.ts` (section 10). There is no other
-server-side route, no database API, no auth API. `middleware.ts` is Edge
+server-side route in this repo and no auth API. The corpus write in section 9
+does not go through `api/`: the client posts to Supabase's PostgREST endpoint
+directly, which is why the database exists without a route here to show for it. `middleware.ts` is Edge
 Middleware (not under `api/`) that gates every request behind HTTP Basic Auth:
 `process.env.SITE_PASSWORD` compared against the request's Basic Auth header,
 fail-closed if the variable is unset ("This prototype is closed. No
@@ -422,11 +457,12 @@ above confirm is actually in `game/`:
   specifies a full plan: a separate `point-taken-heart-app` Next.js repo, its
   own Supabase project, a shared auth-only project across Brain and Heart, and
   Resend email. **None of this exists in `game/`.** The current build has no
-  Next.js, no Supabase client dependency, no auth of any kind beyond the
-  site-wide Basic Auth password, and persists nothing server-side. This is the
-  single largest design-doc-versus-code gap in this document: an entire
-  alternate architecture is specified and none of it is present in the
-  repository this document describes.
+  Next.js, no Supabase client dependency, and no auth of any kind beyond the
+  site-wide Basic Auth password. It does persist server-side, but only the
+  corpus: `src/corpus.ts` inserts answered items into a Supabase table over
+  PostgREST under insert-only RLS (section 9). That is one table and no
+  identity. Accounts, shared login, and server-authoritative writes remain the
+  single largest design-doc-versus-code gap in this document.
 - **Streaming model responses into the transcript.** The infrastructure plan
   calls for streaming Anthropic responses token-by-token (section 6, "Heart's
   typing indicator and transcript want token-by-token"). The current
@@ -469,7 +505,8 @@ above confirm is actually in `game/`:
   ships.
 - **Level gating is client-trust only**, per the roadmap's own warning applied
   to this codebase: progression lives in `localStorage` with no server-side
-  check. Acceptable for a single-player prototype; becomes a real hole the
+  check. The corpus table does not help here, because it is insert-only and the
+  client cannot read it back. Acceptable for a single-player prototype; becomes a real hole the
   moment any competitive or scored multiplayer mode exists.
 - **Political-balance imbalance is a known, ruled-on gap, not an oversight.**
   Per `README.md`: "Steve's ruling of 2026-08-24 allows the prototype to ship

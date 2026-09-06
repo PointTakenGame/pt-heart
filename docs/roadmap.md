@@ -89,7 +89,9 @@ corrected; do not re-conflate them.
 unbuilt things you can run today.
 
 Stack is chosen, do not re-litigate `[ruled]`: Vite 7, React 19.2, TypeScript 5.7 strict, one serverless function
-`api/coach.ts` pinning `claude-haiku-4-5`, dev port 5273. No Next.js, no Supabase, no Express, no sqlite. **No React
+`api/coach.ts` pinning `claude-haiku-4-5`, dev port 5273. No Next.js, no Express, no sqlite, and no Supabase
+client library, but there IS a Supabase database as of 2026-09-01: `src/corpus.ts` posts answered items to an
+insert-only table over PostgREST with plain `fetch`, which is why no client library was needed. **No React
 StrictMode** `[unratified]` (`src/main.tsx`), and that is not an oversight: the beat runner is timed side effects,
 so a double invoke emits every line twice.
 
@@ -102,7 +104,13 @@ so a double invoke emits every line twice.
   authored level removed and a typed topic in its place.
 - `detectors.ts` (234) phrase rules: Judging and Opinions as Facts are callable with no model call at all, Fake
   Listening needs one call per summary. `coach.ts` (129) client side of the model calls. `storage.ts` (135)
-  `localStorage` under `humility-showdown.v1` `[unratified]`, browser only, no account and no server persistence.
+  `localStorage` under `humility-showdown.v1` `[unratified]`, no account. Not browser-only since 2026-09-01:
+  `recordItem` also calls `donate()` in `corpus.ts` (165), which inserts the answered item into the Supabase
+  `rulings` table over PostgREST. One row per answered item: local player id, item id, level slug, rule, answer
+  text, correctness, revisions, timestamp, build sha. No name, no email, no IP. The publishable key ships in the
+  bundle on purpose; row-level security grants insert only, so it cannot read a row back or change one, and
+  reading the corpus is a service-role job from a laptop. Failed sends queue in a separate `localStorage` outbox
+  and retry.
 - `content/`: `cards.ts` (266), `level1.ts` (218), `level2.ts` (271), `level3.ts` (180), `showdown.ts` (288),
   `index.ts` (14). `ui/` ten components. `App.tsx` (525) screens and room.
 

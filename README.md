@@ -67,6 +67,7 @@ src/
   coach.ts         client side of /api/coach, with the fallback path
   detectors.ts     offline foul detection
   storage.ts       localStorage, one key, no accounts
+  corpus.ts        donates each answered item to the Supabase corpus table
   types.ts         LevelDef, ComposerState, Message, ItemRecord
   content/         the authored scripts, one file per level
   ui/              Thread, Composer, Header
@@ -158,9 +159,29 @@ map of cleared level slugs, and every answered item. Text items carry a
 `revisions` array of boundary snapshots (900ms pause, blur, chip insert, send),
 which is what records "they typed the judgment first, then deleted it".
 
-No accounts, no auth, nothing leaves the browser. PT Brain owns auth and hands
-it over later, at which point `storage.ts` gains a sync path and nothing else
-changes.
+No accounts and no auth. PT Brain owns auth and hands it over later, at which
+point `storage.ts` gains a sync path and nothing else changes.
+
+Answered items do leave the browser, and have since 2026-09-01. `corpus.ts`
+donates every answered item to a Supabase table named `rulings`, over PostgREST,
+called from `recordItem` so all five runners are covered at one site. A row is
+the local player id, the item id, the level slug, the rule, the answer text, the
+correctness flag, the revisions array, the answer timestamp, and the build's
+commit sha. There is no name, no email, no account, and no IP kept by us; the
+player id is a random local string that identifies one browser and nothing else.
+
+An outbox in `localStorage` under `humility-showdown.outbox` holds anything that
+failed to send and retries it on the next answered item or the next page load, so
+a round answered on a train is not lost. Capture never blocks play: every path
+swallows its own failure.
+
+The publishable key ships inside the client bundle. That is by design and not a
+leak. Row-level security on the table grants insert and nothing else, so the key
+in the bundle cannot read a single row back, its own included, and cannot update
+or delete anything. Reading the corpus is a service-role job run from a laptop
+with a key that is never in the bundle. A retried POST can duplicate, so the
+table carries a unique index on player, item, and answer time, and a 409 is
+treated as success.
 
 Two ways to get the corpus out, both invisible to a player. `Ctrl/Cmd+Shift+E`
 copies the whole save file to the clipboard and logs it, which is the desktop

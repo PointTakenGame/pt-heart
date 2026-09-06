@@ -82,8 +82,11 @@ sentences above. Neither needs pairing, transport, or session state.
 
 **Not buildable now, and not attempted:** human versus human. That is roadmap §7
 item 11, and it needs pairing, transport, and session state that this repo
-deliberately does not have. Nothing in this spec adds Supabase, auth, websockets,
-or a database. What that room would need is written out in §7, as a spec and not
+deliberately does not have. Nothing in this spec adds auth, websockets, or
+pairing. It adds no database either, though as of 2026-09-01 the repo already has
+one: `src/corpus.ts` inserts answered items into a Supabase table over PostgREST,
+insert-only under RLS, with no identity attached. That is a write-only outbox for
+research rulings, not session state, and nothing in this spec may read from it. What that room would need is written out in §7, as a spec and not
 as a plan: the point of writing it down now is that several of its requirements
 are constraints on code that already ships.
 
@@ -269,8 +272,11 @@ Each is filed as its own row rather than living only here.
 Roadmap §7 item 11, written up 2026-09-01. **Nothing in this section is built and
 nothing in it may be built into this repo yet.** Auth is blocked on
 `HEART-T260825-12` and `HEART-T260825-34`, and the standing instruction is that
-no Supabase client, no auth, and no realtime transport enters this repo before
-those close. This is here so the shape is on paper, and because four of its
+no auth and no realtime transport enters this repo before those close. That
+instruction used to read "no Supabase client" as well; since 2026-09-01 the repo
+posts corpus rows to Supabase over PostgREST with plain `fetch` (no client
+library, no auth, insert-only), so the line to hold now is auth and transport,
+not the vendor. This is here so the shape is on paper, and because four of its
 requirements are constraints on code that already ships.
 
 ### 7.1 The four seat arrangements
