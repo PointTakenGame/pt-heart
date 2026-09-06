@@ -33,6 +33,14 @@ import { CARD_ORDER } from './content/cards.ts';
 import { COACH_EMOJI, DEFAULT_AVATAR, shuffledAvatars } from './avatars.ts';
 import { getAvatar, isCleared, load, setAvatar } from './storage.ts';
 
+// The ladder's rung numbers, read off the ladder rather than typed in. They
+// were hardcoded in eight places and two of them were already wrong once. The
+// seven-rung ladder (docs/design/ladder-spec.md) renumbers these again, and
+// when it does the only edits should be to the arrays these count.
+const SHOWDOWN_NUMBER = LEVELS.length + 1;
+const REFEREE_NUMBER_BASE = SHOWDOWN_NUMBER + 1;
+const FINAL_NUMBER = REFEREE_NUMBER_BASE + REFEREE_LEVELS.length;
+
 type Screen =
   | { name: 'agreement' }
   | { name: 'select' }
@@ -312,7 +320,7 @@ function Select({
             disabled={!allCleared}
             onClick={onShowdown}
           >
-            <span className="level-n">{allCleared ? '4' : '\u{1F512}'}</span>
+            <span className="level-n">{allCleared ? SHOWDOWN_NUMBER : '\u{1F512}'}</span>
             <span className="level-mid">
               <span className="level-title">The Showdown</span>
               <span className="level-sub">
@@ -334,14 +342,14 @@ function Select({
                 disabled={locked}
                 onClick={() => onReferee(l)}
               >
-                <span className="level-n">{locked ? '\u{1F512}' : i + 5}</span>
+                <span className="level-n">{locked ? '\u{1F512}' : REFEREE_NUMBER_BASE + i}</span>
                 <span className="level-mid">
                   <span className="level-title">{l.title}</span>
                   <span className="level-sub">
                     {locked
                       ? i === 0
                         ? 'play the Showdown first'
-                        : `clear level ${i + 4} first`
+                        : `clear level ${REFEREE_NUMBER_BASE + i - 1} first`
                       : `You referee · ${l.figure}`}
                   </span>
                 </span>
@@ -361,11 +369,11 @@ function Select({
                 disabled={locked}
                 onClick={onFinal}
               >
-                <span className="level-n">{locked ? '\u{1F512}' : '7'}</span>
+                <span className="level-n">{locked ? '\u{1F512}' : FINAL_NUMBER}</span>
                 <span className="level-mid">
                   <span className="level-title">The Final Showdown</span>
                   <span className="level-sub">
-                    {locked ? 'clear level 6 first' : `Be generous · ${SUNGMIN}`}
+                    {locked ? `clear level ${FINAL_NUMBER - 1} first` : `Be generous · ${SUNGMIN}`}
                   </span>
                 </span>
                 {isCleared(FINAL_SLUG) && <span className="level-done">played</span>}
@@ -589,7 +597,7 @@ function Showdown({ avatar, onExit }: { avatar: string; onExit: () => void }) {
   if (stage === 'intro') {
     return (
       <BossIntro
-        fightNumber={4}
+        fightNumber={SHOWDOWN_NUMBER}
         boss="Slippery Sofia"
         bossEmoji={SOFIA_EMOJI}
         epithet="Never raises her voice. Fouls you twice before you notice once."
@@ -617,7 +625,7 @@ function Final({ avatar, onExit }: { avatar: string; onExit: () => void }) {
   if (stage === 'intro') {
     return (
       <BossIntro
-        fightNumber={7}
+        fightNumber={FINAL_NUMBER}
         boss={SUNGMIN}
         bossEmoji={SUNGMIN_EMOJI}
         epithet={SUNGMIN_EPITHET}
@@ -836,7 +844,7 @@ function Referee({
   onExit: () => void;
 }) {
   const [stage, setStage] = useState<'prefight' | 'intro' | 'run'>('prefight');
-  const fightNumber = REFEREE_LEVELS.indexOf(level) + 5;
+  const fightNumber = REFEREE_NUMBER_BASE + REFEREE_LEVELS.indexOf(level);
   if (stage === 'prefight') {
     return (
       <Prefight
