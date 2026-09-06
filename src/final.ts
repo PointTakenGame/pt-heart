@@ -27,7 +27,7 @@ import { affirmStep, judgeTurn, opponentLine } from './coach.ts';
 import { THIN_REPLY, tooThin } from './engine.ts';
 import { markCleared, recordItem } from './storage.ts';
 import { offlineRuling } from './showdown.ts';
-import { RULE_LABEL, START_TOKENS, foulCost } from './content/showdown.ts';
+import { FALSE_CALL_COST, RULE_LABEL, START_TOKENS, foulCost } from './content/showdown.ts';
 import {
   ARGUMENT,
   BONUS,
@@ -333,7 +333,7 @@ export function useFinal(): FinalMatch {
           if (called === 'stand') {
             await coach(FINAL_COACH.onStand);
           } else {
-            const { bust } = transfer('player', 1);
+            const { bust } = transfer('player', FALSE_CALL_COST);
             await coach(FINAL_COACH.onFalseCall);
             if (bust && (await bankruptCheck())) return;
           }

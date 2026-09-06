@@ -397,7 +397,12 @@ p  { margin: 0 0 0.75rem; }
 }
 .tok { font-size: 1.55rem; line-height: 1; }
 /* A half token is a half token, drawn as one. Clipping the right half keeps the
-   glyph in its slot, so the row never reflows when a miss costs 0.5. */
+   glyph in its slot, so the row never reflows when a miss costs half.
+
+   This 50% is the one restatement of the half-token rule that does not import
+   its price list: the amounts live in src/content/showdown.ts (MISS_COST,
+   TOKEN_STEP) and CSS cannot read a module. If the miss price ever stops being a
+   half, that file is the source of truth and this rule follows it. */
 .tok-half { clip-path: inset(0 50% 0 0); }
 
 /* A token changing hands, in flight. Steve, 2026-08-25: "there should be some

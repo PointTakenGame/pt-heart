@@ -20,7 +20,7 @@
 //    where it moves from one person's stack to the other."  -> flight, below.
 
 import { useLayoutEffect, useRef } from 'react';
-import { formatTokens } from '../content/showdown.ts';
+import { TOKEN_STEP, formatTokens } from '../content/showdown.ts';
 
 const TOKEN = '\u{1F64F}';
 // Steve, 2026-08-25: "move the closest gratitude from end end to the end of the
@@ -63,7 +63,7 @@ function Purse({
 }) {
   // Only what they still hold. A half token is the last one, clipped.
   const whole = Math.floor(value);
-  const half = value - whole >= 0.5;
+  const half = value - whole >= TOKEN_STEP;
   return (
     <div className={`purse purse-${side}`} aria-label={`${label} ${formatTokens(value)}`}>
       <span className="purse-face" aria-hidden="true">

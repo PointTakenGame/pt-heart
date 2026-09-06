@@ -33,6 +33,8 @@ import { THIN_REPLY, tooThin } from './engine.ts';
 import { markCleared, recordItem } from './storage.ts';
 import {
   COACH,
+  FALSE_CALL_COST,
+  MISS_COST,
   OPENING,
   RULE_LABEL,
   SHOWDOWN_SLUG,
@@ -54,15 +56,6 @@ const SOFIA = 'Slippery Sofia';
  *  she argues whatever the player did not. Kept to what the prompt used to
  *  carry implicitly in her name, so nothing about Level 4 changes. */
 const SOFIA_MANNER = 'Pleasant, quick, and never loud. You do not insult anyone.';
-
-/**
- * What a foul you failed to whistle costs you. Half a token, not a whole one:
- * Steve's ruling of 2026-08-24 on a player who calls nothing and so watches a
- * completely still scoreboard for three rounds. It is a fraction rather than a
- * full token because missing a call is worse than doing nothing and cheaper
- * than committing the foul yourself. Tokens still only move, never burn.
- */
-const MISS_COST = 0.5;
 
 /**
  * The player's turns are sentence frames, not a blank box with hints above it.
@@ -444,7 +437,7 @@ export function useShowdown(): Match {
           } else if (called !== 'stand') {
             // A bad whistle is the only way a clean round of hers costs you
             // anything, and it is what makes round 2 expensive.
-            const { bust } = transfer('player', 1);
+            const { bust } = transfer('player', FALSE_CALL_COST);
             await coach(COACH.onFalseCall);
             if (bust && (await bankruptCheck())) return;
           }

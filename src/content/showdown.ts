@@ -40,21 +40,65 @@ export const SOFIA_EMOJI = '\u{1F471}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}';
 
 export const START_TOKENS = 7;
 
-/** Printed rule: Judging costs two, the other two cost one. */
-/**
- * Tokens print as halves, because a missed foul costs half of one (ruling of
- * 2026-08-24: a player who lets everything stand has to see the ledger move).
- * Halves are exact in binary floating point, so the purses never drift and the
- * two sides still add to fourteen after any number of transfers.
- */
-export function formatTokens(n: number): string {
-  const whole = Math.floor(n);
-  if (n - whole < 0.5) return String(whole);
-  return whole === 0 ? '\u00bd' : `${whole}\u00bd`;
-}
+// THE PRICE LIST. Every number a purse can move by is below, and nothing
+// anywhere else in the app may write one of these amounts as a literal. This
+// file is imported by all five runners and by the header, so a price changed
+// here is changed everywhere, and a price nobody can find is the reason it was
+// scattered across six files before 2026-09-06.
+//
+// Three prices, three different things:
+//   foulCost       what a committed foul hands to the other side
+//   MISS_COST      what letting a real foul go past costs the player
+//   FALSE_CALL_COST  what a whistle at nothing costs the player
+//
+// STILL OPEN, and this is the reason to keep them together rather than to argue
+// about them tonight: HEART-T260905-03 and -13 ask whether fouls should cost
+// whole tokens rather than halves. Whichever way Steve rules, the change is one
+// line in this block. Do not change a value here without a ruling on those rows.
 
+/** Printed rule: Judging costs two, the other two cost one. */
 export function foulCost(foul: FoulType): number {
   return foul === 'judging' ? 2 : 1;
+}
+
+/**
+ * What a foul you failed to whistle costs you. Half a token, not a whole one:
+ * Steve's ruling of 2026-08-24 on a player who calls nothing and so watches a
+ * completely still scoreboard for three rounds. It is a fraction rather than a
+ * full token because missing a call is worse than doing nothing and cheaper than
+ * committing the foul yourself. Tokens still only move, never burn.
+ *
+ * It is the only fractional price in the game, which is why halves exist at all.
+ */
+export const MISS_COST = 0.5;
+
+/**
+ * What a bad whistle costs the player. One token, the same as the cheap fouls,
+ * because calling a foul that was not there is itself a verdict on somebody.
+ */
+export const FALSE_CALL_COST = 1;
+
+/**
+ * The smallest amount a purse can move by, which is exactly MISS_COST and is
+ * derived from it on purpose: halves exist in this game for one reason, and if
+ * the miss price ever becomes a whole token then this becomes 1 and the half
+ * glyph stops being drawn. Anything that renders a purse tests against this
+ * rather than writing 0.5 of its own.
+ *
+ * Halves are exact in binary floating point, so the purses never drift and the
+ * two sides still add to fourteen after any number of transfers.
+ *
+ * The one place this rule is restated instead of imported is styles.css
+ * `.tok-half`, which clips the glyph at 50%. CSS cannot read a module, so that
+ * declaration carries a comment pointing back here.
+ */
+export const TOKEN_STEP = MISS_COST;
+
+/** Tokens print as halves. See TOKEN_STEP for why there are halves at all. */
+export function formatTokens(n: number): string {
+  const whole = Math.floor(n);
+  if (n - whole < TOKEN_STEP) return String(whole);
+  return whole === 0 ? '\u00bd' : `${whole}\u00bd`;
 }
 
 export const RULE_LABEL: Record<FoulType, string> = {
