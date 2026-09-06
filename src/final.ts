@@ -37,7 +37,9 @@ import {
   NAUGHTY,
   STEPS,
   SUNGMIN,
+  SUNGMIN_HEARD,
   SUNGMIN_MANNER,
+  SUNGMIN_NOT_HEARD,
   SUNGMIN_THIN,
 } from './content/final.ts';
 
@@ -273,6 +275,8 @@ export function useFinal(): FinalMatch {
       // having flipped him, and charges the player for it.
       let lastBoss = '';
       let bossPosition = '';
+      /** Walks his answer banks in order, so a short bank does not repeat. */
+      let summaryCount = 0;
 
       for (const turn of ARGUMENT) {
         if (turn.intro) await coach(turn.intro);
@@ -353,6 +357,27 @@ export function useFinal(): FinalMatch {
             revisions: answer.revisions,
             answeredAt: new Date().toISOString(),
           });
+
+          // The summarized person answers, and answers before the coach prices
+          // it (rules.md section 5). Steve, 2026-09-06: the summary question is
+          // resolved by whether the other person calls a listening foul, and
+          // silence means it was correct. Sung-min was silent on both paths
+          // here, so the one man who is the ground truth for whether his point
+          // survived never said. Only on a summarizing turn: a speaking turn
+          // asks him nothing.
+          //
+          // Fake Listening alone picks the bank, not any foul: that is the foul
+          // the frame's question is asking about. A summary that got him right
+          // and then judged him is a yes from him and a charge from the coach.
+          if (turn.kind === 'summarize') {
+            const bank = foul === 'fake_listening' ? SUNGMIN_NOT_HEARD : SUNGMIN_HEARD;
+            await say({
+              lane: 'opponent',
+              speaker: SUNGMIN,
+              text: bank[summaryCount % bank.length],
+            });
+            summaryCount += 1;
+          }
 
           if (foul) {
             const { moved, bust } = transfer('player', foulCost(foul));

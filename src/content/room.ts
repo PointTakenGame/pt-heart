@@ -180,6 +180,38 @@ export const ROOM_THIN = [
 ];
 
 /**
+ * What the summarized stranger says when the human's summary of them was right.
+ *
+ * Steve, 2026-09-06: "Did I miss anything?" is not a separate mechanic. It is
+ * answered by whether the other person calls a listening foul, and silence means
+ * the summary was correct. In a room with two humans that silence is legible,
+ * because a person who says nothing has visibly chosen to say nothing. Against a
+ * cooked opponent it is not: nothing on screen distinguishes "she agreed" from
+ * "the software forgot to answer", and it read as the latter.
+ *
+ * So the stranger says the yes out loud. The no already had a voice: a nominated
+ * foul goes to affirmCall and the stranger rules on it in their own words, which
+ * is why there is no NOT_HEARD bank here and why adding one would make them
+ * answer twice.
+ *
+ * The stranger speaks before the coach prices it, one verdict in two voices, so
+ * the software is never seen overruling the person who was in the room
+ * (soul.md section 6).
+ *
+ * Walked in order rather than sampled, like ROOM_THIN and for the same reason: a
+ * bank this short repeats visibly under random draw.
+ *
+ * These are side-neutral by construction and must stay that way. A room has no
+ * fixed topic, so a line that leaned would lean in whichever direction the
+ * stranger happened to be assigned, which is worse than leaning on purpose.
+ */
+export const STRANGER_HEARD = [
+  'That is it. You kept my reason, which is the part I expected to lose.',
+  'Yes, that is what I said. All of it, not just the easy half.',
+  'You got it. I would not have put it better myself.',
+];
+
+/**
  * What a stranger says when the model is unreachable.
  *
  * The gym authors a fallback per turn, which it can do because it knows the topic

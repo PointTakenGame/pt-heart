@@ -190,6 +190,43 @@ export const ARGUMENT: ArgumentTurn[] = [
   },
 ];
 
+/**
+ * Sung-min's answer to the player's summary of him, in the warm-up rounds.
+ *
+ * Steve, 2026-09-06: "Did I miss anything?" is not a separate mechanic. It is
+ * answered by whether the other person calls a listening foul, and silence means
+ * the summary was correct. Against a cooked opponent that silence has to be
+ * spoken, because nothing on screen tells "he agreed" apart from "the software
+ * did not answer", and the player was asking the question into a room where only
+ * the coach ever spoke back.
+ *
+ * Both banks exist here, unlike the room's, because the boss was silent on both
+ * paths: a foul in the warm-up was priced by the coach alone and Sung-min, the
+ * person actually summarized, never said whether it was his point or not.
+ *
+ * He answers before the coach prices it, one verdict in two voices, so software
+ * is never seen overruling the person who was in the room (soul.md section 6).
+ *
+ * Voice: he is the one man in the building who never fouls and never gloats.
+ * The no is disappointed rather than triumphant, and it says what was dropped
+ * rather than scoring a point off the dropping. Walked in order, not sampled.
+ *
+ * Side-neutral by construction, and it has to stay that way: the warm-up topic
+ * is whichever of the three the player picked, so a line that leaned would lean
+ * on a subject nobody chose for it.
+ */
+export const SUNGMIN_HEARD = [
+  'That is my position, and you kept the reason attached to it. Not everyone does.',
+  'Yes. You did not shave anything off it to make it easier to argue with.',
+  'That is mine, all of it. Thank you for taking the trouble.',
+];
+
+export const SUNGMIN_NOT_HEARD = [
+  'Not quite. You have my position and you have left my reason out of it, and the reason is the part I care about.',
+  'That is close to my words and some way off my point. The why did not survive.',
+  'No. What came back is thinner than what I said, and the missing part is the part I would defend.',
+];
+
 export const FINAL_OPENING = {
   ask: 'What are you two arguing about tonight? One line.',
   placeholder: 'we disagree about...',

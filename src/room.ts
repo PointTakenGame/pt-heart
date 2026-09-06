@@ -44,6 +44,7 @@ import {
   ROOM_SLUG,
   ROOM_THIN,
   ROUNDS,
+  STRANGER_HEARD,
   buildMatch,
   mirrorStance,
   stances,
@@ -264,6 +265,7 @@ export function useRoom(config: RoomConfig): RoomRun {
       let made = 0;
       let stuck = 0;
       let thinCount = 0;
+      let summaryCount = 0;
 
       for (let i = 0; i < match.length; i += 1) {
         const turn = match[i];
@@ -329,6 +331,26 @@ export function useRoom(config: RoomConfig): RoomRun {
               record(turn.id, nominated, text, null, revisions);
             }
           } else {
+            // The summarized person answers, and answers before the coach prices
+            // it (rules.md section 5). Steve, 2026-09-06: the summary question is
+            // resolved by whether the other player calls a listening foul, and
+            // silence means it was correct. A cooked stranger has to say that
+            // silence out loud, because on screen a stranger who agrees and a
+            // stranger the software forgot to run look identical, and the player
+            // was typing "Did I miss anything?" at somebody who never replied.
+            //
+            // Only on a summarizing turn. A speaking turn asks nothing, so there
+            // is nothing to answer and a confirmation there would be noise. The
+            // no already has a voice a few lines up: a nominated foul goes to
+            // affirmCall and the stranger rules on it themselves.
+            if (turn.kind === 'summarize') {
+              await say({
+                lane: 'opponent',
+                speaker: a.name,
+                text: STRANGER_HEARD[summaryCount % STRANGER_HEARD.length],
+              });
+              summaryCount += 1;
+            }
             await coach(ruled?.text ?? ROOM_COACH.clean);
             record(turn.id, 'mixed', text, true, revisions);
           }

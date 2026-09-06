@@ -510,8 +510,15 @@ export function useShowdown(): Match {
             // "Did I miss anything?" at somebody who never replied. One verdict in
             // two voices, hers first, so the software is never seen overruling the
             // person who was actually in the room.
+            // Which bank turns on Fake Listening alone, not on any foul. Steve,
+            // 2026-09-06: the question the frame asks is answered by whether the
+            // other person calls a LISTENING foul, so that is the only foul she
+            // is answering. A summary that got him right and then judged him is
+            // a yes from her and a charge from the coach, which is the honest
+            // reading of both. Her no bank talks about a dropped reason, and it
+            // would be plainly wrong on a Judging call.
             if (turn.kind === 'summarize') {
-              const bank = foul ? SOFIA_NOT_HEARD : SOFIA_HEARD;
+              const bank = foul === 'fake_listening' ? SOFIA_NOT_HEARD : SOFIA_HEARD;
               await say({
                 lane: 'opponent',
                 speaker: SOFIA,
