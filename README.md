@@ -36,11 +36,26 @@ starts from it.
 
 Two older branches were archived on 2026-09-07 as the annotated tags
 `archive/nathan-gym-ladder-rebuild` and `archive/nathan-working-branch-heart`,
-and then deleted. Read the tags if you want the history. Do not branch off them
-and do not merge them: `main` already took their content forward on a different
-engine, and those trees delete helper functions that `main` imports, so a
-whole-file port out of either one breaks the build in ways the type checker does
-not catch until runtime.
+and then deleted. Read the tags if you want the history. **Do not branch off them
+and do not merge them.** `main` already took their content forward on a different
+engine, and two specific ways a port out of either tag goes wrong were confirmed
+by hand in a scratch clone:
+
+- **Taking `src/content/index.ts` whole makes the game unwinnable.** That tree
+  puts the Showdown inside the `LEVELS` array. `main` computes "everything
+  cleared" by mapping over `LEVELS` and gates the Showdown button on the result,
+  so the Showdown ends up locked behind having already cleared the Showdown, and
+  rungs 4 through 7 and both live-play doors die with it for the life of the
+  save. It fails `tsc` with two errors, and `npm run dev` is bare vite with the
+  types stripped, so a dev-mode playtest ships it in silence.
+- **Taking `src/storage.ts` whole stops the research corpus with no error.**
+  `main`'s `recordItem` calls `donate(...)` to post every answered item to
+  Supabase. That tree forked before `corpus.ts` existed and simply does not, so
+  the loss is an omission rather than an edit: zero type errors, passing build,
+  and nothing is captured ever again. It also bumps the storage key from `v1` to
+  `v2` with no migration, which wipes every playtester's save.
+
+Take hunks, never whole files, and run `npm run build` before believing anything.
 
 The one thing worth having off those branches is already here.
 `docs/nathan-gym-rebuild/` holds Nathan's 19 working papers, copied verbatim, and
