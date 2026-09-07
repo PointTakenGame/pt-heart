@@ -25,7 +25,7 @@ import type {
   Revision,
   TemplateSegment,
 } from './types.ts';
-import { BEAT_GAP, dwellMs } from './pacing.ts';
+import { BEAT_GAP, dwellMs, SKIP_LATCH_MS } from './pacing.ts';
 import { crowdRow } from './avatars.ts';
 import { judgeTurn, opponentLine } from './coach.ts';
 import { runPhraseDetectors } from './detectors.ts';
@@ -141,6 +141,14 @@ export function useShowdown(): Match {
 
   const uid = useRef(0);
   const skipper = useRef<(() => void) | null>(null);
+  // A tap that arrived with nothing to skip, kept for the next dwell to eat.
+  // Same window the ladder has (Nathan, 2026-09-05, playtest finding 11): the
+  // skipper is cleared before the dwell resolves, so between one line ending and
+  // the next one reaching `dwell()` there is a tick where a tap hits nothing and
+  // the thread looks frozen for the rest of a long beat.
+  const pendingSkip = useRef(0);
+  // What the composer is showing, for `skip` to read without re-subscribing.
+  const composerKind = useRef<ComposerState['kind']>('locked');
   const pending = useRef<((v: { value: string; revisions: Revision[] }) => void) | null>(null);
   const started = useRef(false);
   /** Bumped on every re-ask, so the composer remounts and clears itself. */
@@ -160,7 +168,21 @@ export function useShowdown(): Match {
     setMessages((prev) => [...prev, msg]);
   }, []);
 
-  const skip = useCallback(() => skipper.current?.(), []);
+  const skip = useCallback(() => {
+    if (skipper.current) {
+      skipper.current();
+      return;
+    }
+    // Latch it only mid-autoplay. A tap while a composer is open is a misfire,
+    // and latching it would eat the first line after the player answers.
+    if (composerKind.current === 'locked') pendingSkip.current = Date.now();
+  }, []);
+
+  // `skip` runs from an event handler and must not re-subscribe on every
+  // composer change, so it reads the kind off a ref.
+  useEffect(() => {
+    composerKind.current = composer.kind;
+  }, [composer]);
 
   const submit = useCallback((value: string, revisions: Revision[] = []) => {
     const resolve = pending.current;
@@ -196,6 +218,12 @@ export function useShowdown(): Match {
     const dwell = (ms: number) =>
       new Promise<void>((resolve) => {
         if (!alive) return;
+        if (Date.now() - pendingSkip.current < SKIP_LATCH_MS) {
+          pendingSkip.current = 0;
+          resolve();
+          return;
+        }
+        pendingSkip.current = 0;
         setWaiting(true);
         let done = false;
         const finish = () => {
