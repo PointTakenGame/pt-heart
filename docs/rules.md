@@ -214,7 +214,7 @@ The Referee's seat is why this game has an obvious place for software: it is a j
 - There is no repair move: a player cannot win a token back by apologizing or fixing a foul. Deliberate, ruled 2026-08-10, when a Repair Sequence was proposed and pushed to a deferred expansion. `[ruled]`
 - Most tokens at the end wins `[ruled]`, and equal tokens is a draw `[ruled, Nathan]`, in print as well as online (`game/src/showdown.ts:517-522`). Section 1 carries it.
 
-**Fractional tokens.** Online, a player who fails to whistle a foul the coach saw is charged half a token, rendered "½" (`game/src/showdown.ts:56`). Steve's ruling of 2026-08-24 `[ruled]`, but online only: print has no half tokens and no penalty for a missed call, because in print the Referee does the calling.
+**Every price is a whole token.** There are no fractional tokens in either edition `[ruled]`. Online, letting one of the AI's fouls go past used to cost the player half a token; Steve retired that price on Nathan's argument that you are charged for what you say, not for what you fail to notice. A miss now moves nothing, so a player who calls nothing watches a still scoreboard, and that stillness is the feedback. `TOKEN_STEP` in `game/src/content/showdown.ts` is the one place a fractional price could come back.
 
 ---
 
@@ -239,14 +239,30 @@ The print flow and the live-human flow are identical. `[ruled]` The differences 
    sits before L1. Boss names are explicitly placeholders and the docs and the code disagree on them, so quote none
    of them anywhere player facing. **None of this vocabulary is player facing in print:** the v7 deck contains zero
    level, phase, boss, tier, stage, or chapter words. Never source a level count from the deck.
-3. **The player, not a referee, throws the whistle at the AI.** The human calls fouls on the AI and the coach calls fouls on the human. Missing one of the AI's fouls costs half a token `[ruled]`; whistling a clean line costs a full token `[unratified]` (`game/src/showdown.ts:399-422`). Both exist only because there is no third human.
+3. **The player, not a referee, throws the whistle at the AI.** The human calls fouls on the AI and the coach calls fouls on the human. Missing one of the AI's fouls costs nothing `[ruled]`; whistling a clean line costs a full token `[unratified]` (`FALSE_CALL_COST`, `game/src/showdown.ts:497`). Both exist only because there is no third human. Section 8 carries the retired miss price.
 4. **Wrong answers cost tokens during teaching.** In L1 to L3 a wrong or too-thin answer costs one token, once per item however many tries it takes, and both purses run from seven from L1 on `[unratified]` (`game/src/engine.ts`). Print has no quiz and no equivalent.
-5. **Attempt ceilings, and a code conflict.** The shipped code allows three attempts on an answering step and then moves on `[unratified]` (`game/src/engine.ts:486`, `game/src/showdown.ts:433`). **That ceiling is wrong under the ruling in section 5: there is no cap on corrections, and nothing advances until the summarized player confirms they were heard.** Print has no attempt limit either. Two things have to change in the code before it matches the rule: the ceiling has to come off, and a coverage check has to exist for the confirmation to be checked against, because no summary coverage check is implemented anywhere today. Recorded, not changed here; `roadmap.md` section 7 carries the build item.
+5. **Attempt ceilings, and a code conflict.** The shipped code allows three attempts on an answering step and then moves on `[unratified]` (`game/src/engine.ts:486`, `game/src/showdown.ts:433`). **That ceiling is wrong under the ruling in section 5: there is no cap on corrections, and nothing advances until the summarized player confirms they were heard.** Print has no attempt limit either. Two things have to change in the code before it matches the rule: the ceiling has to come off, and the opponent's confirmation has to gate the advance, which it does not today. A coverage check does now exist, in the online match against the AI opponent, and item 11 below describes it; the missing piece is the gate, not the judgement. Recorded, not changed here; `roadmap.md` section 7 carries the build item.
 6. **Sentence frames are shown, not remembered.** The speak box shows "The way I see it," [your take] "because" [your reason]; the summary box shows "What I heard was" [her point, in your words] "because" [her reason] ". Did I miss anything?" Steve's 2026-08-24 ruling that the hint belongs inside the box `[ruled]` (`game/src/showdown.ts:69-83`). This makes "because" mandatory in an online summary, which the printed Fake Listening card does not require. A divergence, unresolved.
 7. **No timers.** The thirty and forty-five second clocks are not implemented anywhere in the shipped code; online turns are untimed today. The answer beat in section 5 has no timer in either edition, by ruling rather than by omission.
 8. **Post-match review, and a self-correcting whistle.** Ruled 2026-08-10: the match plays back with every foul annotated inline, showing the flag, the words that tripped it, the human's ruling, and the compliant form. Every call carries an agree or disagree tag and the tags tune the detector. `[ruled]` Print has no memory.
 9. **Spectators with buzzers.** Ruled 2026-08-10: any number of watchers can buzz a foul the Referee missed, a buzz scores for the spectator only when the wronged player confirms it, and the crowd never rules on whether a disputant pays. `[ruled]` Print supports this informally already, since the game is played in a room.
 10. **Neutrality is achieved structurally.** The AI opponent has no position of her own; she argues the opposite of whatever the player argued. `[ruled]` The shipped topic pool is deliberately mild, "student loan forgiveness", "return to office mandates", "nuclear power", with an in-code note that it excludes immigration and abortion on purpose. Note the print deck's own samples do include asylum and deportation, so the online pool is narrower than the print pool by choice.
+
+11. **The AI opponent says whether she was heard, and that is a different question from the foul.** When the
+    player summarizes her, the software asks two separate things about the one sentence. Fake Listening asks whether
+    the summary has the *shape* of listening: a reason, and a check that it landed. The second question asks whether
+    her actual point and her actual reason survived, judged on content alone and not on phrasing, warmth, or whether
+    it was a generous reading. She answers the second one herself, in her own voice, before the coach prices the
+    turn, because section 5 makes the person who was summarized the ground truth for whether they were heard.
+    Steve, 2026-09-07 `[ruled]`.
+
+    **The two answers can disagree, and both stand.** A summary that keeps her reason exactly and then calls her
+    selfish is a yes from her and a Judging charge from the coach, two tokens. A summary carrying a because and a
+    check that hands her a reason she never gave is a no from her and no charge at all, because nothing on a card
+    was broken; the coach says there is nothing to charge and that she is the one who gets to say. Her answer can
+    only move her from yes to no, never the reverse: a Fake Listening call is hers to make and the software does not
+    overturn it. If the model is unreachable the second question goes unanswered, and an unanswered question is read
+    as unknown rather than as a miss. **No price moved with this** `[ruled]`; it changes only what she says.
 
 ---
 
