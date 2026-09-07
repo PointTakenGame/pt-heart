@@ -14,8 +14,10 @@ notes: "Its own git repo, not part of the Claude workspace monorepo above it (re
 # Humility Showdown
 
 A card game about disagreeing without wrecking the relationship, playable in a
-browser. Three training levels teach one foul each, then a fourth level plays a
-full match against an AI opponent using all three.
+browser. Three training levels teach one foul each, a fourth puts you in the
+referee's chair, and the fifth is a full match against Slippery Sofia, the boss,
+with all three cards live. Above those five sit the Humility Showdown levels,
+which are frozen while that phase is restructured.
 
 This is the web build. The printed deck is the original, and Steve's Keynote
 master is the source of truth for card content; it lives outside this repo.
@@ -26,6 +28,19 @@ architecture, the component inventory, and the printed deck. It is normative and
 written in the present tense. `docs/README.md` explains the status markers that
 tell you how much authority any given value has, and the house rules for editing
 anything in there. Anything under `docs/` reaches `main` through a pull request.
+
+## Branches
+
+**`main` is the only living line.** Everything ships from it and everything
+starts from it.
+
+Two older branches were archived on 2026-09-07 as the annotated tags
+`archive/nathan-gym-ladder-rebuild` and `archive/nathan-working-branch-heart`.
+Read them if you want the history. Do not branch off them and do not merge
+them: `main` already took their content forward on a different engine, and
+those trees delete helper functions that `main` imports, so a whole-file port
+out of either one breaks the build in ways the type checker does not catch
+until runtime.
 
 ## Run it
 
