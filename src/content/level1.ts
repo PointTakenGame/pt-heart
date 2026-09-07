@@ -27,6 +27,7 @@
 // also sits in level 2's ledger, which opens on the right.
 
 import type { LevelDef } from '../types.ts';
+import { CARDS } from './cards.ts';
 
 export const level1: LevelDef = {
   slug: 'about-the-argument',
@@ -37,10 +38,13 @@ export const level1: LevelDef = {
   tokens: 'off',
   boss: 'Verdict Victor',
   bossEmoji: '\u{1F468}\u{1F3FB}\u{200D}\u{2696}\u{FE0F}',
-  // The newline is deliberate. Steve, 2026-08-25: "put a new line before
-  // says so." Both places this string lands, the baseball card in the
-  // dialogue box and the VS splash, honour it through white-space: pre-line.
-  bossEpithet: 'Has already decided what kind of person you are.\nSays so.',
+  // One home for this line, and it is the card, not the level. It is a
+  // definition of the foul before it is a description of the boss, and it
+  // now renders on the rule card a player can open mid-match as well as on
+  // the walk-out card and the VS splash. Level 1's still carries the
+  // deliberate newline (Steve, 2026-08-25: "put a new line before says
+  // so"), so every surface rendering one needs white-space: pre-line.
+  bossEpithet: CARDS.judging.epithet,
   // Said in the corner, before the door opens. Steve's ruling of 2026-08-24
   // (name the argument and both sides of it before anything else, because a
   // player who does not know what is being argued cannot tell a hard argument

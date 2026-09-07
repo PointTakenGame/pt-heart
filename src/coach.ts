@@ -78,6 +78,12 @@ export interface TurnRuling {
   foul: FoulType | null;
   text: string;
   fromModel: boolean;
+  // Summarizing turns only, and null whenever the model did not answer it.
+  // Separate from `foul` on purpose: the foul says whether the summary had the
+  // shape of listening, this says whether the other person's point and reason
+  // actually survived. A summary can have a because and a check and still put
+  // words in their mouth. Null means unknown, never "fine".
+  carried: boolean | null;
 }
 
 /**
@@ -102,7 +108,13 @@ export async function judgeTurn(
   if (!text) return null;
   const foul = out?.foul;
   const valid = foul === 'judging' || foul === 'opinion_as_fact' || foul === 'fake_listening';
-  return { foul: valid ? foul : null, text, fromModel: true };
+  const carried = out?.carried;
+  return {
+    foul: valid ? foul : null,
+    text,
+    fromModel: true,
+    carried: typeof carried === 'boolean' ? carried : null,
+  };
 }
 
 /**

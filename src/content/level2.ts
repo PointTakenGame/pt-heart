@@ -26,6 +26,7 @@
 //   carry no position.
 
 import type { LevelDef } from '../types.ts';
+import { CARDS } from './cards.ts';
 
 export const level2: LevelDef = {
   slug: 'my-opinion-not-a-fact',
@@ -36,7 +37,13 @@ export const level2: LevelDef = {
   tokens: 'off',
   boss: 'Obvious Olivia',
   bossEmoji: '\u{1F469}\u{1F3FF}',
-  bossEpithet: 'Never says "I think." Everything she believes is simply a fact.',
+  // One home for this line, and it is the card, not the level. It is a
+  // definition of the foul before it is a description of the boss, and it
+  // now renders on the rule card a player can open mid-match as well as on
+  // the walk-out card and the VS splash. Level 1's still carries the
+  // deliberate newline (Steve, 2026-08-25: "put a new line before says
+  // so"), so every surface rendering one needs white-space: pre-line.
+  bossEpithet: CARDS.opinion_as_fact.epithet,
   prefight: [
     {
       kind: 'line',

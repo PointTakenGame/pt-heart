@@ -221,6 +221,14 @@ export function RuleCardFull({ rule, full = false }: { rule: FoulType; full?: bo
 
       {full && (
         <div className="card-more">
+          {/* The foul drawn as a person, in one line. It used to render only on
+              the walk-out card and the VS splash, both of which a player sees
+              once and cannot get back to, and it is the sharpest definition of
+              the foul anywhere in the product. Steve, 2026-09-07: put them on
+              the foul cards players can tap mid-match, because that is where
+              someone looks when they are stuck. Above the tell on purpose:
+              first read the person, then read how to spot them. */}
+          <p className="card-epithet">{card.epithet}</p>
           <div className="card-col-eyebrow">MORE, FROM THE COACH</div>
           <p className="card-more-tell">{card.tell}</p>
           <ul className="card-deltas">

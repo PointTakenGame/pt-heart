@@ -567,8 +567,22 @@ export function useShowdown(): Match {
             // a yes from her and a charge from the coach, which is the honest
             // reading of both. Her no bank talks about a dropped reason, and it
             // would be plainly wrong on a Judging call.
+            //
+            // The Fake Listening call is a check on the SHAPE of a summary: does
+            // it carry a because, does it check. A summary can have both and
+            // still hand her back a reason she never gave, and that version used
+            // to get a warm "yes, that is mine" out of her. Steve, 2026-09-07:
+            // let her say when a summary missed her point. `carried` is the
+            // model answering that one question, and it can only move her from
+            // yes to no, never the other way: a Fake Listening call is hers to
+            // make and the model does not get to overturn it. Null means the
+            // model was not reached or did not answer, and null leaves her on
+            // the behaviour above rather than putting a doubt in her mouth that
+            // nobody actually raised.
+            const carried = ruled?.carried ?? null;
+            const heard = foul !== 'fake_listening' && carried !== false;
             if (turn.kind === 'summarize') {
-              const bank = foul === 'fake_listening' ? SOFIA_NOT_HEARD : SOFIA_HEARD;
+              const bank = heard ? SOFIA_HEARD : SOFIA_NOT_HEARD;
               await say({
                 lane: 'opponent',
                 speaker: SOFIA,
@@ -582,6 +596,12 @@ export function useShowdown(): Match {
               await coach(ruled?.text ?? COACH.onPlayerFoul(foul, moved));
               if (ruled) await coach(COACH.onPlayerFoul(foul, moved));
               if (bust && (await bankruptCheck())) return;
+            } else if (turn.kind === 'summarize' && !heard) {
+              // She just said it did not land, so the coach does not follow her
+              // with "Clean." or with a line of credit for a summary she is
+              // still holding at arm's length. Nothing is charged either way;
+              // the price list did not move, only what gets said about it.
+              await coach(COACH.onPlayerCleanNotCarried);
             } else if (ruled?.text) {
               await coach(ruled.text);
             } else {

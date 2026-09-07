@@ -286,6 +286,19 @@ p  { margin: 0 0 0.75rem; }
 .front-foot-left { background: #e8e6e2; color: #5a5a5a; }
 .front-foot-right { background: var(--print-orange); color: var(--white); text-align: right; }
 
+/* Sits under the split bar rather than inside it. The bar is the printed deck's
+   footer and has two halves by design; a third thing wedged into the orange half
+   would crowd the notice that is already there. Quiet type on the page ground,
+   so it reads as a disclosure and not as part of the print artwork. */
+.front-foot-note {
+  margin: 0;
+  padding: 0.55rem 1.25rem 0.9rem;
+  font-size: 0.66rem;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: #6b6b6b;
+}
+
 @media (max-width: 30rem) {
   .mast-pill { display: none; }
   .front-foot { flex-direction: column; }
@@ -939,6 +952,18 @@ p  { margin: 0 0 0.75rem; }
   display: flex;
   flex-direction: column;
   gap: calc(var(--u) * 0.4);
+}
+/* The foul as a person, one line, set larger and darker than anything else in
+   this block. It is the first thing read when a card is opened mid-match, so it
+   gets the weight; the tell and the deltas underneath are the working detail.
+   pre-line because the Judging epithet carries a deliberate line break. */
+.card-epithet {
+  margin: 0;
+  white-space: pre-line;
+  font-size: 1.02rem;
+  line-height: 1.3;
+  font-weight: 600;
+  color: #2f2a24;
 }
 .card-more-tell { margin: 0; font-style: italic; color: #6d6355; }
 .card-deltas {

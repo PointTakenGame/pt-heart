@@ -416,6 +416,14 @@ export const COACH = {
   onPlayerFoul: (foul: FoulType, cost: number) =>
     `That is on you. ${RULE_LABEL[foul]}: ${RULE_GLOSS[foul]}. ${cost} to her.`,
   onPlayerClean: 'Clean.',
+  // Said instead of onPlayerClean when the summary broke no rule and the person
+  // summarized still says her point did not survive. Without this the coach says
+  // "Clean." directly under her "that is not what I said", and the player is left
+  // holding two verdicts that do not agree. They do agree: nothing was fouled and
+  // nothing is charged, and she is still the only one who decides whether she was
+  // heard (soul.md section 6). The coach says so rather than talking over her.
+  onPlayerCleanNotCarried:
+    'Nothing to charge. She still says you missed it, and she is the one who gets to say.',
   // Retired 2026-08-31: redoSummary, which made a player redeliver a summary
   // that carried a Judging or Opinions-as-Facts foul. No redo anywhere now. The
   // half of the 2026-08-24 ruling that survives is still enforced above, in

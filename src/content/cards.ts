@@ -82,6 +82,19 @@ export interface RuleCard {
    *  v7). Shorter than `what` on purpose: it is the size that fits a card small
    *  enough to sit three across before a player has clicked anything. */
   blurb: string;
+  /**
+   * The foul drawn as a person, in one line. These were written as the boss
+   * epithets for levels 1 to 3 and lived in the level files, where they only
+   * ever reached the walk-out card and the VS splash: two screens a player sees
+   * once and cannot get back to. They are the sharpest definitions in the
+   * product, so they live here now and the level files read them off this
+   * record. Steve approved the move 2026-09-07.
+   *
+   * Level 1's carries a deliberate newline (Steve, 2026-08-25: "put a new line
+   * before says so"), so every surface that renders one needs
+   * `white-space: pre-line`.
+   */
+  epithet: string;
   /** the shortcut for spotting it */
   tell: string;
   deltas: Delta[];
@@ -94,6 +107,7 @@ export interface RuleCard {
 export const CARDS: Record<FoulType, RuleCard> = {
   judging: {
     rule: 'judging',
+    epithet: 'Has already decided what kind of person you are.\nSays so.',
     emoji: '\u{1F612}',
     name: 'Judging',
     blurb: 'Verdicts on who they are, or their motives',
@@ -149,6 +163,7 @@ export const CARDS: Record<FoulType, RuleCard> = {
 
   opinion_as_fact: {
     rule: 'opinion_as_fact',
+    epithet: 'Never says "I think." Everything she believes is simply a fact.',
     emoji: '\u{1F9D0}',
     name: 'Opinions as Facts',
     blurb: 'Framing your opinion as the one truth',
@@ -210,6 +225,7 @@ export const CARDS: Record<FoulType, RuleCard> = {
 
   fake_listening: {
     rule: 'fake_listening',
+    epithet: 'Agrees with everything. Heard none of it.',
     emoji: '\u{1F643}',
     name: 'Fake Listening',
     blurb: 'Pretending to listen, actually reloading',

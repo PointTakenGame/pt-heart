@@ -34,6 +34,7 @@
 //   which is counterweighted by the boss of Level 2 being caught on a conservative one.
 
 import type { LevelDef } from '../types.ts';
+import { CARDS } from './cards.ts';
 
 export const level3: LevelDef = {
   slug: 'the-summary-gate',
@@ -44,7 +45,13 @@ export const level3: LevelDef = {
   tokens: 'off',
   boss: 'Nodding Noemi',
   bossEmoji: '\u{1F469}\u{1F3FD}',
-  bossEpithet: 'Agrees with everything. Heard none of it.',
+  // One home for this line, and it is the card, not the level. It is a
+  // definition of the foul before it is a description of the boss, and it
+  // now renders on the rule card a player can open mid-match as well as on
+  // the walk-out card and the VS splash. Level 1's still carries the
+  // deliberate newline (Steve, 2026-08-25: "put a new line before says
+  // so"), so every surface rendering one needs white-space: pre-line.
+  bossEpithet: CARDS.fake_listening.epithet,
   prefight: [
     {
       kind: 'line',

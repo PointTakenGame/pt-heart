@@ -193,10 +193,30 @@ const PROMPTS = {
     `Rule on it. Be reluctant: call a foul only if you could point at the exact words that ` +
     `commit it. Blunt, cold, or strongly worded disagreement is not a foul. ` +
     `Never say who is right about the underlying question; you rule on the sentence.\n\n` +
+    // Only asked on a summarizing turn, and deliberately NOT a question about
+    // fouls. The foul check asks whether the summary has the SHAPE of listening;
+    // this asks whether it actually carried what the other person said. A
+    // summary can pass the first and fail the second: it has a because and a
+    // check, and the because is not theirs. rules.md section 5 makes the person
+    // who was summarized the ground truth for whether they were heard, so the
+    // game hands this answer to them to say out loud rather than ruling on it
+    // in the coach's voice.
+    //
+    // Content only, on purpose. Not phrasing, not warmth, not whether it was a
+    // generous reading. Did their point and their reason survive the trip.
+    (kind === 'summarize' && target
+      ? `Answer one more thing, separately from the foul: did the summary carry the other ` +
+        `person's actual point AND their actual reason? Judge content only, not phrasing or ` +
+        `tone. It did not carry if it drops their reason, swaps in a different reason, or ` +
+        `summarizes something they never said. A blunt or unflattering but accurate summary ` +
+        `did carry.\n\n`
+      : '') +
     `Reply with strict JSON and nothing else: ` +
     `{"foul": "judging" | "opinion_as_fact" | "fake_listening" | null, ` +
     `"text": "one sentence, quoting the words at fault if there is a foul, or one short line ` +
-    `of credit if there is not"}`,
+    `of credit if there is not"` +
+    (kind === 'summarize' && target ? `, "carried": true | false` : '') +
+    `}`,
 
   // The mirroring opponent's turn, used by Level 4 (Sofia) and Level 7
   // (Sung-min). Both argue the opposite of whatever the player argued, which is
@@ -497,6 +517,11 @@ export default async function handler(req: Request): Promise<Response> {
     return Response.json({
       foul: foul in RULES ? foul : null,
       text: String(parsed.text ?? ''),
+      // Only present on summarizing turns, and only when the model actually
+      // answered. Anything that is not a literal false is passed through as
+      // null, so a missing or malformed field leaves the caller on its old
+      // behaviour instead of putting words in her mouth.
+      carried: parsed.carried === false ? false : parsed.carried === true ? true : null,
     });
   }
 

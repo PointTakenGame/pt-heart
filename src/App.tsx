@@ -249,6 +249,18 @@ function FrontPage({ onIn }: { onIn: () => void }) {
         <div className="front-foot-left">Humility Showdown &middot; &copy; 2026 Experception LLC</div>
         <div className="front-foot-right">Internal playtest. Do not post or distribute.</div>
       </footer>
+
+      {/* The clause that used to sit above the button promised nothing was kept
+          against you. That clause moved to signup, and signup does not exist,
+          but since 2026-09-01 every answered item has been posted to the
+          research table. A promise that is gone and a practice that is live is
+          the wrong pair, so the disclosure stands on its own here until signup
+          carries it. Steve approved it 2026-09-07. Say it plainly and say what
+          is NOT kept, because that is the part people want to know. */}
+      <p className="front-foot-note">
+        What you type here is saved for research. No name, no email, no account:
+        just a random id for this browser.
+      </p>
     </div>
   );
 }
