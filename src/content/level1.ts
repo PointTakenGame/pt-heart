@@ -1,38 +1,40 @@
-// Level 1: The word "You" (Judging).
+// Level 1: About the argument, not the person (Judging).
 // Source: docs/design/2026-08-23_full-game-scripts.md §1, authored 2026-08-23.
 //
-// Grammar, four items: one foul, its clean twin on the same topic, one trap that
-// sounds nasty and is clean, and one edit_prefilled where the player strips a
-// verdict out of a line drafted for them.
+// Grammar, five items: two fouls (one that reads a motive, one that hands down a
+// verdict on character), two clean lines on the same topic that sound harsh and
+// are not, and one edit_prefilled where the player strips a verdict out of a line
+// drafted for them.
 //
 // Political balance ledger, which is non-negotiable and must stay accurate if the
-// lines are touched. It moved on 2026-08-25 and the new count is worse; read it
-// before writing anything else into this file.
-//   Judging lines, by who they are aimed at: item 1, item 4, and both of the
-//   boss's two fouls now aim at a pro-forgiveness position. Nothing in this
-//   level judges an anti-forgiveness one.
-//   Item 4 used to be the counterweight: a judgement aimed the other way, and
-//   the only one put in the player's own mouth. Steve dictated its replacement
-//   text on 2026-08-25 ("You only think that because you want your own loans
-//   forgiven"), which flipped it, and B6 added a second boss foul on the same
-//   side. Built as dictated and flagged here rather than quietly re-balanced.
-//   Clean arguments modelled: item 2 is anti-forgiveness, item 3 is
-//   pro-forgiveness (it argues the cost figure down), and both Victor's cost
-//   line and the half of item 4 that survives the player's edit are
-//   anti-forgiveness.
-// So the level now runs 4:0 against forgiveness in the judging column and 3:1 in
-// the argument column. One boss can only argue one side, which explains the boss
-// lines but not item 4. The counterweight sits in level 2's ledger, which opens
-// on the right. Whether that is enough is Steve's call (HEART-T260823-33), and
-// this change makes the question sharper than it was.
+// lines are touched. Read it before writing anything else into this file.
+//   Judging lines, by who they are aimed at: item 1 (mind-reads a motive), item 4
+//   (the same, in the player's own mouth), and both of the boss's two fouls aim at
+//   a pro-forgiveness position. Step 4 (Q13) added one that aims the other way: the
+//   character-verdict specimen "anyone who won't forgive these loans is just
+//   selfish", a foul against an anti-forgiveness person. So the judging column now
+//   runs 4:1 against forgiveness, up from 4:0.
+//   Item 4's text is Steve's, dictated 2026-08-25 ("You only think that because you
+//   want your own loans forgiven"); left untouched. The 4:1 is a single counterweight
+//   added openly under Q13, not a quiet rewrite of his line.
+//   Clean arguments modelled: item 2 is anti-forgiveness, item 3 is pro-forgiveness
+//   (it argues the cost figure down), and both Victor's cost line and the half of
+//   item 4 that survives the player's edit are anti-forgiveness — 3:1 against
+//   forgiveness, unchanged.
+//   The card-tap, token-stack and closing-sentence teaching added in step 4 carry
+//   no position and do not move either column.
+// Whether 4:1 is enough is still Nathan's call (HEART-T260823-33). The counterweight
+// also sits in level 2's ledger, which opens on the right.
 
 import type { LevelDef } from '../types.ts';
 
 export const level1: LevelDef = {
-  slug: 'the-word-you',
-  title: 'The word "You"',
+  slug: 'about-the-argument',
+  title: 'About the argument, not the person',
   teaches: 'Judging',
   rule: 'judging',
+  cards: ['judging'],
+  tokens: 'off',
   boss: 'Verdict Victor',
   bossEmoji: '\u{1F468}\u{1F3FB}\u{200D}\u{2696}\u{FE0F}',
   // The newline is deliberate. Steve, 2026-08-25: "put a new line before
@@ -54,7 +56,7 @@ export const level1: LevelDef = {
     },
     {
       kind: 'line',
-      text: 'You can take either side in here. I don\'t care which. I care about one rule.',
+      text: 'You can take either side in here. I don\'t care which.',
     },
     // Steve, 2026-08-25: "start with 'your opponent is...' then show the card
     // that is your defense against his attack." So: the man, his move, and
@@ -62,14 +64,20 @@ export const level1: LevelDef = {
     // a rule handed down before anybody has a problem.
     {
       kind: 'line',
-      text: 'That\'s Verdict Victor. You\'re in with him in two minutes.',
+      text: 'That\'s Verdict Victor. He\'s who you\'re walking in against.',
     },
     {
       kind: 'line',
-      text: 'He has one move. He tells you what you\'re thinking, and what kind of person that makes you. Says it flat, like he\'s reading it off a chart.',
+      text: 'He has one move, and he plays it flat, like he\'s reading it off a chart: he comes at you instead of at your argument. That\u2019s the one thing I care about in here.',
     },
-    // Pinned in the tray from here on.
-    { kind: 'card', rule: 'judging' },
+    // Pinned in the tray from here on. The caption is overridden because the
+    // default reads as a bare first meeting; here it has a promise to keep.
+    {
+      kind: 'card',
+      rule: 'judging',
+      text:
+        'That\u2019s the attack, and here\u2019s the rule: you go after the argument, never the person. This card is your defense. It stays on the wall the whole match.',
+    },
   ],
   beats: [
     {
@@ -81,7 +89,22 @@ export const level1: LevelDef = {
         {
           kind: 'say',
           lane: 'coach',
-          text: 'Four lines coming at you. Some of them are his move. Some are just somebody disagreeing with you hard, which is allowed. Learn the difference now and he has nothing.',
+          text: 'Victor crosses that line two ways, so learn both. Tell one, he reads your mind: he tells you the real reason you think what you think. Tell two, he hands down a verdict on your character, what kind of person that makes you. The word "you" is usually how both start, but it\'s the move underneath that\'s the foul, not the word.',
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'Your end of it is one gesture. When you catch his foul, tap the card up in the tray. That\'s you calling it. See it, tap it.',
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'And those two stacks of tokens up top, his and yours. In a real match a foul moves a token from one stack to the other, and a wrong call costs you one too. Not yet, though. For a while yet both stacks sit still — in the drills and against him too — so swing freely and learn the difference. I will tell you the day they start moving.',
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'Some lines coming at you now. A few are his move. A few are just somebody disagreeing with you hard, which is allowed.',
         },
 
         {
@@ -95,6 +118,23 @@ export const level1: LevelDef = {
             'That\'s about why they want it, not about whether they\'re right. Having a loan doesn\'t make you wrong.',
           onPass:
             'That one crossed. It\'s about why they want it, not about whether they\'re right. Having a loan doesn\'t make you wrong.',
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'That was tell one: reading a motive. Here\'s tell two, aimed the other way for once.',
+        },
+        {
+          kind: 'call_or_pass',
+          id: 'l1-i-character',
+          rule: 'judging',
+          lane: 'coach',
+          line: 'Anyone who won\'t forgive these loans is just selfish, and doesn\'t care what happens to young people.',
+          expected: 'foul',
+          onCall:
+            'That\'s a verdict on who they are, not an answer to what they argued. "Selfish" isn\'t a rebuttal.',
+          onPass:
+            'That one crossed. It sentenced their character, "selfish", instead of taking on the argument. Same foul, other direction.',
         },
         {
           kind: 'call_or_pass',
@@ -178,7 +218,7 @@ export const level1: LevelDef = {
           speaker: 'Verdict Victor',
           line: 'Fine. Then argue the cost. It\'s 400 billion dollars, and most of it goes to people who will end up earning more than the people paying for it.',
           expected: 'clean',
-          onCall: 'No. He went at the money that time, not at you. A bad whistle costs you.',
+          onCall: 'No. He went at the money that time, not at you.',
           onPass: 'Look at that. Same guy, better argument. That\'s the whole trade.',
         },
         // Steve, same day: "Then make him say one more thing about the player's
@@ -198,18 +238,36 @@ export const level1: LevelDef = {
           line: 'Though let\'s be honest about who I\'m arguing with. People who want these loans wiped are all the same. They want somebody else to carry what they signed for.',
           expected: 'foul',
           onCall: 'Called it. He just sentenced a few million people in one line.',
-          onPass: 'He did it to your entire side at once. That is the card. Call it.',
+          onPass: 'He did it to your entire side at once. That is the foul. Call it.',
         },
         {
           kind: 'say',
           lane: 'coach',
-          text: 'That is the job, start to finish. Two whistles, and you let the honest one through.',
+          text: 'That is the job, start to finish. Two of those were fouls and one was honest, and telling them apart is the whole trick.',
         },
         {
           kind: 'say',
           lane: 'opponent',
           speaker: 'Verdict Victor',
           text: 'All right. I\'m beaten. I came in here to tell you what kind of person you are, and you would not take it. I have got nothing left but the argument.',
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'Last thing, and it\'s yours. No frame, one sentence: when you argue with someone in here, what do you go after?',
+        },
+        {
+          kind: 'free',
+          id: 'l1-close',
+          rule: 'judging',
+          capture: 'l1_close',
+          placeholder: 'In your own words.',
+          chips: [],
+        },
+        {
+          kind: 'say',
+          lane: 'coach',
+          text: 'However you put it: the argument, never the person. Go at what they said, not at who they are. That\'s the whole card.',
         },
         { kind: 'continue', label: 'Finish' },
       ],

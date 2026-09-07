@@ -35,8 +35,27 @@ function isItem(step: Step): boolean {
     step.kind === 'call_or_pass' ||
     step.kind === 'sort' ||
     step.kind === 'edit' ||
-    step.kind === 'free'
+    step.kind === 'free' ||
+    step.kind === 'confirm' ||
+    step.kind === 'template'
   );
+}
+
+/** The confirm dialogue answers on one string, because that is what submit()
+ *  takes: the verdict, then the offendee's own words if they wrote any. Enter
+ *  cannot type a newline in any composer, so it is safe as the separator. */
+export function confirmValue(verdict: 'yes' | 'no', note: string): string {
+  const n = note.trim();
+  return n ? `${verdict}\n${n}` : verdict;
+}
+
+export function parseConfirm(value: string): { verdict: 'yes' | 'no'; note: string } {
+  const nl = value.indexOf('\n');
+  const head = (nl === -1 ? value : value.slice(0, nl)).trim();
+  return {
+    verdict: head === 'no' ? 'no' : 'yes',
+    note: nl === -1 ? '' : value.slice(nl + 1).trim(),
+  };
 }
 
 /** Too thin to be an answer. Kills the one-letter and empty-box exploits. */
@@ -135,7 +154,14 @@ export function useGym(level: LevelDef): Gym {
 
   // Fouls never burn a token, they move one. Clamped, so a purse cannot go
   // negative and the two sides always add to fourteen.
+  //
+  // One choke point for the whole economy, on purpose. All three gym levels now
+  // promise out loud that neither stack will move an inch, and a promise that
+  // every future step kind has to remember to re-honour is a promise that breaks
+  // the first time somebody adds a step kind. Here it cannot be forgotten.
+  const tokensLive = level.tokens === 'live';
   const transfer = useCallback((from: 'player' | 'opponent', n: number) => {
+    if (!tokensLive) return;
     const moved = Math.min(n, purse.current[from]);
     if (moved <= 0) return;
     const to = from === 'player' ? 'opponent' : 'player';
@@ -143,7 +169,7 @@ export function useGym(level: LevelDef): Gym {
     purse.current[to] += moved;
     setPlayerTokens(purse.current.player);
     setOpponentTokens(purse.current.opponent);
-  }, []);
+  }, [tokensLive]);
 
   const skip = useCallback(() => {
     if (skipper.current) {
@@ -344,6 +370,25 @@ export function useGym(level: LevelDef): Gym {
           setComposer({ kind: 'free', placeholder: step.placeholder, chips: step.chips });
           return;
 
+        case 'confirm':
+          await say({ lane: step.lane, speaker: step.speaker, text: step.ask }, aliveFn);
+          if (!alive) return;
+          setComposer({
+            kind: 'confirm',
+            yes: step.yesLabel ?? 'Yes, that one landed on me',
+            no: step.noLabel ?? 'No, I am fine with it',
+            placeholder: step.placeholder ?? 'Say it in your own words, if you want to',
+          });
+          return;
+
+        case 'template':
+          if (step.ask) {
+            await say({ lane: 'coach', text: step.ask }, aliveFn);
+            if (!alive) return;
+          }
+          setComposer({ kind: 'template', segments: step.segments });
+          return;
+
         case 'continue':
           setComposer({ kind: 'continue', label: step.label });
           return;
@@ -443,14 +488,25 @@ export function useGym(level: LevelDef): Gym {
           }
 
           chargeMiss();
-          push({
-            lane: 'coach',
-            text:
-              step.onWrong ??
-              (step.expected === 'foul'
-                ? `That one was not clean. Read it again: ${CARDS[step.rule].tell}`
-                : 'That line was clean. A bad whistle costs you one. Read it again.'),
-          });
+          // The authored miss line, not a generic one. Every clean-expected item
+          // writes `onCall` for exactly this moment ("Good instinct, but nothing
+          // in there is about the person"), and every foul-expected item writes
+          // `onPass` for the other half of it. Both were being thrown away here
+          // in favour of a stock sentence, which is why the drills read colder
+          // when you got one wrong than when you got it right.
+          //
+          // The charge clause is appended rather than authored, because the gym
+          // now runs `tokens: 'off'` and a line that says "costs you one" while
+          // both stacks sit at seven is the game lying to the player.
+          const missText =
+            step.expected === 'clean'
+              ? tokensLive
+                ? `${step.onCall} A bad whistle costs you one.`
+                : step.onCall
+              : called
+                ? `That was a foul, but not that one. ${CARDS[step.rule].tell}`
+                : step.onPass;
+          push({ lane: 'coach', text: step.onWrong ?? missText });
           push({ lane: 'coach', text: 'Again. Call the foul, or say it is not one.' });
           attempts.current += 1;
           nonce.current += 1;
@@ -548,11 +604,55 @@ export function useGym(level: LevelDef): Gym {
           return;
         }
 
+        case 'confirm': {
+          const { verdict, note } = parseConfirm(value);
+          const label = verdict === 'yes' ? (step.yesLabel ?? 'Yes.') : (step.noLabel ?? 'No.');
+          // The button label is an imperative, not a sentence, so a note tacked
+          // straight onto it reads as one run-on line. Close the label first.
+          const said = note ? `${/[.!?]$/.test(label) ? label : `${label}.`} ${note}` : label;
+          setComposer({ kind: 'locked' });
+          push({ lane: 'player', text: said });
+          // record(null) on purpose. soul.md section 6: "did I foul?" is answered
+          // by the person who might have been fouled, so neither button can be
+          // wrong and there is nothing here to grade. The answer is corpus.
+          record(null);
+
+          if (verdict === 'yes') {
+            // Same order as a called foul: card first, then the words, then the
+            // token moves, so you can read what you were paid for.
+            push({ lane: 'coach', text: CARDS[step.rule].name, card: step.rule });
+            const pays = step.pays;
+            after(CARD_BEFORE_PAY_MS, () => {
+              push({ lane: step.lane, speaker: step.speaker, text: step.onYes });
+              if (pays) transfer(pays, CARDS[step.rule].cost);
+              settle();
+            });
+            return;
+          }
+
+          // Waving the call off is free, and it is said out loud. The suggester
+          // is allowed to be wrong; that is the whole reason for asking.
+          push({ lane: step.lane, speaker: step.speaker, text: step.onNo });
+          settle();
+          return;
+        }
+
+        case 'template': {
+          // The blanks are gated in the composer, so whatever arrives here is an
+          // answer. Nothing to grade: the frame did the teaching.
+          setComposer({ kind: 'locked' });
+          push({ lane: 'player', text: value });
+          record(null);
+          if (step.reply) push({ lane: 'coach', text: step.reply });
+          settle();
+          return;
+        }
+
         default:
           return;
       }
     },
-    [cursor, seq, level.slug, push, transfer],
+    [cursor, seq, level.slug, push, transfer, tokensLive],
   );
 
   return {

@@ -12,8 +12,15 @@
 // decline. 'template' is a sentence frame with the blanks inside the box
 // (ruling of 2026-08-24), which replaces the loose chips on the turns where the
 // shape of the answer is the thing being taught.
+//
+// 'confirm' is the one that carries both. Somebody has suggested a foul and the
+// person it may have landed on is ruling on it, so two buttons make the fast
+// path fast, and the text box under them is always open because they may want to
+// say something instead of, or as well as, pressing one (Steve, 2026-08-26). The
+// note is never required. The buttons are the answer.
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { confirmValue } from '../engine.ts';
 import type { ComposerState, Revision, TemplateSegment } from '../types.ts';
 
 const PAUSE_MS = 900;
@@ -77,6 +84,10 @@ export function Composer({ state, onSubmit, onResize }: Props) {
     return <TemplateComposer key={key} state={state} onSubmit={onSubmit} onResize={onResize} />;
   }
 
+  if (state.kind === 'confirm') {
+    return <ConfirmComposer key={key} state={state} onSubmit={onSubmit} onResize={onResize} />;
+  }
+
   return <TextComposer key={key} state={state} onSubmit={onSubmit} onResize={onResize} />;
 }
 
@@ -131,6 +142,90 @@ function ButtonComposer({
   );
 }
 
+// Two buttons and a box. The buttons are the verdict and the box is a rider on
+// it: a player who wants to say what was actually left out can, and one who does
+// not can press a button and move. Neither verdict is wrong, so there is nothing
+// to disable and nothing to validate. What the note usually carries is the reason
+// a call was waved off, and that is the part worth keeping.
+function ConfirmComposer({
+  state,
+  onSubmit,
+  onResize,
+}: {
+  state: Extract<ComposerState, { kind: 'confirm' }>;
+  onSubmit: (value: string, revisions: Revision[]) => void;
+  onResize?: () => void;
+}) {
+  const [note, setNote] = useState('');
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const opened = useRef(Date.now());
+  const trace = useRef<Revision[]>([{ t: 0, text: '', reason: 'pause' }]);
+  const pauseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const snap = (value: string, reason: Revision['reason']) => {
+    const last = trace.current[trace.current.length - 1];
+    if (last && last.text === value) return;
+    trace.current.push({ t: Date.now() - opened.current, text: value, reason });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pauseTimer.current) clearTimeout(pauseTimer.current);
+    };
+  }, []);
+
+  // Same grow-to-fit as the free composer: the note is usually one line and
+  // occasionally a paragraph, and the thread above is sized by what is left.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const border = el.offsetHeight - el.clientHeight;
+    el.style.height = `${el.scrollHeight + border}px`;
+    onResize?.();
+  }, [note, onResize]);
+
+  const onChange = (value: string) => {
+    setNote(value);
+    if (pauseTimer.current) clearTimeout(pauseTimer.current);
+    pauseTimer.current = setTimeout(() => snap(value, 'pause'), PAUSE_MS);
+  };
+
+  const send = (verdict: 'yes' | 'no') => {
+    if (pauseTimer.current) clearTimeout(pauseTimer.current);
+    snap(note.trim(), 'send');
+    onSubmit(confirmValue(verdict, note), trace.current);
+  };
+
+  return (
+    <div className="composer composer-confirm">
+      <div className="composer-btn-row">
+        <button className="btn" onClick={() => send('yes')}>
+          {state.yes}
+        </button>
+        <button className="btn" onClick={() => send('no')}>
+          {state.no}
+        </button>
+      </div>
+      <textarea
+        ref={ref}
+        value={note}
+        rows={1}
+        placeholder={state.placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={() => snap(note.trim(), 'blur')}
+        onKeyDown={(e) => {
+          // Return does not send here. There is no answer yet: the note is a
+          // rider on a verdict, and the verdict is one of the two buttons.
+          if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+          }
+        }}
+      />
+    </div>
+  );
+}
+
 // The key remounts the text states so a new item never inherits the last one's
 // draft. nonce is what makes a retry of the same item remount too: the player is
 // being sent back to a line they already typed, and the box has to come back
@@ -139,6 +234,7 @@ function composerKey(state: ComposerState): string {
   if (state.kind === 'prefilled') return `p:${state.prefill}:${state.nonce ?? 0}`;
   if (state.kind === 'free') return `f:${state.placeholder}:${state.nonce ?? 0}`;
   if (state.kind === 'template') return `t:${state.segments.length}:${state.nonce ?? 0}`;
+  if (state.kind === 'confirm') return `y:${state.nonce ?? 0}`;
   if (state.kind === 'call') return `c:${state.nonce ?? 0}`;
   return state.kind;
 }

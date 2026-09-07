@@ -183,6 +183,40 @@ function renderStep(step: Step): void {
       break;
     }
 
+    case 'confirm': {
+      push(`**Confirm** _(id: ${step.id}, card: ${RULE_LABEL[step.rule]})_`);
+      blank();
+      quote(step.ask, step.speaker ?? (step.lane === 'coach' ? 'Coach' : 'Opponent'));
+      blank();
+      push(`- **Yes button:** "${step.yesLabel ?? 'Yes, that one landed on me'}"`);
+      push(`- **No button:** "${step.noLabel ?? 'No, I am fine with it'}"`);
+      push(`- **Note box placeholder:** "${step.placeholder ?? 'Say it in your own words, if you want'}"`);
+      push(`- **If the call is upheld:** ${step.onYes}`);
+      push(`- **If it is waved off:** ${step.onNo}`);
+      push(
+        `- **Token cost:** ${step.pays ? `${step.pays} pays when upheld` : 'none, nothing moves either way'}`,
+      );
+      push('- **Neither answer is wrong.** The person who may have been fouled makes the call, so there is nothing here to grade.');
+      blank();
+      break;
+    }
+
+    case 'template': {
+      push(`**Template** _(id: ${step.id}, card: ${RULE_LABEL[step.rule]})_`);
+      blank();
+      if (step.ask) {
+        quote(step.ask, 'Coach');
+        blank();
+      }
+      const frame = step.segments
+        .map((seg) => ('text' in seg ? seg.text : `[${seg.input.placeholder}]`))
+        .join('');
+      push(`- **Frame the player fills in:** ${frame}`);
+      if (step.reply) push(`- **Coach's reply:** ${step.reply}`);
+      blank();
+      break;
+    }
+
     case 'continue': {
       push(`**[Continue button: "${step.label}"]**`);
       blank();

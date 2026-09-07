@@ -618,7 +618,7 @@ function Room({
           result reads as a screen that has not finished loading. */}
       {!gym.finished && (
         <RuleCards
-          enabled={[level.rule]}
+          enabled={level.cards}
           live={railLive ? liveCards(gym.composer.kind, call?.callable) : null}
           onCall={(f) => gym.submit(f, [])}
           pass={

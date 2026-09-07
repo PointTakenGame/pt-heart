@@ -1852,6 +1852,27 @@ p  { margin: 0 0 0.75rem; }
   background: var(--cream);
 }
 
+/* The verdict composer: two buttons over an always-open note box. The box is
+   not a second question, it is a rider on the button, so it sits under them and
+   stays quiet until somebody types in it. */
+.composer-confirm { gap: 0.6rem; }
+.composer-confirm textarea {
+  width: 100%;
+  font: inherit;
+  resize: none;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--white);
+  color: inherit;
+  overflow: hidden;
+}
+.composer-confirm textarea:focus {
+  outline: none;
+  border-color: var(--teal);
+  background: var(--cream);
+}
+
 /* Live play: the block under the ladder, and the door screen. */
 .live-head { margin-top: 2rem; }
 .live-doors { display: flex; gap: 0.6rem; margin-top: 0.75rem; }

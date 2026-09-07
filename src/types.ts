@@ -54,6 +54,16 @@ export type ComposerState =
   | { kind: 'free'; placeholder: string; chips: string[]; nonce?: number }
   /** A sentence frame the player fills in, rather than a blank box plus hints. */
   | { kind: 'template'; segments: TemplateSegment[]; nonce?: number }
+  /** The person a foul may have landed on, ruling on it. Two buttons carry the
+   *  answer and the box under them is always open, because they may want to say
+   *  something instead of, or as well as, pressing one (Steve, 2026-08-26). */
+  | {
+      kind: 'confirm';
+      yes: string;
+      no: string;
+      placeholder: string;
+      nonce?: number;
+    }
   | { kind: 'continue'; label: string };
 
 export interface Revision {
@@ -147,6 +157,42 @@ interface ModelStep {
   fallback: string;
 }
 
+/** A suggested foul, answered by the person it may have landed on: yes, no, or
+ *  their own words. Both replies are authored, so this runs with no API key, and
+ *  neither answer is wrong. soul.md section 6 gives the call to the human who was
+ *  there, so waving one off is free and is said out loud rather than corrected. */
+interface ConfirmStep {
+  kind: 'confirm';
+  id: string;
+  rule: FoulType;
+  lane: 'coach' | 'opponent';
+  speaker?: string;
+  /** the suggestion itself, spoken before the buttons open */
+  ask: string;
+  /** what the suggester says when the call is upheld */
+  onYes: string;
+  /** what they say when it is waved off */
+  onNo: string;
+  yesLabel?: string;
+  noLabel?: string;
+  placeholder?: string;
+  /** whose purse pays when the call is upheld. Omit and nothing moves. */
+  pays?: 'player' | 'opponent';
+}
+
+/** A sentence frame with blanks in it. The player is not staring at an empty
+ *  box; the shape of the move is already on screen and they supply the words. */
+interface TemplateStep {
+  kind: 'template';
+  id: string;
+  rule: FoulType;
+  /** what the coach asks for before the frame opens */
+  ask?: string;
+  segments: TemplateSegment[];
+  /** what the coach says back. One pass, no grading. */
+  reply?: string;
+}
+
 interface ContinueStep {
   kind: 'continue';
   label: string;
@@ -160,6 +206,8 @@ export type Step =
   | EditStep
   | FreeStep
   | ModelStep
+  | ConfirmStep
+  | TemplateStep
   | ContinueStep;
 
 export interface Beat {
@@ -189,6 +237,18 @@ export interface LevelDef {
   title: string;
   teaches: string;
   rule: FoulType;
+  /** Every card the level puts on the rail. A one-card level lists its own rule;
+   *  it is spelled out rather than derived from `rule` because the rungs above
+   *  the gym run all three at once, and a rail that quietly tracks `rule` would
+   *  have to be found and unpicked on the day one of them ships. */
+  cards: FoulType[];
+  /** Whether the token economy is switched on. Nathan, 2026-09-05: the cost is
+   *  introduced and goes live when the player takes the referee's chair, so the
+   *  gym levels are `'off'` and both stacks genuinely do not move, not for a
+   *  drill and not for a boss call either. The coach says so out loud in all
+   *  three levels. Required, not optional, so a new level makes the choice out
+   *  loud instead of inheriting one. */
+  tokens: 'off' | 'live';
   boss: string;
   /** the boss's face, big, on every line they speak */
   bossEmoji: string;
