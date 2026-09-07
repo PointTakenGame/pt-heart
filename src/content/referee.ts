@@ -64,6 +64,40 @@ export interface RefTurn {
   frame?: string;
   /** the coach narrates before this turn, out of the ring */
   intro?: string;
+  /**
+   * The scripted answer key for a whistle blown on this turn.
+   *
+   * Steve's ruling of 2026-09-07 (HEART-T260907-01): inside the gym, the fighter's
+   * response to a call is a script, not a judgment. It used to go to the model
+   * through `affirmCall`, which meant the one moment the level is actually about
+   * was the one moment nobody had written. Present means scripted and the model
+   * is never asked; absent means the old path, which is what levels 5 and 6 still
+   * use while they are frozen.
+   *
+   * `upheld` and `declined` are the fouled fighter's own words, in character.
+   * `declined` covers both misses that can happen: the wrong card on a real foul,
+   * and a whistle on a line that was clean. Neither costs the referee anything,
+   * per the no-purse rule above, so this is teaching text and not a penalty.
+   *
+   * `onCall` is the coach afterwards whenever the whistle was blown, `onPass`
+   * whenever it was let stand.
+   */
+  scripted?: {
+    upheld: string;
+    declined: string;
+    onCall: string;
+    onPass: string;
+  };
+  /**
+   * A line the fighter says once the call on this turn is settled.
+   *
+   * Steve's ruling of 2026-09-07: each fighter repairs their own foul, not the
+   * other's. The alternative, which shipped here until now, had each of them
+   * clean up after the other so that neither ended the round as the one who
+   * modelled good behaviour. He picked the redemption arc instead, so these are
+   * the two concessions that pay off the two fouls their own speaker committed.
+   */
+  after?: { actor: RefActor; text: string };
 }
 
 export interface RefereeLevel {
@@ -228,6 +262,30 @@ const LEVEL_4: RefereeLevel = {
   // keys in the corpus table, so the prefix is spoken for. Slug plus item id is
   // what makes a corpus row unique, so nothing would have broken; a later
   // analyst grepping `l4-` for one level and getting two would have.
+  // Reordered and re-cut on 2026-09-07 to Nathan's build of this round, on Steve's
+  // ruling that Nathan is the ground truth for level 4 content. Two changes with
+  // teeth.
+  //
+  // First, the ledger. Victor now fouls twice for three tokens and Olivia once for
+  // one, a three-to-one split rather than the even two-and-two that shipped here.
+  // The turn that made it even was Olivia's mirror Judging foul, "you have never
+  // once waited forty minutes for a bus you were not sure was coming", and it is
+  // gone. Steve was shown that this leaves three quarters of the round's penalty
+  // on the pro-highway speaker and ruled it anyway: "let Nathan overrule you on
+  // that point", and separately "stop worrying about political balance, I will
+  // judge that when I play." Recorded, not silently accepted, so that the next
+  // person to read this knows it was a call and not an oversight.
+  //
+  // Second, each fighter now repairs their own foul instead of the other's (`after`
+  // on the two clean turns). The version that shipped here had them clean up after
+  // each other on purpose, so neither one ended the round as the good example.
+  // Steve picked the redemption arc.
+  //
+  // Ids are not in numeric order and that is deliberate. `chair-t1`, `chair-t3` and
+  // `chair-t6` carry the same speaker, kind and foul they always did, so their
+  // corpus rows stay comparable across the change; the two turns whose content
+  // actually moved got fresh ids rather than quietly changing what an existing id
+  // means. `chair-t2` is retired and must not be reused.
   turns: [
     {
       id: 'chair-t1',
@@ -238,16 +296,46 @@ const LEVEL_4: RefereeLevel = {
       fallback:
         'You only want the trains because you have never had to haul three kids and a week of ' +
         'groceries in your life. You do not live in the real world the rest of us drive around in.',
+      scripted: {
+        upheld:
+          'Yes. Take it. He did not say one word about the trains, he said something about me. ' +
+          'I will have that one.',
+        declined:
+          'No, that is not the one. He did not come at what I said, he came at me. Look again.',
+        onCall:
+          'Good whistle, and she took it. He never touched her argument. He handed down a verdict ' +
+          'on her whole life, "you do not live in the real world," and that is Judging every time.',
+        onPass:
+          'That was the big one and it got past you. Not a word about transit, just a verdict on ' +
+          'who she is and how she lives. Judging, the double penalty. Costs you nothing, but she ' +
+          'was owed two and she did not get them.',
+      },
     },
     {
-      id: 'chair-t2',
+      id: 'chair-t6',
       actor: 'figure',
       kind: 'speak',
-      foul: 'judging',
+      foul: 'opinion_as_fact',
       intro: 'She is not going to let that sit.',
       fallback:
-        'And you only want the lanes because you have never once waited forty minutes for a bus ' +
-        'you were not sure was coming. You have no idea how anybody else in this city gets around.',
+        'Everyone knows widening a highway just fills it back up. Induced demand, it is settled. ' +
+        'There is nothing to argue about.',
+      scripted: {
+        upheld:
+          'Yeah, I will take that. "Nothing to argue about" while I am sitting right here arguing ' +
+          'about it. Hand it over.',
+        declined:
+          'No. She listened fine, she just told me the matter was closed. Different problem. Try ' +
+          'again.',
+        onCall:
+          'Right card, and he took it. "Everyone knows," "it is settled," "nothing to argue about." ' +
+          'She may even be onto something, but she filed her opinion as a closed fact with no owner ' +
+          'on it. Opinions as Facts.',
+        onPass:
+          'That was Opinions as Facts. "Everyone knows, it is settled" and she took a contested read ' +
+          'and stamped it closed. Victor disagrees, which is the whole definition of contested. One ' +
+          'he never got.',
+      },
     },
     {
       id: 'chair-t3',
@@ -258,41 +346,90 @@ const LEVEL_4: RefereeLevel = {
       fallback:
         'So what I am hearing is you want to force everyone out of their cars. That is it, right? ' +
         'Anything else?',
+      scripted: {
+        upheld:
+          'Yes, I am taking that one. He made it sound like a summary and there was nothing of ' +
+          'mine left in it.',
+        declined:
+          'No, that is the wrong card for it. He was not ruling on me and he was not stating a ' +
+          'fact. He was pretending to repeat me.',
+        onCall:
+          'Sharp, and she took it. He dressed a summary up as listening and dropped everything ' +
+          'under it, her reason, the whole case for transit, and handed back the version he could ' +
+          'swat. Fake Listening.',
+        onPass:
+          'He made it sound like a summary, but he kept none of her reason and turned it into a ' +
+          'thing he could knock down. "Force everyone out of their cars" was never her point. ' +
+          'Fake Listening, and it slipped by.',
+      },
     },
     {
-      id: 'chair-t4',
+      // Clean, and the fixed version of her own foul two turns back. `upheld` can
+      // never fire on a turn with `foul: null`, since the key upholds only the card
+      // the turn was written to commit, but the field is not optional and a fighter
+      // still needs something in character to say.
+      id: 'chair-owned',
       actor: 'figure',
+      kind: 'speak',
+      foul: null,
+      intro: 'She takes another run at the same take. Hold her to the bar you just held him to.',
+      fallback:
+        'The way I see it, transit is the better bet here, because the last time this stretch got ' +
+        'widened it was jammed again inside two years.',
+      scripted: {
+        upheld: 'No, I am not taking that. She owned it and she backed it. That is fair.',
+        declined:
+          'No, I am not taking that. I do not agree with a word of it, but she said it was her ' +
+          'read and she said why. That is fair.',
+        onCall:
+          'And he waved you off, which is his right. "The way I see it" owns it as hers, and she ' +
+          'put a checkable reason under it, the last widening that jammed up in two years. That is ' +
+          'exactly the shape you want. Nothing to call, and nothing lost by asking.',
+        onPass:
+          'Right, let it stand. She owned it as her read and backed it with something you could go ' +
+          'check. That is the clean version of the same take she fouled on a minute ago, and there ' +
+          'is no card for doing it right.',
+      },
+      after: {
+        actor: 'figure',
+        text:
+          'And fine, I said "everyone knows" earlier. That was me closing the door. It is my read, ' +
+          'not the last word. I will own it.',
+      },
+    },
+    {
+      id: 'chair-summary',
+      actor: 'ray',
       kind: 'summarize',
       foul: null,
-      intro: 'Her turn at the same move. Hold her to the same bar you just held him to.',
+      intro: 'Last one, and it is the same move he fouled on. Do not sleep through the last call.',
       fallback:
-        'What I heard was that the lanes matter to you because a car is the only way you can move ' +
-        'three kids and a week of groceries, and losing that is not a small thing. Did I miss ' +
-        'anything?',
-    },
-    {
-      id: 'chair-t5',
-      actor: 'ray',
-      kind: 'speak',
-      foul: null,
-      intro: 'He gets another swing at it.',
-      fallback:
-        'The way I see it, widening is still the better bet on this stretch, because the two exits ' +
-        'either side of it back up every single morning and nothing we have tried has touched that.',
-    },
-    {
-      id: 'chair-t6',
-      actor: 'figure',
-      kind: 'speak',
-      foul: 'opinion_as_fact',
-      intro: 'Last one. Do not let the last call be the one you sleep through.',
-      fallback:
-        'Everyone knows widening just fills back up. Induced demand. It is settled, there is ' +
-        'nothing here to argue about.',
+        'What I heard is you would back transit here because the last widening filled right back up ' +
+        'inside two years. Did I miss anything?',
+      scripted: {
+        upheld: 'No, he kept my reason and he asked if he missed anything. Nothing to take.',
+        declined:
+          'No, he kept it. The two years, the whole reason. And he asked. I have got nothing to ' +
+          'take there.',
+        onCall:
+          'She waved it off, and she is right to. That time he kept her reason, the two years, and ' +
+          'asked if he missed anything. That is the fixed version of the move he fouled on before. ' +
+          'A whistle you get wrong here costs you nothing, but keep watching before you blow it.',
+        onPass:
+          'Right. Reason kept, and then "did I miss anything?" That is the honest summary, the ' +
+          'opposite of what he did earlier. You let good listening stand, which is the other half ' +
+          'of the job.',
+      },
+      after: {
+        actor: 'ray',
+        text:
+          'Yeah. That is her actual point, not the one I stuck her with. And the crack about her ' +
+          'life, that was out of line. I will keep it on the road.',
+      },
     },
   ],
   outro:
-    'That is a whole round called. Two doubles, two lighter ones, and two honest lines that had ' +
+    'That is a whole round called. A double, two lighter ones, and two honest lines that had ' +
     'every right to walk. Letting those two go matters as much as the whistle: a referee who ' +
     'calls everything is as useless as one who calls nothing.',
 };

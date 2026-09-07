@@ -189,16 +189,25 @@ export function useReferee(level: RefereeLevel, avatar: string): RefereeRun {
         const speaker = isRay ? left.name : level.figure;
         const listener = isRay ? level.figure : left.name;
 
-        const out = await figureLine(
-          speaker,
-          level.topic,
-          isRay ? level.rayStance : level.figureStance,
-          isRay ? lastFigure : lastRay,
-          turn.kind,
-          turn.foul,
-          turn.fallback,
-          turn.frame,
-        );
+        // A scripted turn is scripted end to end. The answer key in `scripted`
+        // quotes the line back at the player word for word ("you do not live in
+        // the real world"), so it is only true if the line is the one in
+        // `fallback`. Letting the model write a fresh line under a fixed key
+        // produces a coach who confidently cites a sentence nobody said, which
+        // is exactly what happened the first time this ran (2026-09-07). The
+        // model still writes every line in levels 5 and 6, which carry no key.
+        const out = turn.scripted
+          ? { text: turn.fallback, fromModel: false }
+          : await figureLine(
+              speaker,
+              level.topic,
+              isRay ? level.rayStance : level.figureStance,
+              isRay ? lastFigure : lastRay,
+              turn.kind,
+              turn.foul,
+              turn.fallback,
+              turn.frame,
+            );
         if (isRay) lastRay = out.text;
         else lastFigure = out.text;
 
@@ -234,21 +243,54 @@ export function useReferee(level: RefereeLevel, avatar: string): RefereeRun {
           face: avatar,
         });
 
+        // The fouled fighter's line, whichever way the call went. Scripted when
+        // the turn carries an answer key (level 4, Steve's ruling of 2026-09-07),
+        // and only otherwise does the model get asked.
+        const sayRuling = (text: string) =>
+          say(
+            isRay
+              ? { lane: 'opponent', speaker: listener, text }
+              : { lane: 'player', speaker: listener, text, face: left.emoji },
+          );
+
         let good: boolean;
         if (called === 'stand') {
           // Nobody was asked, so this is the one place the authored schedule
           // decides. Nothing moves either way: the referee has no purse, and a
           // foul nobody stopped is a foul nobody paid for.
           good = turn.foul === null;
-          await coach(good ? REF_COACH.clean : REF_COACH.missed);
+          if (turn.scripted) await coach(turn.scripted.onPass);
+          else await coach(good ? REF_COACH.clean : REF_COACH.missed);
+        } else if (turn.scripted) {
+          const foul = called as FoulType;
+          // The answer key, not a judgment: upheld exactly when the referee named
+          // the card the turn was written to commit. A clean turn has `foul: null`
+          // and so is never upheld, which is the point of the two clean turns.
+          const upheld = foul === turn.foul;
+          await sayRuling(upheld ? turn.scripted.upheld : turn.scripted.declined);
+          good = upheld;
+          if (upheld) {
+            const moved = transfer(isRay ? 'ray' : 'figure', foulCost(foul));
+            // Nathan's key ended each of these with the amount spelled out ("Two
+            // tokens across the table"). The amount comes off `foulCost` here
+            // instead, so the key cannot drift out of step with the ledger.
+            await coach(
+              `${turn.scripted.onCall} ${formatTokens(moved)} ` +
+                `${moved === 1 ? 'token' : 'tokens'} from ${speaker}.`,
+            );
+          } else if (turn.foul === null) {
+            // A whistle on a clean line. The fighter has already waved it off, and
+            // `onCall` here is written to explain why the line was fine, so it is
+            // the teaching beat rather than a scolding.
+            await coach(turn.scripted.onCall);
+          }
+          // Right whistle, wrong card, on a turn that really did foul: the
+          // fighter's `declined` line names what they were actually looking at,
+          // which is the whole correction. A coach line on top would bury it.
         } else {
           const foul = called as FoulType;
           const ruling = await affirmCall(listener, out.text, foul, turn.foul);
-          await say(
-            isRay
-              ? { lane: 'opponent', speaker: listener, text: ruling.text }
-              : { lane: 'player', speaker: listener, text: ruling.text, face: left.emoji },
-          );
+          await sayRuling(ruling.text);
           good = ruling.upheld;
           if (ruling.upheld) {
             const moved = transfer(isRay ? 'ray' : 'figure', foulCost(foul));
@@ -258,6 +300,21 @@ export function useReferee(level: RefereeLevel, avatar: string): RefereeRun {
           } else {
             await coach(REF_COACH.declined(listener));
           }
+        }
+
+        // The fighter owns their own foul out loud, once the call is settled.
+        if (turn.after) {
+          const afterIsRay = turn.after.actor === 'ray';
+          await say(
+            afterIsRay
+              ? {
+                  lane: 'player',
+                  speaker: left.name,
+                  text: turn.after.text,
+                  face: left.emoji,
+                }
+              : { lane: 'opponent', speaker: level.figure, text: turn.after.text },
+          );
         }
 
         hits += good ? 1 : 0;
