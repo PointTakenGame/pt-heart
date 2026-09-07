@@ -47,6 +47,15 @@ const SHOWDOWN_NUMBER = REF_SEAT_NUMBER + 1;
 const REFEREE_NUMBER_BASE = SHOWDOWN_NUMBER + 1;
 const FINAL_NUMBER = REFEREE_NUMBER_BASE + REFEREE_LEVELS.length;
 
+// Steve's ruling of 2026-09-07: The Third Chair is the last rung anyone plays for
+// now. Everything above it is about to be restructured (the Sofia Showdown is
+// cut, and the two referee levels become parts A/B and C of one Final Showdown),
+// so those rungs are shown but not enterable. Nothing is deleted. The writing in
+// them is kept and re-attributed when the rebuild happens. Set this to false to
+// walk the old ladder again.
+const FROZEN_ABOVE_THIRD_CHAIR = true;
+const FROZEN_SUB = 'being rebuilt \u00b7 not playable yet';
+
 type Screen =
   | { name: 'agreement' }
   | { name: 'select' }
@@ -345,15 +354,21 @@ function Select({
         </li>
         <li>
           <button
-            className={`level-card level-card-boss${allCleared ? '' : ' is-locked'}`}
-            disabled={!allCleared}
+            className={`level-card level-card-boss${allCleared && !FROZEN_ABOVE_THIRD_CHAIR ? '' : ' is-locked'}`}
+            disabled={!allCleared || FROZEN_ABOVE_THIRD_CHAIR}
             onClick={onShowdown}
           >
-            <span className="level-n">{allCleared ? SHOWDOWN_NUMBER : '\u{1F512}'}</span>
+            <span className="level-n">
+              {allCleared && !FROZEN_ABOVE_THIRD_CHAIR ? SHOWDOWN_NUMBER : '\u{1F512}'}
+            </span>
             <span className="level-mid">
               <span className="level-title">The Showdown</span>
               <span className="level-sub">
-                {allCleared ? 'All three cards \u00b7 Slippery Sofia' : 'clear all three levels first'}
+                {FROZEN_ABOVE_THIRD_CHAIR
+                  ? FROZEN_SUB
+                  : allCleared
+                    ? 'All three cards \u00b7 Slippery Sofia'
+                    : 'clear all three levels first'}
               </span>
             </span>
             {isCleared(SHOWDOWN_SLUG) && <span className="level-done">played</span>}
@@ -363,7 +378,9 @@ function Select({
             the third seat, so these unlock behind the Showdown: you get handed
             the whistle after you have been on the wrong end of one. */}
         {REFEREE_LEVELS.map((l, i) => {
-          const locked = i === 0 ? !isCleared(SHOWDOWN_SLUG) : !isCleared(REFEREE_LEVELS[i - 1].slug);
+          const locked =
+            FROZEN_ABOVE_THIRD_CHAIR ||
+            (i === 0 ? !isCleared(SHOWDOWN_SLUG) : !isCleared(REFEREE_LEVELS[i - 1].slug));
           return (
             <li key={l.slug}>
               <button
@@ -375,11 +392,13 @@ function Select({
                 <span className="level-mid">
                   <span className="level-title">{l.title}</span>
                   <span className="level-sub">
-                    {locked
-                      ? i === 0
-                        ? 'play the Showdown first'
-                        : `clear level ${REFEREE_NUMBER_BASE + i - 1} first`
-                      : `You referee · ${l.figure}`}
+                    {FROZEN_ABOVE_THIRD_CHAIR
+                      ? FROZEN_SUB
+                      : locked
+                        ? i === 0
+                          ? 'play the Showdown first'
+                          : `clear level ${REFEREE_NUMBER_BASE + i - 1} first`
+                        : `You referee · ${l.figure}`}
                   </span>
                 </span>
                 {isCleared(l.slug) && <span className="level-done">cleared</span>}
@@ -391,7 +410,9 @@ function Select({
             perform two moves they only ever refereed before. */}
         <li>
           {(() => {
-            const locked = !isCleared(REFEREE_LEVELS[REFEREE_LEVELS.length - 1].slug);
+            const locked =
+              FROZEN_ABOVE_THIRD_CHAIR ||
+              !isCleared(REFEREE_LEVELS[REFEREE_LEVELS.length - 1].slug);
             return (
               <button
                 className={`level-card level-card-boss${locked ? ' is-locked' : ''}`}
@@ -402,7 +423,11 @@ function Select({
                 <span className="level-mid">
                   <span className="level-title">The Final Showdown</span>
                   <span className="level-sub">
-                    {locked ? `clear level ${FINAL_NUMBER - 1} first` : `Be generous · ${SUNGMIN}`}
+                    {FROZEN_ABOVE_THIRD_CHAIR
+                      ? FROZEN_SUB
+                      : locked
+                        ? `clear level ${FINAL_NUMBER - 1} first`
+                        : `Be generous · ${SUNGMIN}`}
                   </span>
                 </span>
                 {isCleared(FINAL_SLUG) && <span className="level-done">played</span>}
