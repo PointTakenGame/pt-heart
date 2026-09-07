@@ -35,6 +35,7 @@
 
 import type { FoulType, PrefightStep } from '../types.ts';
 import { COACH_EMOJI, COACH_NAME } from '../avatars.ts';
+import { LEVEL_ID, type LevelId } from './ids.ts';
 
 export type RefActor = 'ray' | 'figure';
 
@@ -101,7 +102,9 @@ export interface RefTurn {
 }
 
 export interface RefereeLevel {
-  /** Saves name levels by slug, never by number (ruling B3, 2026-08-23). */
+  /** The permanent save key. Ruling HEART-T260906-03; see ids.ts. */
+  id: LevelId;
+  /** A renameable label, and the key to nothing. */
   slug: string;
   title: string;
   teaches: string;
@@ -194,6 +197,7 @@ const OLIVIA = '\u{1F469}\u{1F3FF}';
 // behaviour. Their two Judging fouls are the same move in mirror image: each one
 // tells the other they have never lived the life that would teach them better.
 const LEVEL_4: RefereeLevel = {
+  id: LEVEL_ID.refereeSeat,
   slug: 'the-third-chair',
   title: 'The Third Chair',
   teaches: 'All three cards at once, and the whistle only suggests.',
@@ -441,6 +445,7 @@ const LEVEL_4: RefereeLevel = {
 // 6). That is a Judging foul at two tokens, not a soft one, and it is hard to
 // hear as one because it opens with "I learned".
 const LEVEL_5: RefereeLevel = {
+  id: LEVEL_ID.refereeLearned,
   slug: 'referee-what-i-learned',
   title: 'What I Learned',
   teaches: 'A verdict does not stop being a verdict because it starts with "I learned".',
@@ -560,6 +565,7 @@ const LEVEL_5: RefereeLevel = {
 // rules the line between them the Referee's call, made in the room. This level is
 // where a player learns to make it.
 const LEVEL_6: RefereeLevel = {
+  id: LEVEL_ID.refereeDisagree,
   slug: 'referee-why-we-disagree',
   title: 'Why We Might Still Disagree',
   teaches:

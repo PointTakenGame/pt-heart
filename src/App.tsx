@@ -5,12 +5,12 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { LEVELS } from './content/index.ts';
 import type { FoulType, LevelDef } from './types.ts';
-import { useGym } from './engine.ts';
+import { useGym, type ReviewTurn } from './engine.ts';
 import { Composer } from './ui/Composer.tsx';
 import { Thread, type ThreadHandle } from './ui/Thread.tsx';
 import { Drill } from './ui/Drill.tsx';
 import { Header } from './ui/Header.tsx';
-import { RuleCards, RuleCardMini } from './ui/RuleCards.tsx';
+import { RuleCards, RuleCardFull, RuleCardMini } from './ui/RuleCards.tsx';
 import { BossIntro } from './ui/BossIntro.tsx';
 import { Prefight } from './ui/Prefight.tsx';
 import { Mast } from './ui/Mast.tsx';
@@ -26,10 +26,10 @@ import {
   leftSeat,
   type RefereeLevel,
 } from './content/referee.ts';
-import { SHOWDOWN_PREFIGHT, SHOWDOWN_SLUG, SOFIA_EMOJI } from './content/showdown.ts';
+import { SHOWDOWN_ID, SHOWDOWN_PREFIGHT, SOFIA_EMOJI } from './content/showdown.ts';
 import {
+  FINAL_ID,
   FINAL_PREFIGHT,
-  FINAL_SLUG,
   SUNGMIN,
   SUNGMIN_EMOJI,
   SUNGMIN_EPITHET,
@@ -333,7 +333,7 @@ function Select({
   // The ladder is a ladder. Steve's ruling of 2026-08-24: level 2 cannot be
   // opened before level 1 is cleared, because each level assumes the card the
   // one before it taught, and the showdown assumes all three.
-  const cleared = LEVELS.map((l) => isCleared(l.slug));
+  const cleared = LEVELS.map((l) => isCleared(l.id));
   const allCleared = cleared.every(Boolean);
 
   return (
@@ -403,7 +403,7 @@ function Select({
                   : 'clear all three levels first'}
               </span>
             </span>
-            {isCleared(REF_SEAT_LEVEL.slug) && <span className="level-done">cleared</span>}
+            {isCleared(REF_SEAT_LEVEL.id) && <span className="level-done">cleared</span>}
           </button>
         </li>
         <li>
@@ -427,7 +427,7 @@ function Select({
                   : 'clear all three levels first'}
               </span>
             </span>
-            {isCleared(SHOWDOWN_SLUG) && <span className="level-done">played</span>}
+            {isCleared(SHOWDOWN_ID) && <span className="level-done">played</span>}
           </button>
         </li>
         {/* The referee levels. Ray goes down into the ring and the player takes
@@ -436,7 +436,7 @@ function Select({
         {REFEREE_LEVELS.map((l, i) => {
           const locked =
             FROZEN_ABOVE_SOFIA ||
-            (i === 0 ? !isCleared(SHOWDOWN_SLUG) : !isCleared(REFEREE_LEVELS[i - 1].slug));
+            (i === 0 ? !isCleared(SHOWDOWN_ID) : !isCleared(REFEREE_LEVELS[i - 1].id));
           return (
             <li key={l.slug}>
               <button
@@ -457,7 +457,7 @@ function Select({
                         : `You referee · ${l.figure}`}
                   </span>
                 </span>
-                {isCleared(l.slug) && <span className="level-done">cleared</span>}
+                {isCleared(l.id) && <span className="level-done">cleared</span>}
               </button>
             </li>
           );
@@ -468,7 +468,7 @@ function Select({
           {(() => {
             const locked =
               FROZEN_ABOVE_SOFIA ||
-              !isCleared(REFEREE_LEVELS[REFEREE_LEVELS.length - 1].slug);
+              !isCleared(REFEREE_LEVELS[REFEREE_LEVELS.length - 1].id);
             return (
               <button
                 className={`level-card${locked ? ' is-locked' : ' level-card-boss'}`}
@@ -486,7 +486,7 @@ function Select({
                         : `Be generous · ${SUNGMIN}`}
                   </span>
                 </span>
-                {isCleared(FINAL_SLUG) && <span className="level-done">played</span>}
+                {isCleared(FINAL_ID) && <span className="level-done">played</span>}
               </button>
             );
           })()}
@@ -591,6 +591,13 @@ function Room({
     );
   }
 
+  // The rung is over, so the room is over. Nathan ruling Q21 puts a review
+  // screen here rather than a button: "One end-of-level review screen: the card,
+  // its `trains` line, what you did. No score, no confetti, no modal."
+  if (gym.finished) {
+    return <Review level={level} review={gym.review} onExit={onExit} />;
+  }
+
   const call = gym.composer.kind === 'call' ? gym.composer : null;
 
   // Training and a fight are two different rooms now. Steve, 2026-08-25: "The
@@ -606,15 +613,7 @@ function Room({
 
   const railLive = inBoss || !drillBehind;
 
-  const composerNode = gym.finished ? (
-    <div className="composer">
-      <button className="btn btn-wide" onClick={onExit}>
-        Back to the gym
-      </button>
-    </div>
-  ) : (
-    <Composer state={gym.composer} onSubmit={gym.submit} onResize={land} />
-  );
+  const composerNode = <Composer state={gym.composer} onSubmit={gym.submit} onResize={land} />;
 
   return (
     <div className={`page page-level${inBoss ? '' : ' page-drill'}`}>
@@ -665,26 +664,109 @@ function Room({
           // his baseball card in a room he is not in. See the Header note above.
           opponent={null}
           composer={composerNode}
-          composerReady={gym.finished || gym.composer.kind !== 'locked'}
+          composerReady={gym.composer.kind !== 'locked'}
           onBehind={setDrillBehind}
         />
       )}
-      {/* The rail goes away when the match does. Its whistle is dead once there
-          is nothing left to call, and leaving three inert cards pinned under the
-          result reads as a screen that has not finished loading. */}
-      {!gym.finished && (
-        <RuleCards
-          enabled={level.cards}
-          live={railLive ? liveCards(gym.composer.kind, call?.callable) : null}
-          onCall={(f) => gym.submit(f, [])}
-          pass={
-            call && railLive
-              ? { label: call.pass.label, onPass: () => gym.submit(call.pass.value, []) }
-              : undefined
-          }
-        />
-      )}
+      <RuleCards
+        enabled={level.cards}
+        live={railLive ? liveCards(gym.composer.kind, call?.callable) : null}
+        onCall={(f) => gym.submit(f, [])}
+        pass={
+          call && railLive
+            ? { label: call.pass.label, onPass: () => gym.submit(call.pass.value, []) }
+            : undefined
+        }
+      />
     </div>
+  );
+}
+
+/**
+ * What just happened, at the end of a gym rung.
+ *
+ * Nathan ruling Q21: "One end-of-level review screen: the card, its `trains`
+ * line, what you did. No score, no confetti, no modal." His learner report is
+ * where the shape of the third clause comes from: five out of five playtesters
+ * asked for "each line, my call, the ruling", and none of them could tell, from
+ * any screen in the game, what they had got wrong.
+ *
+ * So: no tokens, no tally, no percentage. A rung can be retried until it is
+ * right, which makes any score a foregone conclusion and a tally of retries a
+ * punishment for learning out loud. What is on the screen instead is the card
+ * the rung was teaching, printed face and all, and then every turn as it
+ * happened: the line that was on the table, what the player did about it, and
+ * what the coach said back.
+ *
+ * A full screen and not an overlay, because "no modal" is the ruling and
+ * because the review is longer than a phone. It scrolls, deliberately: the gym
+ * is open book, and re-reading the card here is the point of putting it here.
+ */
+function Review({
+  level,
+  review,
+  onExit,
+}: {
+  level: LevelDef;
+  review: ReviewTurn[];
+  onExit: () => void;
+}) {
+  return (
+    <div className="page page-review">
+      <Mast
+        slim
+        right={
+          <button className="link" onClick={onExit}>
+            Leave
+          </button>
+        }
+      />
+      <div className="review">
+        <p className="review-eyebrow">Round over</p>
+        <h1 className="review-title">{level.title}</h1>
+        <p className="review-teaches">{level.teaches}</p>
+
+        {level.cards.map((rule) => (
+          <div key={rule} className="review-card">
+            <RuleCardFull rule={rule} />
+          </div>
+        ))}
+
+        {review.length > 0 && (
+          <>
+            <h2 className="review-head">What you did</h2>
+            <ol className="review-list">
+              {review.map((turn) => (
+                <ReviewRow key={turn.id} turn={turn} />
+              ))}
+            </ol>
+          </>
+        )}
+      </div>
+      <div className="composer">
+        <button className="btn btn-wide" onClick={onExit}>
+          Back to the gym
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** One turn. The specimen, then what the player said, then the ruling.
+ *
+ *  A turn the player got wrong the first time is marked, and marked quietly: a
+ *  coloured edge on the row, no icon, no word "wrong". It is the row worth
+ *  re-reading and it should be findable while scrolling, and it is also the row
+ *  a player is most likely to feel got them, so the design pulls its punch on
+ *  purpose. Turns with nothing to grade, the ones where the player wrote a
+ *  sentence in their own words, carry no mark at all. */
+function ReviewRow({ turn }: { turn: ReviewTurn }) {
+  return (
+    <li className={`review-turn${turn.clean === false ? ' is-missed' : ''}`}>
+      {turn.line && <p className="review-specimen">{turn.line}</p>}
+      <p className="review-said">{turn.said}</p>
+      {turn.ruling && <p className="review-ruling">{turn.ruling}</p>}
+    </li>
   );
 }
 
@@ -825,7 +907,7 @@ function Door({
   // level the ruling called level 4 on the day it was made; the Third Chair was
   // inserted below it the next morning and pushed every number above it up one.
   // If the ladder renumbers again, this reads the slug, not the number.
-  const prepared = isCleared(SHOWDOWN_SLUG);
+  const prepared = isCleared(SHOWDOWN_ID);
 
   return (
     <div className="page page-narrow">

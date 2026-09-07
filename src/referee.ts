@@ -324,6 +324,7 @@ export function useReferee(level: RefereeLevel, avatar: string): RefereeRun {
 
         recordItem({
           itemId: turn.id,
+          levelId: level.id,
           levelSlug: level.slug,
           rule: turn.foul ?? level.rule,
           answer: called,
@@ -339,6 +340,7 @@ export function useReferee(level: RefereeLevel, avatar: string): RefereeRun {
 
       recordItem({
         itemId: `${level.slug}-result`,
+        levelId: level.id,
         levelSlug: level.slug,
         rule: 'mixed',
         answer: `${hits}/${seen}`,
@@ -349,7 +351,7 @@ export function useReferee(level: RefereeLevel, avatar: string): RefereeRun {
       // Cleared for finishing it, not for scoring well. There is no accuracy gate
       // anywhere in this game and this is not the place to introduce one; the
       // pass mark is something the coach says out loud, not a locked door.
-      markCleared(level.slug);
+      markCleared(level.id);
       setPassed(rate >= REF_PASS_MARK);
       setFinished(true);
       setComposer({ kind: 'locked' });

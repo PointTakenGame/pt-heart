@@ -11,6 +11,7 @@
 // Everything lives under one key so a player can clear it in one action.
 
 import type { ItemRecord } from './types.ts';
+import { LEGACY_SLUG_IDS, type LevelId } from './content/ids.ts';
 import { PLAYER_AVATARS } from './avatars.ts';
 import { donate } from './corpus.ts';
 
@@ -20,7 +21,9 @@ export interface SaveFile {
   version: 1;
   /** local-only id. Not an account, not sent anywhere in this build. */
   playerId: string;
-  /** level slug -> ISO timestamp of the first clear */
+  /** permanent level id -> ISO timestamp of the first clear. The key is an id
+   *  written as a string, because JSON object keys are strings. It used to be
+   *  the level's slug, and every rename wiped it; see content/ids.ts. */
   cleared: Record<string, string>;
   /** every answered item, in order, including the revision trace */
   items: ItemRecord[];
@@ -58,6 +61,10 @@ export function load(): SaveFile {
         if (!parsed.cleared || typeof parsed.cleared !== 'object') parsed.cleared = {};
         if (typeof parsed.playerId !== 'string') parsed.playerId = crypto.randomUUID();
         cache = parsed;
+        // Write it back, or the rename is undone on every load: the migration
+        // only mutates the object in memory, and nothing else on a level-select
+        // screen calls save().
+        if (migrateCleared(parsed)) save(parsed);
         return cache;
       }
     }
@@ -66,6 +73,33 @@ export function load(): SaveFile {
   }
   cache = blank();
   return cache;
+}
+
+/**
+ * Carry clears written under a slug onto the permanent id.
+ *
+ * Every save on disk before 2026-09-07 keys `cleared` by slug, and all three gym
+ * rungs have already been renamed once, so a playtester who cleared
+ * `the-word-you` in August is holding a key that matches nothing today. Runs on
+ * every load and is a no-op after the first: an id key is a run of digits and
+ * never appears in LEGACY_SLUG_IDS.
+ *
+ * A slug we no longer recognise is left alone rather than dropped. It costs a
+ * few bytes and it is the only copy of the fact that somebody cleared something.
+ */
+function migrateCleared(file: SaveFile): boolean {
+  let changed = false;
+  for (const [key, when] of Object.entries(file.cleared)) {
+    const id = LEGACY_SLUG_IDS[key];
+    if (id === undefined) continue;
+    const target = String(id);
+    // Keep the earlier of the two timestamps: a rung cleared under an old slug
+    // was cleared then, not on the day its rename shipped.
+    if (!file.cleared[target] || when < file.cleared[target]) file.cleared[target] = when;
+    delete file.cleared[key];
+    changed = true;
+  }
+  return changed;
 }
 
 function save(file: SaveFile): void {
@@ -87,16 +121,17 @@ export function recordItem(record: ItemRecord): void {
   donate(record, file.playerId);
 }
 
-export function markCleared(slug: string): void {
+export function markCleared(id: LevelId): void {
   const file = load();
-  if (!file.cleared[slug]) {
-    file.cleared[slug] = new Date().toISOString();
+  const key = String(id);
+  if (!file.cleared[key]) {
+    file.cleared[key] = new Date().toISOString();
     save(file);
   }
 }
 
-export function isCleared(slug: string): boolean {
-  return Boolean(load().cleared[slug]);
+export function isCleared(id: LevelId): boolean {
+  return Boolean(load().cleared[String(id)]);
 }
 
 export function getAvatar(): string | null {

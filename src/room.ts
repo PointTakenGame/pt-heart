@@ -41,6 +41,7 @@ import { RULE_LABEL, START_TOKENS, foulCost, formatTokens } from './content/show
 import {
   FALLBACK,
   ROOM_COACH,
+  ROOM_ID,
   ROOM_SLUG,
   ROOM_THIN,
   ROUNDS,
@@ -220,6 +221,7 @@ export function useRoom(config: RoomConfig): RoomRun {
     ) => {
       recordItem({
         itemId: id,
+        levelId: ROOM_ID,
         levelSlug: ROOM_SLUG,
         rule,
         answer,

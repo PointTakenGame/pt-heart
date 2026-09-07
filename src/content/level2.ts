@@ -27,8 +27,10 @@
 
 import type { LevelDef } from '../types.ts';
 import { CARDS } from './cards.ts';
+import { LEVEL_ID } from './ids.ts';
 
 export const level2: LevelDef = {
+  id: LEVEL_ID.gymOpinion,
   slug: 'my-opinion-not-a-fact',
   title: 'In my head, because',
   teaches: 'Opinions as Facts',

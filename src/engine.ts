@@ -72,6 +72,35 @@ const CARD_BEFORE_PAY_MS = 950;
 export const THIN_REPLY =
   'That is not an answer yet. Give me a real sentence, in your own words, and I will read it properly.';
 
+/**
+ * One line of the end-of-level review.
+ *
+ * Nathan ruling Q21: "One end-of-level review screen: the card, its `trains`
+ * line, what you did. No score, no confetti, no modal." The learner report is
+ * where the granularity comes from: "each line, my call, the ruling. This does
+ * not exist anywhere and every learner wanted it."
+ *
+ * So a row is what was on the table, what the player did about it, and what the
+ * coach said back. It holds the player's FIRST answer on purpose. A rung can be
+ * retried until it is right, and a review built out of final answers would tell
+ * every player the same story, that they got everything right, which is the one
+ * story with nothing in it to learn from.
+ */
+export interface ReviewTurn {
+  /** the item id, so a row can be traced to its corpus record */
+  id: string;
+  /** which card the item is teaching */
+  rule: FoulType;
+  /** the line the player was ruling on, when the step put one on the table */
+  line?: string;
+  /** what the player did, in the words the thread used */
+  said: string;
+  /** the coach's ruling on it. Empty where nothing is graded. */
+  ruling: string;
+  /** right first time, wrong first time, or null where there is no right answer */
+  clean: boolean | null;
+}
+
 export interface Gym {
   messages: Message[];
   composer: ComposerState;
@@ -81,6 +110,8 @@ export interface Gym {
   itemsDone: number;
   itemsTotal: number;
   finished: boolean;
+  /** every item the player has answered, oldest first; the review screen reads it */
+  review: ReviewTurn[];
   /** true while a message is dwelling, so the thread can offer tap-to-skip */
   waiting: boolean;
   playerTokens: number;
@@ -98,6 +129,7 @@ export function useGym(level: LevelDef): Gym {
   const [composer, setComposer] = useState<ComposerState>({ kind: 'locked' });
   const [cursor, setCursor] = useState(0);
   const [itemsDone, setItemsDone] = useState(0);
+  const [review, setReview] = useState<ReviewTurn[]>([]);
   const [finished, setFinished] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const [playerTokens, setPlayerTokens] = useState(START_TOKENS);
@@ -275,7 +307,7 @@ export function useGym(level: LevelDef): Gym {
 
     if (!entry) {
       if (!finished) {
-        markCleared(level.slug);
+        markCleared(level.id);
         setFinished(true);
         setComposer({ kind: 'locked' });
       }
@@ -409,10 +441,21 @@ export function useGym(level: LevelDef): Gym {
       const step = entry.step;
       const advance = () => setCursor((c) => c + 1);
 
+      /** Add this item to the end-of-level review. First answer only: a retry
+       *  is the same item being learned, not a second thing that happened. */
+      const logTurn = (row: Omit<ReviewTurn, 'id' | 'rule'>) => {
+        if (!isItem(step) || attempts.current !== 0) return;
+        setReview((r) => [
+          ...r,
+          { id: (step as { id: string }).id, rule: (step as { rule: FoulType }).rule, ...row },
+        ]);
+      };
+
       const record = (correct: boolean | null, suffix = '') => {
         if (!isItem(step)) return;
         recordItem({
           itemId: `${(step as { id: string }).id}${suffix}`,
+          levelId: level.id,
           levelSlug: level.slug,
           rule: (step as { rule: FoulType }).rule,
           answer: value,
@@ -470,6 +513,7 @@ export function useGym(level: LevelDef): Gym {
             // Letting a clean line stand is right, and it is worth nothing.
             if (!called) {
               push({ lane: 'coach', text: step.onPass });
+              logTurn({ line: step.line, said: 'Not a foul', ruling: step.onPass, clean: true });
               settle();
               return;
             }
@@ -478,6 +522,12 @@ export function useGym(level: LevelDef): Gym {
             // card in teh chat BEFORE the points move." Reading it in that
             // order tells you what you were paid for.
             push({ lane: 'coach', text: CARDS[step.rule].name, card: step.rule });
+            logTurn({
+              line: step.line,
+              said: `Foul: ${CARDS[step.rule].name}`,
+              ruling: step.onCall,
+              clean: true,
+            });
             const clean = attempts.current === 0;
             after(CARD_BEFORE_PAY_MS, () => {
               push({ lane: 'coach', text: step.onCall });
@@ -507,6 +557,12 @@ export function useGym(level: LevelDef): Gym {
                 ? `That was a foul, but not that one. ${CARDS[step.rule].tell}`
                 : step.onPass;
           push({ lane: 'coach', text: step.onWrong ?? missText });
+          logTurn({
+            line: step.line,
+            said: called ? `Foul: ${CARDS[value as FoulType]?.name ?? value}` : 'Not a foul',
+            ruling: step.onWrong ?? missText,
+            clean: false,
+          });
           push({ lane: 'coach', text: 'Again. Call the foul, or say it is not one.' });
           attempts.current += 1;
           nonce.current += 1;
@@ -526,6 +582,12 @@ export function useGym(level: LevelDef): Gym {
           setComposer({ kind: 'locked' });
           push({ lane: 'player', text: picked?.label ?? value });
           push({ lane: 'coach', text: step.feedback[value] ?? '' });
+          logTurn({
+            line: step.line,
+            said: picked?.label ?? value,
+            ruling: step.feedback[value] ?? '',
+            clean: correct,
+          });
           record(correct, attempts.current === 0 ? '' : `-redo${attempts.current}`);
 
           if (correct) {
@@ -553,6 +615,7 @@ export function useGym(level: LevelDef): Gym {
             return;
           }
           captured.current[step.capture] = value;
+          logTurn({ said: value, ruling: '', clean: null });
           record(null);
           setComposer({ kind: 'locked' });
           push({ lane: 'player', text: value });
@@ -586,6 +649,7 @@ export function useGym(level: LevelDef): Gym {
           push({ lane: 'player', text: value });
           void (async () => {
             const out = await judgeEdit(step.target, step.prefill, value, step.fallback);
+            logTurn({ line: step.prefill, said: value, ruling: out.text, clean: out.pass });
             record(out.pass, '');
             push({ lane: 'coach', text: out.text });
 
@@ -615,6 +679,11 @@ export function useGym(level: LevelDef): Gym {
           // record(null) on purpose. soul.md section 6: "did I foul?" is answered
           // by the person who might have been fouled, so neither button can be
           // wrong and there is nothing here to grade. The answer is corpus.
+          logTurn({
+            said,
+            ruling: verdict === 'yes' ? step.onYes : step.onNo,
+            clean: null,
+          });
           record(null);
 
           if (verdict === 'yes') {
@@ -642,6 +711,7 @@ export function useGym(level: LevelDef): Gym {
           // answer. Nothing to grade: the frame did the teaching.
           setComposer({ kind: 'locked' });
           push({ lane: 'player', text: value });
+          logTurn({ said: value, ruling: step.reply ?? '', clean: null });
           record(null);
           if (step.reply) push({ lane: 'coach', text: step.reply });
           settle();
@@ -664,6 +734,7 @@ export function useGym(level: LevelDef): Gym {
     itemsDone,
     itemsTotal,
     finished,
+    review,
     waiting,
     playerTokens,
     opponentTokens,

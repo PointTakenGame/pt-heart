@@ -28,8 +28,10 @@
 
 import type { LevelDef } from '../types.ts';
 import { CARDS } from './cards.ts';
+import { LEVEL_ID } from './ids.ts';
 
 export const level1: LevelDef = {
+  id: LEVEL_ID.gymJudging,
   slug: 'about-the-argument',
   title: 'About the argument, not the person',
   teaches: 'Judging',

@@ -202,7 +202,15 @@ minimum wage.
 ## Storage
 
 One `localStorage` key, `humility-showdown.v1`, holding a local `playerId`, a
-map of cleared level slugs, and every answered item. Text items carry a
+map of cleared level ids, and every answered item.
+
+**A save is keyed by a level's permanent id, never by its slug.** The ids live in
+`src/content/ids.ts` and are plain integers, assigned once and never reused. The
+map used to be keyed by slug, and because a slug is a label that gets edited for
+good reasons, every rename silently wiped everyone's progress on that rung. It is
+not hypothetical: all three gym rungs have been renamed once already. `load()`
+carries the old slug keys forward through `LEGACY_SLUG_IDS`, so never delete a
+line from that table. Text items carry a
 `revisions` array of boundary snapshots (900ms pause, blur, chip insert, send),
 which is what records "they typed the judgment first, then deleted it".
 

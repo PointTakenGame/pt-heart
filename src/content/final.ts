@@ -23,8 +23,10 @@
 // should ever start to.
 
 import type { PrefightStep, TemplateSegment } from '../types.ts';
+import { LEVEL_ID } from './ids.ts';
 
 export const FINAL_SLUG = 'final-showdown';
+export const FINAL_ID = LEVEL_ID.final;
 
 export const SUNGMIN = 'Stonewall Sung-min';
 export const SUNGMIN_EMOJI = '\u{1F468}\u{1F3FB}';

@@ -1962,3 +1962,79 @@ p  { margin: 0 0 0.75rem; }
   margin: 1rem 0 1.5rem;
 }
 .door-chips .chip { text-align: left; border-radius: var(--radius); }
+
+/* ---------- the end-of-level review ----------
+   Nathan ruling Q21: the card, its trains line, what you did. No score, no
+   confetti, no modal. So there is no number anywhere on this screen and no
+   animation on it either. It is a page you read.
+
+   The page scrolls and the button does not: "Back to the gym" is pinned to the
+   bottom on the composer's own rail, in the same place the send button sat a
+   second ago, so the thumb does not have to go looking for it after a long
+   scroll. */
+
+.page-review {
+  overflow: hidden;
+  background: var(--white);
+}
+.page-review > .mast-slim,
+.page-review > .composer { flex: 0 0 auto; }
+
+.review {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1.25rem 1.25rem 2rem;
+}
+
+.review-eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--print-eyebrow-grey);
+}
+.review-title { margin: 0 0 0.2rem; font-size: 1.55rem; }
+.review-teaches { color: #6d6355; margin: 0 0 1.4rem; }
+
+.review-card { margin: 0 0 1.6rem; }
+
+.review-head {
+  margin: 0 0 0.85rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--print-eyebrow-grey);
+}
+
+.review-list { list-style: none; margin: 0; padding: 0; }
+
+.review-turn {
+  border-left: 3px solid var(--rule);
+  padding: 0 0 0 0.9rem;
+  margin: 0 0 1.35rem;
+}
+/* Quiet on purpose. This is the row worth re-reading, so it has to be findable
+   while scrolling, and it is also the row most likely to sting, so it gets a
+   coloured edge and nothing else: no icon, no cross, and never the word wrong. */
+.review-turn.is-missed { border-left-color: var(--print-orange); }
+
+/* The line that was on the table, in the specimen's own voice. */
+.review-specimen {
+  margin: 0 0 0.5rem;
+  color: var(--charcoal);
+  font-style: italic;
+}
+.review-said {
+  margin: 0 0 0.4rem;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+.review-ruling {
+  margin: 0;
+  color: #6d6355;
+  font-size: 0.92rem;
+}

@@ -35,8 +35,10 @@
 
 import type { LevelDef } from '../types.ts';
 import { CARDS } from './cards.ts';
+import { LEVEL_ID } from './ids.ts';
 
 export const level3: LevelDef = {
+  id: LEVEL_ID.gymSummary,
   slug: 'the-summary-gate',
   title: 'Did I miss anything?',
   teaches: 'Fake Listening',

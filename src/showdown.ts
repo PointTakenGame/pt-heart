@@ -37,6 +37,7 @@ import {
   OPENING,
   RULE_LABEL,
   SHOWDOWN_SLUG,
+  SHOWDOWN_ID,
   SOFIA_HEARD,
   SOFIA_NOT_HEARD,
   SOFIA_THIN,
@@ -305,6 +306,7 @@ export function useShowdown(): Match {
     ) => {
       recordItem({
         itemId: `${turn.id}${suffix}`,
+        levelId: SHOWDOWN_ID,
         levelSlug: SHOWDOWN_SLUG,
         rule,
         answer,
@@ -333,6 +335,7 @@ export function useShowdown(): Match {
       );
       recordItem({
         itemId: 'l4-result',
+        levelId: SHOWDOWN_ID,
         levelSlug: SHOWDOWN_SLUG,
         rule: 'mixed',
         answer: `${result} ${purse.current.player}-${purse.current.sofia}`,
@@ -342,7 +345,7 @@ export function useShowdown(): Match {
       });
       // The match clears the level whether it was won or lost. Turning up and
       // finishing is the bar; there is no accuracy gate anywhere in this game.
-      markCleared(SHOWDOWN_SLUG);
+      markCleared(SHOWDOWN_ID);
       setOutcome(result);
       setFinished(true);
       setComposer({ kind: 'locked' });

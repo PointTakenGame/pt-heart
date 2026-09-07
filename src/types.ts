@@ -3,6 +3,8 @@
 // is still the only referee, and every answering step is gated: a wrong or empty
 // answer loops back to the same step instead of advancing the level.
 
+import type { LevelId } from './content/ids.ts';
+
 export type FoulType = 'judging' | 'opinion_as_fact' | 'fake_listening';
 
 /** 'crowd' is a centered bare-emoji row, no bubble and no speaker. */
@@ -74,6 +76,11 @@ export interface Revision {
 
 export interface ItemRecord {
   itemId: string;
+  /** the rung's permanent id. Survives a rename; see content/ids.ts. */
+  levelId: LevelId;
+  /** the rung's current label. A renameable string, kept because the corpus
+   *  column `level_slug` has held it since 2026-09-01 and old rows have to stay
+   *  readable. Never key anything on it. */
   levelSlug: string;
   rule: FoulType | 'mixed';
   answer: string;
@@ -231,8 +238,10 @@ export type PrefightStep =
   | { kind: 'card'; rule: FoulType; text?: string };
 
 export interface LevelDef {
-  /** Saved progress names levels by this, never by number (ruling B3,
-   *  2026-08-23): renumbering the ladder must not orphan saves. */
+  /** The permanent save key. Ruling HEART-T260906-03; see content/ids.ts. */
+  id: LevelId;
+  /** A renameable label. Read by humans and written to the corpus, and the key
+   *  to nothing. It used to be the save key, and every rename wiped progress. */
   slug: string;
   title: string;
   teaches: string;

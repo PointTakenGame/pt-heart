@@ -39,8 +39,10 @@
 // side you would pick.
 
 import type { FoulType, PrefightStep } from '../types.ts';
+import { LEVEL_ID } from './ids.ts';
 
 export const SHOWDOWN_SLUG = 'full-showdown';
+export const SHOWDOWN_ID = LEVEL_ID.showdown;
 
 /** Sofia's face, on every line she speaks and on the walk-out screen. */
 export const SOFIA_EMOJI = '\u{1F471}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}';

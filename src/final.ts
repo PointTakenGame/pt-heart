@@ -32,6 +32,7 @@ import {
   ARGUMENT,
   BONUS,
   FINAL_COACH,
+  FINAL_ID,
   FINAL_OPENING,
   FINAL_SLUG,
   NAUGHTY,
@@ -208,6 +209,7 @@ export function useFinal(): FinalMatch {
       );
       recordItem({
         itemId: 'l7-result',
+        levelId: FINAL_ID,
         levelSlug: FINAL_SLUG,
         rule: 'mixed',
         answer: `${result} ${purse.current.player}-${purse.current.boss}`,
@@ -215,7 +217,7 @@ export function useFinal(): FinalMatch {
         revisions: [],
         answeredAt: new Date().toISOString(),
       });
-      markCleared(FINAL_SLUG);
+      markCleared(FINAL_ID);
       setOutcome(result);
       setFinished(true);
       setComposer({ kind: 'locked' });
@@ -322,6 +324,7 @@ export function useFinal(): FinalMatch {
 
           recordItem({
             itemId: `${turn.id}-call`,
+            levelId: FINAL_ID,
             levelSlug: FINAL_SLUG,
             rule: 'mixed',
             answer: called,
@@ -350,6 +353,7 @@ export function useFinal(): FinalMatch {
           const foul = ruled ? ruled.foul : offlineRuling(turn.kind, answer.text);
           recordItem({
             itemId: turn.id,
+            levelId: FINAL_ID,
             levelSlug: FINAL_SLUG,
             rule: 'mixed',
             answer: answer.text,
@@ -433,6 +437,7 @@ export function useFinal(): FinalMatch {
 
         recordItem({
           itemId: step.id,
+          levelId: FINAL_ID,
           levelSlug: FINAL_SLUG,
           rule: 'mixed',
           answer: `${ruling.verdict}: ${answer.text}`,

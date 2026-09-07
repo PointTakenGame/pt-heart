@@ -14,11 +14,13 @@
 // decides which turns are dirty and the model only writes the sentence.
 
 import type { FoulType } from '../types.ts';
+import { LEVEL_ID } from './ids.ts';
 
 /** Every live match saves against this one slug. The gym saves per level; live
  *  play has no levels, and the rulings a human makes here are worth keeping
  *  whatever topic produced them. */
 export const ROOM_SLUG = 'live-room';
+export const ROOM_ID = LEVEL_ID.liveRoom;
 
 export type Seat = 'player' | 'referee';
 
