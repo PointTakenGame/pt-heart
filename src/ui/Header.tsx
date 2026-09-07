@@ -20,7 +20,7 @@
 //    where it moves from one person's stack to the other."  -> flight, below.
 
 import { useLayoutEffect, useRef } from 'react';
-import { TOKEN_STEP, formatTokens } from '../content/showdown.ts';
+import { formatTokens } from '../content/showdown.ts';
 
 const TOKEN = '\u{1F64F}';
 // Steve, 2026-08-25: "move the closest gratitude from end end to the end of the
@@ -61,9 +61,10 @@ function Purse({
   side: 'them' | 'you';
   stack: React.Ref<HTMLSpanElement>;
 }) {
-  // Only what they still hold. A half token is the last one, clipped.
+  // Only what they still hold. Every price is a whole token (TOKEN_STEP), so
+  // this is a plain count; the clipped half glyph died with MISS_COST on
+  // 2026-09-07. The floor stays because a purse is a length, not a label.
   const whole = Math.floor(value);
-  const half = value - whole >= TOKEN_STEP;
   return (
     <div className={`purse purse-${side}`} aria-label={`${label} ${formatTokens(value)}`}>
       <span className="purse-face" aria-hidden="true">
@@ -80,7 +81,6 @@ function Purse({
             {TOKEN}
           </span>
         ))}
-        {half && <span className="tok tok-half">{TOKEN}</span>}
       </span>
     </div>
   );

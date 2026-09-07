@@ -35,12 +35,18 @@ anything in there. Anything under `docs/` reaches `main` through a pull request.
 starts from it.
 
 Two older branches were archived on 2026-09-07 as the annotated tags
-`archive/nathan-gym-ladder-rebuild` and `archive/nathan-working-branch-heart`.
-Read them if you want the history. Do not branch off them and do not merge
-them: `main` already took their content forward on a different engine, and
-those trees delete helper functions that `main` imports, so a whole-file port
-out of either one breaks the build in ways the type checker does not catch
-until runtime.
+`archive/nathan-gym-ladder-rebuild` and `archive/nathan-working-branch-heart`,
+and then deleted. Read the tags if you want the history. Do not branch off them
+and do not merge them: `main` already took their content forward on a different
+engine, and those trees delete helper functions that `main` imports, so a
+whole-file port out of either one breaks the build in ways the type checker does
+not catch until runtime.
+
+The one thing worth having off those branches is already here.
+`docs/nathan-gym-rebuild/` holds Nathan's 19 working papers, copied verbatim, and
+they are what every "Nathan ruling N" comment in `src/` is citing. That folder is
+history and not specification; its own README says which two files are still
+worth reading and which are spent build logs.
 
 ## Run it
 
@@ -131,14 +137,25 @@ on the first child, which is what `.thread > .msg:first-child` does.
 **Tokens move, they never burn.** Fourteen are on the table when a match starts
 and fourteen when it ends. A foul hands tokens to the other player; nothing is
 created or destroyed, and the two numbers in the header always add to fourteen.
-Half tokens are real: letting one of Sofia's fouls go past you hands her half a
-token (`MISS_COST`), so a player who calls nothing still watches the ledger
-drain. Halves are exact in binary floating point, so the purses do not drift;
-`formatTokens` in `src/content/showdown.ts` is what prints `6½`.
+Every price is a whole token. Half tokens existed until 2026-09-07 for exactly
+one reason, `MISS_COST`, the half a token that letting one of Sofia's fouls go
+past used to cost you. Steve retired that price on Nathan's argument: you are
+charged for what you say, not for what you fail to notice. A miss now moves
+nothing, so a player who calls nothing watches a still scoreboard, and that
+stillness is the feedback. `TOKEN_STEP` in `src/content/showdown.ts` is the
+one place a fractional price could ever come back.
 `transfer` in `src/showdown.ts` clamps a move to what the losing purse actually
 holds, because judging costs two and a purse can be holding one. Without the
 clamp the ledger paints a negative number for a full beat and then the bust line
 says "you are empty" over it.
+
+**A purse at zero does not end a gym rung.** Steve, 2026-09-07: "player at zero
+is out, but that's not true in the gym levels. That's true in the live play."
+So `bankruptCheck` in `src/showdown.ts` says its line once and lets the match run
+to its last round; the player finishes the drill they came for and simply cannot
+pay any more. The same function in `src/final.ts` still ends the match, and that
+is correct: the Humility Showdown rungs above Sofia are the live-play phase, and
+they are frozen anyway.
 
 **Rulings on the player land in the moment, not at the end of the round.** These
 are training rounds and feedback that arrives three messages later is not

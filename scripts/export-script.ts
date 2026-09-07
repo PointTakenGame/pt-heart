@@ -305,7 +305,7 @@ function renderShowdown(): void {
   blank();
   quote(COACH.onFalseCall, 'Player calls a clean line (false call)');
   blank();
-  quote(COACH.onMissed('opinion_as_fact', foulCost('opinion_as_fact')), 'Player lets a foul stand (sample: Opinions as Facts)');
+  quote(COACH.onMissed('opinion_as_fact'), 'Player lets a foul stand (sample: Opinions as Facts)');
   blank();
   quote(
     COACH.onWrongCard('judging', 'fake_listening'),

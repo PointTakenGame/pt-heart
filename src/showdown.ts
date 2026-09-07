@@ -34,7 +34,6 @@ import { markCleared, recordItem } from './storage.ts';
 import {
   COACH,
   FALSE_CALL_COST,
-  MISS_COST,
   OPENING,
   RULE_LABEL,
   SHOWDOWN_SLUG,
@@ -349,11 +348,25 @@ export function useShowdown(): Match {
       setComposer({ kind: 'locked' });
     };
 
-    /** Returns true if the match ended here. */
+    /** The empty-purse line is said once per match, not once per foul. */
+    let saidBankrupt = false;
+
+    /**
+     * Returns true if the match ended here.
+     *
+     * An empty player purse does NOT end it. Steve, 2026-09-07: "player at zero
+     * is out, but that's not true in the gym levels. That's true in the live
+     * play." This is a gym rung, so zero costs the player the rest of the
+     * ledger and nothing else, and the drill runs to its last round. The line
+     * lands once, the first time they hit empty, and then play carries on.
+     */
     const bankruptCheck = async (): Promise<boolean> => {
       if (purse.current.player <= 0) {
-        await end('loss', COACH.bankrupt);
-        return true;
+        if (!saidBankrupt) {
+          saidBankrupt = true;
+          await coach(COACH.bankrupt);
+        }
+        return false;
       }
       // Unreachable, deliberately. See the comment on COACH.bankruptHer: her
       // authored fouls cannot empty her, because knocking a boss out mid-training
@@ -471,10 +484,13 @@ export function useShowdown(): Match {
             missedCount += 1;
             await coach(COACH.onWrongCard(called as FoulType, turn.foul));
           } else if (turn.foul) {
+            // A miss moves nothing. Steve, 2026-09-07, siding with Nathan
+            // against the earlier ruling that charged half a token here: you
+            // are charged for what you say, not for what you fail to notice.
+            // She keeps the token the call would have taken off her, which is
+            // the entire cost of letting it past.
             missedCount += 1;
-            const { moved, bust } = transfer('player', MISS_COST);
-            await coach(COACH.onMissed(turn.foul, moved));
-            if (bust && (await bankruptCheck())) return;
+            await coach(COACH.onMissed(turn.foul));
           } else if (called !== 'stand') {
             // A bad whistle is the only way a clean round of hers costs you
             // anything, and it is what makes round 2 expensive.

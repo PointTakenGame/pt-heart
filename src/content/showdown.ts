@@ -55,29 +55,24 @@ export const START_TOKENS = 7;
 //
 // Three prices, three different things:
 //   foulCost       what a committed foul hands to the other side
-//   MISS_COST      what letting a real foul go past costs the player
 //   FALSE_CALL_COST  what a whistle at nothing costs the player
 //
-// STILL OPEN, and this is the reason to keep them together rather than to argue
-// about them tonight: HEART-T260905-03 and -13 ask whether fouls should cost
-// whole tokens rather than halves. Whichever way Steve rules, the change is one
-// line in this block. Do not change a value here without a ruling on those rows.
+// A third price used to live here: MISS_COST, what letting a real foul go past
+// cost the player. It is gone. Steve ruled on 2026-09-07, siding with Nathan
+// against the earlier 2026-08-24 ruling, that a miss moves nothing. Watching a
+// foul go by is a failure of attention and not a foul of your own, and the game
+// charges you for what you say, not for what you fail to notice. The player who
+// calls nothing now watches a still scoreboard, which is the outcome the
+// 2026-08-24 ruling was trying to avoid; that is accepted, because the still
+// scoreboard is itself the feedback. Rows HEART-T260905-03 and -13 close on this,
+// and HEART-T260907-23 is the ruling.
+//
+// It was the only fractional price in the game, so half tokens went with it.
 
 /** Printed rule: Judging costs two, the other two cost one. */
 export function foulCost(foul: FoulType): number {
   return foul === 'judging' ? 2 : 1;
 }
-
-/**
- * What a foul you failed to whistle costs you. Half a token, not a whole one:
- * Steve's ruling of 2026-08-24 on a player who calls nothing and so watches a
- * completely still scoreboard for three rounds. It is a fraction rather than a
- * full token because missing a call is worse than doing nothing and cheaper than
- * committing the foul yourself. Tokens still only move, never burn.
- *
- * It is the only fractional price in the game, which is why halves exist at all.
- */
-export const MISS_COST = 0.5;
 
 /**
  * What a bad whistle costs the player. One token, the same as the cheap fouls,
@@ -86,26 +81,20 @@ export const MISS_COST = 0.5;
 export const FALSE_CALL_COST = 1;
 
 /**
- * The smallest amount a purse can move by, which is exactly MISS_COST and is
- * derived from it on purpose: halves exist in this game for one reason, and if
- * the miss price ever becomes a whole token then this becomes 1 and the half
- * glyph stops being drawn. Anything that renders a purse tests against this
- * rather than writing 0.5 of its own.
+ * The smallest amount a purse can move by. It is 1, and every price above is a
+ * whole number, so a purse only ever holds a whole number of tokens.
  *
- * Halves are exact in binary floating point, so the purses never drift and the
- * two sides still add to fourteen after any number of transfers.
- *
- * The one place this rule is restated instead of imported is styles.css
- * `.tok-half`, which clips the glyph at 50%. CSS cannot read a module, so that
- * declaration carries a comment pointing back here.
+ * This was 0.5 until 2026-09-07. Halves existed in this game for exactly one
+ * reason, the miss price, and that price is gone, so they are gone with it: no
+ * half glyph is drawn any more and `formatTokens` has nothing to round. Anything
+ * that renders a purse still tests against this rather than writing a 1 of its
+ * own, so that a future fractional price is a one-line change here again.
  */
-export const TOKEN_STEP = MISS_COST;
+export const TOKEN_STEP = 1;
 
-/** Tokens print as halves. See TOKEN_STEP for why there are halves at all. */
+/** Every price is a whole token, so this is just the number. See TOKEN_STEP. */
 export function formatTokens(n: number): string {
-  const whole = Math.floor(n);
-  if (n - whole < TOKEN_STEP) return String(whole);
-  return whole === 0 ? '\u00bd' : `${whole}\u00bd`;
+  return String(Math.round(n));
 }
 
 export const RULE_LABEL: Record<FoulType, string> = {
@@ -412,11 +401,14 @@ export const COACH = {
   /**
    * Called the moment the line goes past, not at the end of the round. A
    * training round has to answer fast or the answer is not attached to
-   * anything (ruling of 2026-08-24). A miss costs half a token, so the player
-   * who lets everything stand watches the ledger drain anyway.
+   * anything (ruling of 2026-08-24).
+   *
+   * Nothing moves on a miss. Steve, 2026-09-07: a foul you did not notice is
+   * not a foul you committed. She keeps the token she should have paid, which
+   * is the whole cost of missing it, and the naming is what the round is for.
    */
-  onMissed: (foul: FoulType, cost: number) =>
-    `You let one go: ${RULE_LABEL[foul]}, ${RULE_GLOSS[foul]}. She keeps her token and takes ${formatTokens(cost)} of yours for the miss.`,
+  onMissed: (foul: FoulType) =>
+    `You let one go: ${RULE_LABEL[foul]}, ${RULE_GLOSS[foul]}. She keeps the token that call would have cost her. Nothing comes out of your pile for missing it.`,
   onWrongCard: (called: FoulType, actual: FoulType) =>
     `You had the whistle right and the card wrong. That was ${RULE_LABEL[actual]}, not ${RULE_LABEL[called]}. No token moves on a wrong card.`,
   roundClean: 'Nothing missed that round.',
@@ -434,7 +426,15 @@ export const COACH = {
   win: 'You took it. Not because you were right about the policy; I have no idea who was right about the policy. You took it because you stayed on the argument and she didn\'t.',
   loss: 'She took it. Go back and drill the card she kept getting past you.',
   draw: 'Dead even. Which, in this game, isn\'t a bad night.',
-  bankrupt: 'You are empty. That ends it, whatever the round said.',
+  /**
+   * Said once, when the player's purse hits empty, and then the round carries
+   * on. It is not an ending. Steve, 2026-09-07: "player at zero is out, but
+   * that's not true in the gym levels. That's true in the live play." This is a
+   * gym rung, so running your meter to zero here costs you the rest of the
+   * match's ledger and nothing else; you still finish the drill you came for.
+   * The printed three-seat game is where zero puts you out.
+   */
+  bankrupt: 'You are empty. You keep playing, and you cannot pay another one, so every foul from here is free for her. Finish the round.',
   /**
    * Unreachable by design, and kept anyway. Sofia's authored fouls total four
    * tokens against a seven-token purse, so her floor is three and she cannot be

@@ -227,10 +227,18 @@ function FrontPage({ onIn }: { onIn: () => void }) {
           person you will never persuade.
         </p>
 
-        <p className="front-clause">
-          <strong>You can leave anytime.</strong> End a round at any point, no explanation
-          owed. Nothing is tracked against you for leaving.
-        </p>
+        {/* The conduct agreement used to sit here, as a second clause: "You can
+            leave anytime. End a round at any point, no explanation owed. Nothing
+            is tracked against you for leaving."
+
+            It is gone from this page. Nathan's ruling Q4, which Steve adopted on
+            2026-09-07 ("do whatever Nathan wants"): the conduct agreement belongs
+            to signup, not to the front page. Signup does not exist yet, so the
+            text is parked in docs/roadmap.md against the signup work rather than
+            left here. Do not put it back on this page; put it in signup.
+
+            The clause above it stays. That one is the pitch, not conduct: it says
+            what the game is for. Q4 cut the agreement, not the thesis. */}
 
         <button className="btn btn-wide btn-in" onClick={onIn}>
           I&rsquo;m in

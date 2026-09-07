@@ -42,6 +42,18 @@ the game *is*, not what happened to it.
 | `ui-components.md` | Component inventory with states | Rannie, Audrey |
 | `cards.md` | The printed deck: content, counts, categories, and how it maps to the web build | Everyone |
 
+### The one exception to everything above
+
+| Folder | What it is | Who it is for |
+|---|---|---|
+| `nathan-gym-rebuild/` | Nathan's archived working papers from the gym-ladder rebuild, copied verbatim off a deleted branch | Anyone chasing a "Nathan ruling N" citation in a source comment |
+
+**Nothing in that folder is normative and none of the house rules above apply to
+it.** It is history, not specification: it is dated, it contradicts the shipped
+code in places, and it is not to be edited into agreement. It is here because
+source comments throughout `src/` cite it by name, and those citations used to
+point at a git tag. Read `nathan-gym-rebuild/README.md` before anything in it.
+
 ## How to read a value in these files: the status markers
 
 Every specific value in these documents (a number, a timer, a count, a name, a

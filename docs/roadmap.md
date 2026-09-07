@@ -509,8 +509,11 @@ of them, on what is true today, sits the code.**
    is right.
 3. **Tokens in the gym.** One doc says tokens are off in Levels 1 to 3, and another says no score, no token count,
    no timer. The code runs both purses from Level 1 and passes them to the header on every gym level.
-4. **Half tokens.** Fractional tokens exist only in the code, attributed to a ruling. No doc mentions them and the
-   printed deck is whole tokens.
+4. **Half tokens: no longer a contradiction, and kept on this list so nobody reopens it.** Every price in the code
+   is a whole token, which is what the docs and the printed deck have always said. Halves existed for exactly one
+   price, the half token that letting a foul go past used to cost the player, and that price is gone: a miss moves
+   nothing, because you are charged for what you say and not for what you fail to notice. `TOKEN_STEP` in
+   `src/content/showdown.ts` is the single place a fractional price could ever come back, and it is 1.
 5. **Retries and gating.** One doc says no retry, no red flash, no blocked path, the player still clears. The code
    gates every answering step and loops back on a wrong or empty answer, attributed to a later ruling. Direct
    reversal. Gating wins for Levels 1-3's practice items. For the summary coverage check specifically, §7 now rules
@@ -533,3 +536,31 @@ of them, on what is true today, sits the code.**
 Where a newer source contradicts an older one the newer one probably wins, but **say so rather than silently
 choosing.** Every item above is a place where an implementer who quietly picked one reading would have shipped
 something plausible and wrong.
+
+---
+
+## The conduct agreement belongs to signup
+
+There is no signup screen. When one is built, it carries this text, which does not appear anywhere
+in the product today:
+
+> **You can leave anytime.** End a round at any point, no explanation owed. Nothing is tracked
+> against you for leaving.
+
+This is Nathan's ruling Q4, which Steve adopted: the Level-0 conduct agreement is not part of the
+front page. Nathan's note on that ruling carries the warning that matters most, and it is repeated
+here because ignoring it has already cost this project a day. The `Agreement()` component in
+`App.tsx` was **both** the conduct gate and the app's front page, so cutting the gate must not
+delete the front page. The page now renders unconditionally as `FrontPage`, and there is no gate.
+
+One clause stays on the front page rather than moving with this one:
+
+> You are here to practice disagreeing better, not to win. What you are learning is when your own
+> sentences make the other person angry, because an angry person is a person you will never persuade.
+
+That is the pitch, not conduct. Q4 cuts the agreement, not the thesis.
+
+**GAP: Steve.** The five-persona playtest found that the front page reads to two of five learners as
+a consent form for a study, and names these clauses as the reason. Moving the conduct text to signup
+addresses that on the front page and hands the same question to signup. Whether signup should read
+as a consent form is a real design question and nobody has answered it.
