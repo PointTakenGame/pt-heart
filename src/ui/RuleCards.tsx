@@ -33,10 +33,19 @@ interface Props {
   onCall?: (foul: FoulType) => void;
   /** the let-it-stand row, present only while a call is open */
   pass?: { label: string; onPass: () => void };
+  /**
+   * One line of teaching, printed on the tray itself, pointing down at the
+   * chips. Nathan ruling Q22: players did not discover that a card opens until
+   * somebody told them, and the telling has to happen here rather than in a
+   * coach line five panels earlier. It withdraws itself the first time a card
+   * is opened, because an instruction you have already followed is clutter.
+   */
+  hint?: string;
 }
 
-export function RuleCards({ enabled, live, onCall, pass }: Props) {
+export function RuleCards({ enabled, live, onCall, pass, hint }: Props) {
   const [open, setOpen] = useState<FoulType | null>(null);
+  const [everOpened, setEverOpened] = useState(false);
 
   const press = (rule: FoulType) => {
     if (!enabled.includes(rule)) return;
@@ -46,11 +55,26 @@ export function RuleCards({ enabled, live, onCall, pass }: Props) {
       onCall(rule);
       return;
     }
+    setEverOpened(true);
     setOpen((cur) => (cur === rule ? null : rule));
   };
 
+  // The instruction arrives in real time and leaves when it is spent. It is
+  // suppressed while a call is open, because at that moment the chips mean
+  // something else entirely and two instructions on one control is worse than
+  // none.
+  const showHint = Boolean(hint) && !everOpened && live === null;
+
   return (
     <div className="rail-wrap">
+      {showHint && (
+        <p className="rail-hint">
+          {hint}
+          <span className="rail-hint-arrow" aria-hidden="true">
+            {'\u25BE'}
+          </span>
+        </p>
+      )}
       {pass && (
         <button className="rail-pass" onClick={pass.onPass}>
           {pass.label}
@@ -81,6 +105,15 @@ export function RuleCards({ enabled, live, onCall, pass }: Props) {
                   {on ? card.emoji : '\u{1F512}'}
                 </span>
                 <span className="rail-name">{card.name}</span>
+                {/* The price, on the thing that charges it, at the moment it can
+                    be charged. Off the rest of the time: a number that never
+                    changes and never applies is the first thing a player learns
+                    to stop reading. */}
+                {callable && (
+                  <span className="rail-cost" aria-label={`costs ${card.cost}`}>
+                    {'\u{1F64F}'.repeat(card.cost)}
+                  </span>
+                )}
               </button>
             </div>
           );

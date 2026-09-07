@@ -2038,3 +2038,191 @@ p  { margin: 0 0 0.75rem; }
   color: #6d6355;
   font-size: 0.92rem;
 }
+
+/* ---------- attention: the sine-wave pulse ---------- */
+
+/* One animation, used everywhere the game is waiting on the player and the
+   control might not be noticed. Steve, 2026-09-07: "use decontrasting and even
+   flickering, gentle sine wave. Flashing, you know, like a period of a couple of
+   seconds to draw attention if there's an action needed on a thing."
+
+   Three properties of it matter and none of them are decorative:
+
+   Period. 2.4s, not 0.6s. A fast blink is an error state and reads as alarm; at
+   two and a half seconds the eye catches the movement in the periphery and the
+   thing does not feel broken. `ease-in-out` on a two-keyframe alternation is the
+   cheap sine: the value spends most of its time near the extremes and crosses the
+   middle fast, which is what "gentle" looks like in motion.
+
+   It rings, it does not move. Nothing on this screen may change size to get
+   attention: the tray sits under a thread that re-lands on its own bottom every
+   time anything below it changes height, so a control that grows by 2px on a
+   pulse retriggers that landing forty times a minute. A box-shadow ring costs no
+   layout.
+
+   It stops when the action is taken. Every selector below is gated on a state
+   that only exists while the player owes the game something. A pulse that is
+   always on is wallpaper within ten seconds.
+
+   Reduced motion drops the animation and keeps the ring at full strength, which
+   is the salient-colour half of the same instruction rather than nothing. */
+@keyframes cta-pulse {
+  from { box-shadow: 0 0 0 0 var(--cta-ring, rgba(212, 82, 10, 0)); }
+  to { box-shadow: 0 0 0 5px var(--cta-ring, rgba(212, 82, 10, 0.34)); }
+}
+
+/* A call is open and these three chips are the answer. The ring is the card's own
+   colour, so the thing that pulses is also the thing that names which foul. */
+.rail-card.is-live {
+  --cta-ring: var(--card);
+  animation: cta-pulse 2.4s ease-in-out infinite alternate;
+}
+/* Letting it stand is an answer too, and it was the quieter of the two: three
+   pulsing chips under a flat row taught players that passing was the non-answer.
+   Offset by half a period so the tray breathes rather than strobing as one
+   block. */
+.rail-pass {
+  --cta-ring: rgba(212, 82, 10, 0.3);
+  animation: cta-pulse 2.4s ease-in-out infinite alternate;
+  animation-delay: -1.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-card.is-live,
+  .rail-pass {
+    animation: none;
+    box-shadow: 0 0 0 3px var(--cta-ring);
+  }
+}
+
+/* ---------- what each foul costs, under the purses that pay it ---------- */
+
+/* Nathan's learner report, every playtester: they could not remember that Judging
+   is two and the other two are one. They had been told once, in the corner, four
+   screens back, and by the time a price is charged that line has scrolled out of
+   the world.
+
+   So it lives against the two piles it moves tokens between, in the same glyph
+   the piles are drawn in, and it is rendered only on the rungs where a price is
+   actually charged (Header `costs`). On a rung running `tokens: 'off'` the purses
+   cannot move, and a price list over an inert scoreboard is the fastest way to
+   teach a player that the header is not worth reading. */
+.cost-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.9rem;
+  margin-top: 0.4rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--rule);
+}
+.cost-item { display: flex; align-items: baseline; gap: 0.25rem; min-width: 0; }
+.cost-glyph { font-size: 0.8rem; letter-spacing: -0.08em; flex: 0 0 auto; }
+.cost-name {
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6d6355;
+  white-space: nowrap;
+}
+
+@media (max-width: 34rem) {
+  .cost-strip { gap: 0.1rem 0.55rem; }
+  .cost-name { font-size: 0.6rem; }
+}
+
+/* The price on the chip that charges it, shown only while that chip is a button
+   you could press right now. Off the rest of the time: a number that never
+   changes and never applies is the first thing a player stops reading. */
+.rail-cost {
+  font-size: 0.62rem;
+  letter-spacing: -0.1em;
+  line-height: 1;
+}
+
+/* ---------- the line under judgement, in the fight ---------- */
+
+/* The drill has had `.drill-table` since the stepper landed. The thread had the
+   same hole and no strip: the opponent says the thing, two coach lines land on
+   top of it, the composer opens, and the sentence you are ruling on is above the
+   fold. Pinned between the header and the thread, so it cannot scroll, and
+   present only while a ruling is open. */
+.on-table {
+  flex: 0 0 auto;
+  margin: 0.5rem 1rem 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--print-orange);
+  border-radius: calc(var(--radius) - 0.25rem);
+}
+.on-table-tag,
+.on-table-hint {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6d6355;
+}
+.on-table-tag { margin-bottom: 0.15rem; }
+.on-table-text { display: block; font-style: italic; }
+/* The instruction sits on the line it is about, not in a coach bubble somewhere
+   up the thread. Steve's standing rule: put the instruction next to the thing in
+   space, and say it at the moment it applies. */
+.on-table-hint {
+  margin-top: 0.3rem;
+  color: var(--print-orange);
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 0.75rem;
+}
+
+/* ---------- teaching the tray ---------- */
+
+/* Nathan ruling Q22: nobody discovered that a card opens. It is the one control
+   on the screen that does two different things depending on the moment, and the
+   difference was never said anywhere. Level 1 says it, on the tray, with an arrow
+   pointing down at the chips, and stops saying it the first time a card is
+   opened. */
+.rail-hint {
+  flex: 0 0 auto;
+  margin: 0.5rem 1rem 0;
+  font-size: 0.78rem;
+  color: var(--print-orange);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.rail-hint-arrow {
+  font-size: 0.9rem;
+  animation: hint-nudge 2.4s ease-in-out infinite alternate;
+}
+@keyframes hint-nudge {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rail-hint-arrow { animation: none; opacity: 1; }
+}
+
+/* ---------- a level row that says what state it is in ---------- */
+
+/* Nathan ruling Q20. A cleared row says which card it taught and offers the way
+   back in. It says nothing else: no score, no attempt count, no percentage. A
+   rung can be retried until it is right, so any number here is either a foregone
+   conclusion or a punishment for having learned out loud. */
+.level-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  flex: 0 0 auto;
+}
+.level-replay {
+  font-size: 0.75rem;
+  color: var(--print-orange);
+  border: 1px solid var(--print-orange);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  white-space: nowrap;
+}
+.level-card.is-cleared { border-color: var(--teal); }

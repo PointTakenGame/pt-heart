@@ -21,6 +21,7 @@
 
 import { useLayoutEffect, useRef } from 'react';
 import { formatTokens } from '../content/showdown.ts';
+import { CARDS, CARD_ORDER } from '../content/cards.ts';
 
 const TOKEN = '\u{1F64F}';
 // Steve, 2026-08-25: "move the closest gratitude from end end to the end of the
@@ -46,6 +47,15 @@ interface Props {
   teaches: string;
   beatName: string;
   purses: Purses;
+  /** Show what each foul costs, right under the purses it is paid out of.
+   *
+   *  Nathan's learner report: nobody could remember that Judging is two tokens
+   *  and the other two are one. They had been told, once, several screens back.
+   *  So the prices live next to the piles they move, and they appear only on the
+   *  rungs where a price is actually charged: a cost table over two purses that
+   *  cannot move is decoration, and it teaches the player to stop reading the
+   *  header. Levels 1 to 3 run `tokens: 'off'` and get no strip. */
+  costs?: boolean;
 }
 
 function Purse({
@@ -130,7 +140,7 @@ function fly(from: HTMLElement | null, to: HTMLElement | null) {
   window.setTimeout(() => el.remove(), FLIGHT_MS + 200);
 }
 
-export function Header({ title, teaches, beatName, purses }: Props) {
+export function Header({ title, teaches, beatName, purses, costs = false }: Props) {
   const them = useRef<HTMLSpanElement>(null);
   const you = useRef<HTMLSpanElement>(null);
   const was = useRef<{ player: number; opponent: number } | null>(null);
@@ -170,6 +180,21 @@ export function Header({ title, teaches, beatName, purses }: Props) {
           stack={you}
         />
       </div>
+      {costs && (
+        <div className="cost-strip" aria-label="what each foul costs">
+          {CARD_ORDER.map((rule) => {
+            const card = CARDS[rule];
+            return (
+              <span key={rule} className="cost-item">
+                <span className="cost-glyph" aria-hidden="true">
+                  {TOKEN.repeat(card.cost)}
+                </span>
+                <span className="cost-name">{card.name}</span>
+              </span>
+            );
+          })}
+        </div>
+      )}
     </header>
   );
 }

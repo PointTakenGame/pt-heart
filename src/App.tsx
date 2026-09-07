@@ -11,6 +11,7 @@ import { Thread, type ThreadHandle } from './ui/Thread.tsx';
 import { Drill } from './ui/Drill.tsx';
 import { Header } from './ui/Header.tsx';
 import { RuleCards, RuleCardFull, RuleCardMini } from './ui/RuleCards.tsx';
+import { OnTable, tableLine } from './ui/OnTable.tsx';
 import { BossIntro } from './ui/BossIntro.tsx';
 import { Prefight } from './ui/Prefight.tsx';
 import { Mast } from './ui/Mast.tsx';
@@ -34,7 +35,8 @@ import {
   SUNGMIN_EMOJI,
   SUNGMIN_EPITHET,
 } from './content/final.ts';
-import { CARD_ORDER } from './content/cards.ts';
+import { CARDS, CARD_ORDER } from './content/cards.ts';
+import { LEVEL_ID } from './content/ids.ts';
 import { COACH_EMOJI, DEFAULT_AVATAR, shuffledAvatars } from './avatars.ts';
 import { getAvatar, isCleared, setAvatar } from './storage.ts';
 
@@ -365,21 +367,42 @@ function Select({
       <ul className="levels">
         {LEVELS.map((l, i) => {
           const locked = i > 0 && !cleared[i - 1];
+          const done = cleared[i];
+          const card = CARDS[l.rule];
           return (
             <li key={l.slug}>
               <button
-                className={`level-card${locked ? ' is-locked' : ''}`}
+                className={`level-card${locked ? ' is-locked' : ''}${done ? ' is-cleared' : ''}`}
                 disabled={locked}
                 onClick={() => onPick(l)}
               >
                 <span className="level-n">{locked ? '\u{1F512}' : i + 1}</span>
                 <span className="level-mid">
                   <span className="level-title">{l.title}</span>
+                  {/* Nathan ruling Q20: a row that has been cleared should say
+                      which card it taught and offer the way back in, and it
+                      should not say anything else. No score, no attempt count,
+                      no percentage; a rung can be retried until it is right, so
+                      any number here is either a foregone conclusion or a
+                      punishment for having learned out loud.
+
+                      An uncleared row says what it is about to teach and who is
+                      across the table. A locked one says only what to do next,
+                      because nothing else about it is actionable yet. */}
                   <span className="level-sub">
-                    {locked ? `clear level ${i} first` : `${l.teaches} \u00b7 ${l.boss}`}
+                    {locked
+                      ? `clear level ${i} first`
+                      : done
+                        ? `${card.emoji} ${card.name}`
+                        : `${l.teaches} \u00b7 ${l.boss}`}
                   </span>
                 </span>
-                {cleared[i] && <span className="level-done">cleared</span>}
+                {done && (
+                  <span className="level-state">
+                    <span className="level-done">cleared</span>
+                    <span className="level-replay">Replay</span>
+                  </span>
+                )}
               </button>
             </li>
           );
@@ -615,6 +638,20 @@ function Room({
 
   const composerNode = <Composer state={gym.composer} onSubmit={gym.submit} onResize={land} />;
 
+  const onTable = tableLine(gym.messages);
+
+  // Nathan ruling Q22: nobody found out that a card opens. It is the one control
+  // on the screen that does two entirely different things depending on the
+  // moment, and the difference was never said out loud anywhere. So level 1, and
+  // only level 1, says it, on the tray, pointing at the chips, and stops saying
+  // it the first time a card is opened.
+  const railHint =
+    level.id === LEVEL_ID.gymJudging
+      ? call
+        ? undefined
+        : 'Tap a card to read what it means.'
+      : undefined;
+
   return (
     <div className={`page page-level${inBoss ? '' : ' page-drill'}`}>
       <Mast
@@ -642,9 +679,17 @@ function Room({
           opponentEmoji: inBoss ? level.bossEmoji : COACH_EMOJI,
           playerEmoji: avatar,
         }}
+        costs={level.tokens === 'live'}
       />
       {inBoss ? (
         <>
+          {/* The strip the drill has always had, now in the fight too. Sofia
+              speaks, two coach lines land on top of her, the composer opens, and
+              the sentence you are ruling on is above the fold. It appears only
+              while a ruling is open. */}
+          {call && onTable && (
+            <OnTable text={onTable} hint="Foul, or let it stand? Answer below." />
+          )}
           <Thread
             ref={thread}
             messages={gym.messages}
@@ -670,6 +715,7 @@ function Room({
       )}
       <RuleCards
         enabled={level.cards}
+        hint={railHint}
         live={railLive ? liveCards(gym.composer.kind, call?.callable) : null}
         onCall={(f) => gym.submit(f, [])}
         pass={
@@ -838,6 +884,7 @@ function FinalRun({ avatar, onExit }: { avatar: string; onExit: () => void }) {
   useLayoutEffect(land, [match.finished, land]);
 
   const call = match.composer.kind === 'call' ? match.composer : null;
+  const onTable = tableLine(match.messages);
 
   return (
     <div className="page page-level">
@@ -860,7 +907,11 @@ function FinalRun({ avatar, onExit }: { avatar: string; onExit: () => void }) {
           opponentEmoji: SUNGMIN_EMOJI,
           playerEmoji: avatar,
         }}
+        costs
       />
+      {call && onTable && (
+        <OnTable text={onTable} hint="Foul, or let it stand? Answer below." />
+      )}
       <Thread
         ref={thread}
         messages={match.messages}
@@ -993,6 +1044,7 @@ function LiveRoom({
   useLayoutEffect(land, [run.finished, land]);
 
   const call = run.composer.kind === 'call' ? run.composer : null;
+  const onTable = tableLine(run.messages);
   const left = seat === 'referee' ? a : { name: 'You', emoji: avatar };
   const right = seat === 'referee' ? (b as Person) : a;
 
@@ -1018,7 +1070,11 @@ function LiveRoom({
           playerEmoji: left.emoji,
           playerLabel: left.name.toLowerCase(),
         }}
+        costs
       />
+      {call && onTable && (
+        <OnTable text={onTable} hint="Foul, or let it stand? Answer below." />
+      )}
       <Thread
         ref={thread}
         messages={run.messages}
@@ -1111,6 +1167,7 @@ function RefereeRun({
   useLayoutEffect(land, [run.finished, land]);
 
   const call = run.composer.kind === 'call' ? run.composer : null;
+  const onTable = tableLine(run.messages);
 
   return (
     <div className="page page-level">
@@ -1137,7 +1194,11 @@ function RefereeRun({
           playerEmoji: left.emoji,
           playerLabel: left.name.split(' ').slice(-1)[0].toLowerCase(),
         }}
+        costs
       />
+      {call && onTable && (
+        <OnTable text={onTable} hint="Foul, or let it stand? Answer below." />
+      )}
       <Thread
         ref={thread}
         messages={run.messages}
@@ -1175,6 +1236,7 @@ function Match({ avatar, onExit }: { avatar: string; onExit: () => void }) {
   useLayoutEffect(land, [match.finished, land]);
 
   const call = match.composer.kind === 'call' ? match.composer : null;
+  const onTable = tableLine(match.messages);
 
   return (
     <div className="page page-level">
@@ -1197,7 +1259,11 @@ function Match({ avatar, onExit }: { avatar: string; onExit: () => void }) {
           opponentEmoji: SOFIA_EMOJI,
           playerEmoji: avatar,
         }}
+        costs
       />
+      {call && onTable && (
+        <OnTable text={onTable} hint="Foul, or let it stand? Answer below." />
+      )}
       <Thread
         ref={thread}
         messages={match.messages}
