@@ -1,6 +1,6 @@
-// Five screens: the agreement (Beat 0), level select, the gym thread, the
-// showdown, and the referee levels. Everything that carries game state lives in
-// the three thread screens.
+// Five screens: the front page, level select, the gym thread, the showdown, and
+// the referee levels. Everything that carries game state lives in the three
+// thread screens.
 
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { LEVELS } from './content/index.ts';
@@ -36,28 +36,41 @@ import {
 } from './content/final.ts';
 import { CARD_ORDER } from './content/cards.ts';
 import { COACH_EMOJI, DEFAULT_AVATAR, shuffledAvatars } from './avatars.ts';
-import { getAvatar, isCleared, load, setAvatar } from './storage.ts';
+import { getAvatar, isCleared, setAvatar } from './storage.ts';
 
 // The ladder's rung numbers, read off the ladder rather than typed in. They
 // were hardcoded in eight places and two of them were already wrong once. The
 // seven-rung ladder (docs/design/ladder-spec.md) renumbers these again, and
 // when it does the only edits should be to the arrays these count.
 const REF_SEAT_NUMBER = LEVELS.length + 1;
-const SHOWDOWN_NUMBER = REF_SEAT_NUMBER + 1;
-const REFEREE_NUMBER_BASE = SHOWDOWN_NUMBER + 1;
+const SOFIA_NUMBER = REF_SEAT_NUMBER + 1;
+const REFEREE_NUMBER_BASE = SOFIA_NUMBER + 1;
 const FINAL_NUMBER = REFEREE_NUMBER_BASE + REFEREE_LEVELS.length;
 
-// Steve's ruling of 2026-09-07: The Third Chair is the last rung anyone plays for
-// now. Everything above it is about to be restructured (the Sofia Showdown is
-// cut, and the two referee levels become parts A/B and C of one Final Showdown),
-// so those rungs are shown but not enterable. Nothing is deleted. The writing in
-// them is kept and re-attributed when the rebuild happens. Set this to false to
-// walk the old ladder again.
-const FROZEN_ABOVE_THIRD_CHAIR = true;
+// Steve's ruling of 2026-09-07, second pass, which replaces the first one. The
+// first read of his ruling froze the Sofia match along with everything above it.
+// That was wrong, and he said so: "so are you saying that there's level one, two,
+// three where you are just being trained, level four where you play the referee,
+// and then level five is when you actually play as a player. If that is what
+// Nathan's saying, I like that idea." It is. So rungs 1 to 5 are the core game
+// and all five are playable: three to learn the cards, the referee's chair, then
+// the match against the boss.
+//
+// What is still frozen is everything above rung 5, which is the Humility Showdown
+// phase and is being restructured. Nothing is deleted; the writing in those rungs
+// is kept and re-attributed when the rebuild happens. Set this to false to walk
+// the old ladder again.
+//
+// The reason the numbering kept drifting was a name, not a number. Rung 5 used to
+// be called "The Showdown", which collides with Humility Showdown, the name of the
+// phase that starts at rung 6. Steve: "we shouldn't call it Sofia Showdown because
+// that is what confused me, because the Humility Showdown is the second phase of
+// the game." Rung 5 is now just the boss's name.
+const FROZEN_ABOVE_SOFIA = true;
 const FROZEN_SUB = 'being rebuilt \u00b7 not playable yet';
 
 type Screen =
-  | { name: 'agreement' }
+  | { name: 'front' }
   | { name: 'select' }
   | { name: 'level'; level: LevelDef }
   | { name: 'showdown' }
@@ -67,10 +80,16 @@ type Screen =
   | { name: 'live'; seat: Seat; topic: string };
 
 export function App() {
-  const seen = Object.keys(load().cleared).length > 0;
-  const [screen, setScreen] = useState<Screen>(
-    seen ? { name: 'select' } : { name: 'agreement' },
-  );
+  // The front page is where the app opens, every time, for everybody. It used
+  // to be a gate: a first-visit-only screen you agreed to before you were let
+  // in, which meant a returning player never saw it again. Steve, 2026-09-07:
+  // "there used to be a homepage for this entire humility showdown game. It
+  // would show something that looks a lot like the first page of the PDF. Where
+  // did that go?" It went behind the gate, the first time he cleared a level.
+  // The gate is retired (his same message: "We don't need a separate agreement
+  // page anymore. You can retire that."); the page stays, and the ladder's
+  // masthead has a way back to it.
+  const [screen, setScreen] = useState<Screen>({ name: 'front' });
   const [avatar, setAvatarState] = useState<string>(() => getAvatar() ?? DEFAULT_AVATAR);
 
   const pickAvatar = (emoji: string) => {
@@ -78,12 +97,13 @@ export function App() {
     setAvatarState(emoji);
   };
 
-  if (screen.name === 'agreement') return <Agreement onIn={() => setScreen({ name: 'select' })} />;
+  if (screen.name === 'front') return <FrontPage onIn={() => setScreen({ name: 'select' })} />;
   if (screen.name === 'select') {
     return (
       <Select
         avatar={avatar}
         onAvatar={pickAvatar}
+        onHome={() => setScreen({ name: 'front' })}
         onPick={(level) => setScreen({ name: 'level', level })}
         onShowdown={() => setScreen({ name: 'showdown' })}
         onReferee={(level) => setScreen({ name: 'referee', level })}
@@ -164,7 +184,11 @@ export function App() {
 // navy, and card-anatomy.md §G reads the black as drift rather than intent.
 //
 // Two clauses. Steve cut the other two on 2026-08-23. Do not reintroduce them.
-function Agreement({ onIn }: { onIn: () => void }) {
+// The front page, off page 1 of the printed deck. It is not an agreement and it
+// asks for nothing: it says what the game is, shows the three fouls, and opens
+// the door. The two conduct clauses stay (Steve cut the other two on
+// 2026-08-23); they are this page's own copy, not the gate's.
+function FrontPage({ onIn }: { onIn: () => void }) {
   return (
     <div className="page page-front">
       <Mast />
@@ -224,6 +248,7 @@ function Agreement({ onIn }: { onIn: () => void }) {
 function Select({
   avatar,
   onAvatar,
+  onHome,
   onPick,
   onShowdown,
   onReferee,
@@ -232,6 +257,7 @@ function Select({
 }: {
   avatar: string;
   onAvatar: (emoji: string) => void;
+  onHome: () => void;
   onPick: (l: LevelDef) => void;
   onShowdown: () => void;
   onReferee: (l: RefereeLevel) => void;
@@ -292,10 +318,20 @@ function Select({
 
   return (
     <div className="page page-narrow">
-      <Mast slim />
+      {/* The way back to the front page. Without it the page is unreachable the
+          moment you walk into the gym, which is how it went missing. */}
+      <Mast
+        slim
+        right={
+          <button className="link" onClick={onHome}>
+            Front page
+          </button>
+        }
+      />
       <h1>The gym</h1>
       <p className="muted">
-        Three levels, each one habit and one opponent. Then all three at once, for tokens.
+        Five levels. Three to learn the cards, one in the referee&rsquo;s chair, then
+        everything at once against the boss.
       </p>
 
       <div className="picker picker-done">
@@ -329,11 +365,9 @@ function Select({
           );
         })}
         {/* Rung 4, the twist. The word "referee" is withheld through levels 1 to
-            3 and lands here, so this sits above the Showdown rather than with
-            the other two referee levels below it. It opens on the same key the
-            Showdown does, the three gym levels, because the ruled ladder
-            (docs/design/ladder-spec.md) has no gym-boss rung at all and where
-            the Showdown ends up sitting is still Steve's call. */}
+            3 and lands here, so this sits below Sofia rather than with the two
+            referee levels above her. It opens on the same key her match does,
+            the three gym levels. */}
         <li>
           <button
             className={`level-card${allCleared ? '' : ' is-locked'}`}
@@ -360,34 +394,28 @@ function Select({
                as a different kind of locked from the referee rungs beside them.
                Steve, 2026-09-07: "can you just reset the flag so they all appear
                the same". So the boss look is earned by being playable. */
-            className={`level-card${
-              allCleared && !FROZEN_ABOVE_THIRD_CHAIR ? ' level-card-boss' : ' is-locked'
-            }`}
-            disabled={!allCleared || FROZEN_ABOVE_THIRD_CHAIR}
+            className={`level-card${allCleared ? ' level-card-boss' : ' is-locked'}`}
+            disabled={!allCleared}
             onClick={onShowdown}
           >
-            <span className="level-n">
-              {allCleared && !FROZEN_ABOVE_THIRD_CHAIR ? SHOWDOWN_NUMBER : '\u{1F512}'}
-            </span>
+            <span className="level-n">{allCleared ? SOFIA_NUMBER : '\u{1F512}'}</span>
             <span className="level-mid">
-              <span className="level-title">The Showdown</span>
+              <span className="level-title">Slippery Sofia</span>
               <span className="level-sub">
-                {FROZEN_ABOVE_THIRD_CHAIR
-                  ? FROZEN_SUB
-                  : allCleared
-                    ? 'All three cards \u00b7 Slippery Sofia'
-                    : 'clear all three levels first'}
+                {allCleared
+                  ? 'The boss \u00b7 all three cards'
+                  : 'clear all three levels first'}
               </span>
             </span>
             {isCleared(SHOWDOWN_SLUG) && <span className="level-done">played</span>}
           </button>
         </li>
         {/* The referee levels. Ray goes down into the ring and the player takes
-            the third seat, so these unlock behind the Showdown: you get handed
-            the whistle after you have been on the wrong end of one. */}
+            the third seat, so these unlock behind the Sofia match: you get
+            handed the whistle after you have been on the wrong end of one. */}
         {REFEREE_LEVELS.map((l, i) => {
           const locked =
-            FROZEN_ABOVE_THIRD_CHAIR ||
+            FROZEN_ABOVE_SOFIA ||
             (i === 0 ? !isCleared(SHOWDOWN_SLUG) : !isCleared(REFEREE_LEVELS[i - 1].slug));
           return (
             <li key={l.slug}>
@@ -400,11 +428,11 @@ function Select({
                 <span className="level-mid">
                   <span className="level-title">{l.title}</span>
                   <span className="level-sub">
-                    {FROZEN_ABOVE_THIRD_CHAIR
+                    {FROZEN_ABOVE_SOFIA
                       ? FROZEN_SUB
                       : locked
                         ? i === 0
-                          ? 'play the Showdown first'
+                          ? 'beat Sofia first'
                           : `clear level ${REFEREE_NUMBER_BASE + i - 1} first`
                         : `You referee · ${l.figure}`}
                   </span>
@@ -419,7 +447,7 @@ function Select({
         <li>
           {(() => {
             const locked =
-              FROZEN_ABOVE_THIRD_CHAIR ||
+              FROZEN_ABOVE_SOFIA ||
               !isCleared(REFEREE_LEVELS[REFEREE_LEVELS.length - 1].slug);
             return (
               <button
@@ -431,7 +459,7 @@ function Select({
                 <span className="level-mid">
                   <span className="level-title">The Final Showdown</span>
                   <span className="level-sub">
-                    {FROZEN_ABOVE_THIRD_CHAIR
+                    {FROZEN_ABOVE_SOFIA
                       ? FROZEN_SUB
                       : locked
                         ? `clear level ${FINAL_NUMBER - 1} first`
@@ -447,8 +475,8 @@ function Select({
 
       {/* Live play has no gate. Steve's ruling of 2026-09-05 (HEART-T260905-02)
           overturned the roadmap line that unlocked it behind the gym: anyone can
-          walk straight into a real match. A player who has not fought the
-          Showdown is warned on the way in and then let through, and the warning
+          walk straight into a real match. A player who has not fought Sofia is
+          warned on the way in and then let through, and the warning
           lives on the Door screen because that is already the step between this
           button and the room. */}
       <h2 className="live-head">Live play</h2>
@@ -659,7 +687,7 @@ function Showdown({ avatar, onExit }: { avatar: string; onExit: () => void }) {
   if (stage === 'intro') {
     return (
       <BossIntro
-        fightNumber={SHOWDOWN_NUMBER}
+        fightNumber={SOFIA_NUMBER}
         boss="Slippery Sofia"
         bossEmoji={SOFIA_EMOJI}
         epithet="Never raises her voice. Fouls you twice before you notice once."
@@ -799,7 +827,7 @@ function Door({
       {!prepared && (
         <div className="door-warning">
           <p>
-            You have not fought the Showdown yet, so you have never had to use all three
+            You have not fought Sofia yet, so you have never had to use all three
             cards at once against someone who is trying to win. You can go in anyway. You
             just will not know what you are doing yet, and the person across from you is
             the one who finds that out.
@@ -1057,7 +1085,7 @@ function Match({ avatar, onExit }: { avatar: string; onExit: () => void }) {
         }
       />
       <Header
-        title="The Showdown"
+        title="Slippery Sofia"
         teaches="All three cards"
         beatName={match.phase}
         purses={{

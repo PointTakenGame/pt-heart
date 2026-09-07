@@ -434,7 +434,7 @@ const LEVEL_4: RefereeLevel = {
     'calls everything is as useless as one who calls nothing.',
 };
 
-// Level 5. The Final Showdown's second step, "tell the other player what you
+// Rung 6, "What I Learned". The Final Showdown's second step, "tell the other player what you
 // learned", and the specific way it goes wrong: a verdict wearing a learning
 // sentence. The printed deck's own worked example of the failure is "I learned
 // that you don't understand this issue", tagged #humility-fail (rules.md section
@@ -552,7 +552,7 @@ const LEVEL_5: RefereeLevel = {
     'sounds like the humble step and it lands like a verdict.',
 };
 
-// Level 6. The Final Showdown's third step, "why might the other player think
+// Rung 7, "Why We Might Still Disagree". The Final Showdown's third step, "why might the other player think
 // differently", and the reason it is the hardest call in the game: the step's
 // bonus and the step's foul are the same grammatical move pointed in opposite
 // directions. "You think that because you value fairness" earns a token. "You
@@ -675,7 +675,7 @@ const LEVEL_6: RefereeLevel = {
     'worth a token and one cost two. Now you know which is which.',
 };
 
-/** Rung 4, which sits between the gym and the Showdown and is kept out of
+/** Rung 4, which sits between the gym and the Sofia match and is kept out of
  *  REFEREE_LEVELS on purpose: that array is the matched political pair, and the
  *  ladder numbering counts it. */
 export const REF_SEAT_LEVEL = LEVEL_4;

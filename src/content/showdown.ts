@@ -1,4 +1,11 @@
-// Level 4: the full showdown against Slippery Sofia.
+// Level 5: the full match against Slippery Sofia, the boss of the core ladder.
+//
+// Renamed 2026-09-07. This rung used to be called "The Showdown", which collides
+// with Humility Showdown, the name of the game's second phase up at rungs 6 to 8.
+// Steve: "don't call it Sofia Showdown. Call it just a match against Sofia as the
+// boss or something." The slug and the recorded item ids still read `full-showdown`
+// and `l4-*`; those are corpus keys with rulings already filed against them, so
+// they stay as they are and mean nothing about where the rung sits.
 // Design of record: docs/design/2026-08-23_showdown-full-match-sofia.md (HEART-T260823-30).
 //
 // Everything Sofia does is authored here. Her foul schedule is fixed and identical

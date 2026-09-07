@@ -252,6 +252,19 @@ export function useShowdown(): Match {
       // is live for the whole beat and lands on the next line instead of the
       // floor. Timing for a player who never taps is unchanged.
       await dwell(dwellMs(m.text) + BEAT_GAP);
+      // Then the line waits to be dismissed. Harvested from Nathan's branch,
+      // where it is his ruling 1 of 2026-09-05: "Put in a next button, which
+      // should go after each text blurb ... This ensures the player actually
+      // reads and digests each part." Every other screen in the game already
+      // works this way; the boss match was the last place a run of lines still
+      // played at the player on a timer.
+      //
+      // The dwell stays in front of it, so a line still lands with a beat and a
+      // tap on the thread still cuts that beat short. Next appears when the
+      // dwell is done. A turn that ends in a real prompt is not double-gated:
+      // that composer is opened by `ask`, not by `say`.
+      if (!alive) return;
+      await ask({ kind: 'continue', label: 'Next' });
     };
 
     const coach = (text: string) => say({ lane: 'coach', text });

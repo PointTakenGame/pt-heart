@@ -226,7 +226,7 @@ export type PrefightStep =
   | { kind: 'line'; text: string }
   /** `text` overrides the coach's default caption. The default introduces the
    *  card as a defense against the attack just described, which is right the
-   *  first time a player meets it and wrong by the Showdown, where all three
+   *  first time a player meets it and wrong by the Sofia match, where all three
    *  are already cleared levels and the panel is a roll call. */
   | { kind: 'card'; rule: FoulType; text?: string };
 
