@@ -63,10 +63,12 @@ export function RuleCards({ enabled, live, onCall, pass }: Props) {
           const callable = on && Boolean(live?.includes(rule));
           const dim = !on || (live !== null && !callable);
           return (
-            // The slot exists so the card can be previewed on hover even while
-            // the button under it is disabled: a disabled control fires no
-            // mouse events of its own, but CSS :hover still reaches its
-            // ancestors, so the preview is pure CSS on the wrapper.
+            // The slot is just the chip's box now. It used to carry a
+            // hover preview of the card above the tray; Steve, 2026-09-07:
+            // "Tapping the card ... alternates between having the card appear
+            // below the button, which I like, that's great, and then also
+            // above the button. Get rid of the above the button one." One
+            // surface, below, opened and closed by tapping the chip.
             <div key={rule} className="rail-slot">
               <button
                 className={`rail-card${dim ? ' is-dim' : ''}${callable ? ' is-live' : ''}${open === rule ? ' is-open' : ''}`}
@@ -80,17 +82,6 @@ export function RuleCards({ enabled, live, onCall, pass }: Props) {
                 </span>
                 <span className="rail-name">{card.name}</span>
               </button>
-              {/* Steve, 2026-08-25: "foul cards at bottom: remove points number
-                  from bottom. on hover, tooltip entire original card." The cost
-                  was the only number on the chip and it was the least useful
-                  thing on it; what a player hovering actually wants is the card
-                  itself. A locked card has nothing to preview: the level has
-                  not taught it, so the chip stays a padlock. */}
-              {on && (
-                <div className="rail-tip" aria-hidden="true">
-                  <RuleCardFull rule={rule} />
-                </div>
-              )}
             </div>
           );
         })}

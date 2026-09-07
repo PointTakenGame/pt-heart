@@ -52,6 +52,7 @@
   /* The heights of the NPC dialogue box, one per class of thing it holds. See
      .dlg for the arithmetic and for why this is a tier list and not one number. */
   --dlg-h: 29rem;          /* holds the full printed card */
+  --dlg-h-card: 26rem;     /* holds the small dealt card, tap to blow it up */
   --dlg-h-mug: 29rem;      /* holds the opponent's baseball card */
   --dlg-h-text: 11rem;     /* a floor for plain talk, not a ceiling */
   --dlg-h-compact: 15rem;  /* training: text, or text plus the small card */
@@ -777,64 +778,14 @@ p  { margin: 0 0 0.75rem; }
   text-transform: uppercase;
 }
 
-/* Steve, 2026-08-25: "foul cards at bottom: remove points number from bottom.
-   on hover, tooltip entire original card."
-   
-   Pure CSS on the slot, not React state on the button, because the button is
-   often disabled and a disabled control fires no mouse events of its own. Its
-   ancestors still resolve :hover, so the wrapper is what listens.
-   
-   Positioned against .rail-wrap rather than against its own slot, so the
-   leftmost and rightmost previews are centered over the tray instead of hanging
-   off the side of a phone. The delay on the way in keeps it from flashing while
-   a cursor crosses the tray to reach something else; there is no delay on the
-   way out. */
-.rail-tip {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% - 0.9rem);
-  transform: translateX(-50%);
-  /* Steve, 2026-08-25: "it does pop up, but it needs to be about twice as big.
-     It's too small. The text size should be this at least as big as the other
-     text on the screen." Width and --u move together, so the card keeps its
-     printed proportion and every line on it doubles with the frame. */
-  /* The third term is the window: the preview keeps the card's printed
-     proportion, so a width the viewport can hold is not enough, the height it
-     implies has to fit too. 9rem is the tray it hangs above plus the header it
-     must not slide under. Without this the top of a tall card is simply cut off
-     on a laptop screen. */
-  width: min(29rem, 94vw, calc((100vh - 9rem) / 1.242));
-  z-index: 40;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  filter: drop-shadow(0 6px 14px rgba(45, 45, 45, 0.28));
-  transition: opacity 120ms ease, visibility 0s;
-}
-/* The preview is the printed card, so it wears the printed proportion too.
-   --u is set for the reading, not for the frame: 0.78 * 1.28rem lands the body
-   text at 16px, which is the size of the rail label under the cursor. Steve's
-   floor was "at least as big as the other text on the screen", and the frame is
-   held one rem narrower than that would imply so the tall card still clears the
-   top of the window when it opens upward. */
-.rail-tip .card-full {
-  --u: 1.28rem;
-  aspect-ratio: var(--card-ar);
-}
-/* :has(:focus-visible) rather than :focus-within, because a mouse click leaves
-   the foul card focused and the preview is now big enough to cover the whole
-   room while the player is trying to read what their call did. Keyboard focus
-   still opens it. */
-/* A card that is already open below has nothing to preview. Leaving the hover
-   tip live meant brushing the tray while reading an opened card covered it with
-   a second copy of a different card. */
-.rail-wrap:has(.rail-open) .rail-tip { display: none; }
-.rail-slot:hover .rail-tip,
-.rail-slot:has(:focus-visible) .rail-tip {
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 120ms ease 320ms, visibility 0s 320ms;
-}
+/* The chip tray had a second card surface: a pure-CSS preview that opened
+   upward on hover, above the button. Steve, 2026-09-07: "Tapping the card in
+   the actual game interface alternates between having the card appear below
+   the button, which I like, that's great, and then also above the button. Get
+   rid of the above the button one. Retapping the card should make it
+   disappear." Both complaints were the same object, so it is gone. .rail-open
+   below is now the only place a card opens, and pressing the chip again closes
+   it (RuleCards.tsx, press()).
 
 /* The opened card pushes the thread up instead of covering it, and scrolls
    inside its own box if it runs long on a phone. */
@@ -1326,7 +1277,10 @@ p  { margin: 0 0 0.75rem; }
 /* The tiers. Fixed heights where a fixed-size object dominates the panel (a
    dealt card, a mug shot), so those panels are identical to each other; the
    plain-text tier above keeps its floor and grows. */
-.dlg.has-card { height: var(--dlg-h); }
+/* The box used to be sized to hold the whole printed card. It holds a small
+   one now (Steve, 2026-09-07), so it gives the height back rather than framing
+   a hole. */
+.dlg.has-card { height: var(--dlg-h-card); }
 .dlg.has-mug { height: var(--dlg-h-mug); }
 .dlg.is-compact,
 .dlg.is-compact.has-card { height: var(--dlg-h-compact); }
@@ -1582,14 +1536,86 @@ p  { margin: 0 0 0.75rem; }
    with its extra procedure band, fit inside that ratio at the dialogue box's
    current height. It came down with --dlg-h when the box was trimmed to 29rem
    for short windows. */
-.dlg .card-full {
-  --u: 0.71rem;
+/* Dealt small, on purpose. Steve, 2026-09-07: "make it smaller and then have
+   Coach Ray tell you to click it to make it larger so it's actually readable."
+   Nothing at this size is meant to be read: it is the object the coach is
+   holding, and it says which card is coming. The reading happens in .card-zoom.
+   Every length on the card is a multiple of --u, so shrinking is one number;
+   width tracks it at the same 24.6 the box has always used, which is what keeps
+   the printed proportion. */
+.dlg-card-btn {
   flex: 0 0 auto;
-  width: min(100%, 17.5rem);
-  aspect-ratio: var(--card-ar);
-  /* auto on all four sides, so the card sits in the middle of whatever the
-     fixed box has left after the coach's line rather than jammed under it. */
+  /* The button is the flex item now, and a flex item stretches by default,
+     which left the card sitting against the left edge of a full-width button.
+     align-self holds the button to the card's own width; auto on all four
+     sides then sits it in the middle of whatever the fixed box has left after
+     the coach's line rather than jammed under it. */
+  align-self: center;
   margin: auto;
+  /* The button is exactly the card and nothing else, so the dead strip beside
+     the card belongs to the box (where a click dumps the coach's line) and not
+     to the card (where a click blows it up). */
+  width: min(100%, 11rem);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  line-height: 0;
+  border-radius: 2px;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.dlg-card-btn:hover,
+.dlg-card-btn:focus-visible {
+  transform: scale(1.04);
+  box-shadow: 0 4px 14px rgba(45, 45, 45, 0.4);
+}
+.dlg .card-full {
+  --u: 0.52rem;
+  width: 100%;
+  aspect-ratio: var(--card-ar);
+}
+
+/* The card, blown up, out of the box and over the whole window. Steve's own
+   second option for the same complaint, 2026-09-07: "the window to just be
+   much taller so that that card can essentially fill the whole width of the
+   window." The box cannot be that tall without moving everything else, so the
+   card leaves the box instead.
+
+   The hard floor he set: "The smallest font on the card needs to match the
+   smallest font in the text dialogue from Coach Ray", which is .dlg-name at
+   0.8rem. The card's smallest type is --u * 0.5, so --u has to clear 1.6rem,
+   and --u is width / 22.6 (the ratio the old hover preview used: 29rem of card
+   at --u 1.28rem). So the card wants about 36rem of width, and takes whatever
+   the window can give: the full width, unless the height it implies would not
+   fit, in which case height is what decides. Both terms are viewport units, so
+   the type on the card and the type in the coach's box, which is clamped to the
+   viewport height at html, come down together on a short screen. */
+.card-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  background: rgba(26, 26, 30, 0.84);
+  cursor: zoom-out;
+}
+.card-zoom .card-full {
+  --zw: min(96vw, calc((100vh - 4.5rem) * 0.8054));
+  --u: calc(var(--zw) / 22.6);
+  width: var(--zw);
+  aspect-ratio: var(--card-ar);
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.5);
+}
+.card-zoom-hint {
+  font-family: var(--font-cond);
+  font-size: 0.8rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--print-tint, #f3cfba);
 }
 
 /* The typed-out text is decoration for the eye. A screen reader gets the whole

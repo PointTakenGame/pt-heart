@@ -354,7 +354,15 @@ function Select({
         </li>
         <li>
           <button
-            className={`level-card level-card-boss${allCleared && !FROZEN_ABOVE_THIRD_CHAIR ? '' : ' is-locked'}`}
+            /* A frozen rung is a frozen rung. The boss styling, purple border and
+               a darker ground, is what tells you a rung is not another drill, and
+               at 45% opacity it was still loud enough that the two boss rungs read
+               as a different kind of locked from the referee rungs beside them.
+               Steve, 2026-09-07: "can you just reset the flag so they all appear
+               the same". So the boss look is earned by being playable. */
+            className={`level-card${
+              allCleared && !FROZEN_ABOVE_THIRD_CHAIR ? ' level-card-boss' : ' is-locked'
+            }`}
             disabled={!allCleared || FROZEN_ABOVE_THIRD_CHAIR}
             onClick={onShowdown}
           >
@@ -415,7 +423,7 @@ function Select({
               !isCleared(REFEREE_LEVELS[REFEREE_LEVELS.length - 1].slug);
             return (
               <button
-                className={`level-card level-card-boss${locked ? ' is-locked' : ''}`}
+                className={`level-card${locked ? ' is-locked' : ' level-card-boss'}`}
                 disabled={locked}
                 onClick={onFinal}
               >
