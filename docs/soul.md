@@ -280,12 +280,19 @@ its own three-step structure and rubric, the one-token humility bonus included. 
 is the home of those mechanics and `roadmap.md` section 6 carries the build. It is still absent from
 the current code, which runs rounds 1 to 3 and then scores.
 
-**A player who reaches zero is out** `[ruled]`. Nathan proposed softening this, reasoning that
-ejecting the player who fouled most removes the person with the most left to learn; Steve considered
-it and rejected it on the 2026-08-31 call, reaffirming the original 2026-08-10 decision
-(`rules.md` sections 1, 8, 9) that already weighed and refused softening the zero. This stands
-exactly as printed on page 1 of the deck, quoted in `script.md` sections 2 and 6, and implemented at
-`game/src/content/showdown.ts:250`. Nothing to propagate: the ruling never changed.
+**A player who reaches zero is out, in live play** `[ruled]`. Nathan proposed softening this,
+reasoning that ejecting the player who fouled most removes the person with the most left to learn;
+Steve considered it and rejected it on the 2026-08-31 call, reaffirming the original 2026-08-10
+decision (`rules.md` sections 1, 8, 9) that already weighed and refused softening the zero. This
+stands exactly as printed on page 1 of the deck, quoted in `script.md` sections 2 and 6, and
+implemented at `game/src/content/showdown.ts:250`.
+
+The scope clause is Steve's, 2026-09-07: "player at zero is out, but that's not true in the gym
+levels. That's true in the live play." So the rule belongs to the three-seat live round, the part of
+the product the printed deck actually governs. Running your meter down in a gym rung does not eject
+you; the drill goes on and you finish it. Nathan's working branch rewrote this line to say a player
+at zero is not out at all, and main kept the unqualified opposite. Neither was right: the
+distinction is the surface, not the number.
 
 ## 12. The open tension, held open on purpose
 
