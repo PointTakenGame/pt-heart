@@ -263,7 +263,7 @@ function FrontPage({ onIn }: { onIn: () => void }) {
       </div>
 
       <footer className="front-foot">
-        <div className="front-foot-left">Humility Showdown &middot; &copy; 2026 Experception LLC</div>
+        <div className="front-foot-left">Humility Showdown &middot; Copyright 2026 Experception LLC</div>
         <div className="front-foot-right">Internal playtest. Do not post or distribute.</div>
       </footer>
 
