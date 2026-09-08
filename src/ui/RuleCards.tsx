@@ -4,9 +4,9 @@
 // to be on screen through every stage rather than explained once in a coach line
 // that scrolls away. Two jobs in one component:
 //
-//   1. Reference. Tap any card and it opens to the full printed face: what the
-//      foul is, the tell, three bad lines with the fix under each, and the shape
-//      of the repair. The deltas are the point (Steve: "need the direct deltas").
+//   1. Reference. Tap any card and it opens to the full printed face, exactly as
+//      the printed deck has it: what the foul is, the smoke-alarm terms, and the
+//      worked incorrect/correct examples.
 //   2. The whistle. Pressing a card IS calling that foul. There is no separate
 //      row of call buttons any more, and the card sits in the same place every
 //      time, so the gesture is the same in the gym and in the showdown. Letting
@@ -121,7 +121,7 @@ export function RuleCards({ enabled, live, onCall, pass, hint }: Props) {
       </div>
       {open && (
         <div className="rail-open">
-          <RuleCardFull rule={open} full />
+          <RuleCardFull rule={open} />
         </div>
       )}
     </div>
@@ -169,12 +169,8 @@ export function RuleCardMini({ rule }: { rule: FoulType }) {
  * versus solution, peach against mint, and the icon and the title are what tell
  * the fouls apart. The per-foul tint the app uses survives only on the rail
  * chips, where it is doing a job the paper game never had to do.
- *
- * `full` opens the coach's extra examples underneath. Off in the pre-fight
- * stepper, where the card is being taught one panel at a time, and on in the
- * rail, where the player has deliberately opened it to study.
  */
-export function RuleCardFull({ rule, full = false }: { rule: FoulType; full?: boolean }) {
+export function RuleCardFull({ rule }: { rule: FoulType }) {
   const card: RuleCard = CARDS[rule];
   const p = card.printed;
   return (
@@ -251,29 +247,6 @@ export function RuleCardFull({ rule, full = false }: { rule: FoulType; full?: bo
         <span className="card-trains-tag">Trains</span>
         <span className="card-trains-line">{p.trains}</span>
       </div>
-
-      {full && (
-        <div className="card-more">
-          {/* The foul drawn as a person, in one line. It used to render only on
-              the walk-out card and the VS splash, both of which a player sees
-              once and cannot get back to, and it is the sharpest definition of
-              the foul anywhere in the product. Steve, 2026-09-07: put them on
-              the foul cards players can tap mid-match, because that is where
-              someone looks when they are stuck. Above the tell on purpose:
-              first read the person, then read how to spot them. */}
-          <p className="card-epithet">{card.epithet}</p>
-          <div className="card-col-eyebrow">MORE, FROM THE COACH</div>
-          <p className="card-more-tell">{card.tell}</p>
-          <ul className="card-deltas">
-            {card.deltas.map((d) => (
-              <li key={d.bad}>
-                <span className="delta-bad">{d.bad}</span>
-                <span className="delta-fix">{d.fix}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }
