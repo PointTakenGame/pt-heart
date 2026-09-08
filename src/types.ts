@@ -40,7 +40,7 @@ export type ComposerState =
   | { kind: 'locked' }
   | {
       kind: 'buttons';
-      options: { value: string; label: string }[];
+      options: { value: string; label: string; tone?: 'bad' | 'good' }[];
       help?: { label: string; lines: string[] };
     }
   /** A foul call. The cards themselves are the buttons (they live in the rail
@@ -129,7 +129,7 @@ interface SortStep {
   id: string;
   rule: FoulType;
   line: string;
-  options: { value: string; label: string }[];
+  options: { value: string; label: string; tone?: 'bad' | 'good' }[];
   expected: string;
   feedback: Record<string, string>;
 }

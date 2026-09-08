@@ -157,9 +157,9 @@ export const level2: LevelDef = {
           rule: 'opinion_as_fact',
           line: 'In my head, crypto needs much tighter rules. It just does.',
           options: [
-            { value: 'missing_own', label: 'Said as a fact' },
-            { value: 'missing_reason', label: 'No real because' },
-            { value: 'good', label: 'Good' },
+            { value: 'missing_own', label: 'Said as a fact', tone: 'bad' },
+            { value: 'missing_reason', label: 'No real because', tone: 'bad' },
+            { value: 'good', label: 'All Good', tone: 'good' },
           ],
           expected: 'missing_reason',
           feedback: {
@@ -174,9 +174,9 @@ export const level2: LevelDef = {
           rule: 'opinion_as_fact',
           line: 'In my head, crypto needs tighter rules, because the two exchanges I used both froze withdrawals in the same year.',
           options: [
-            { value: 'missing_own', label: 'Said as a fact' },
-            { value: 'missing_reason', label: 'No real because' },
-            { value: 'good', label: 'Good' },
+            { value: 'missing_own', label: 'Said as a fact', tone: 'bad' },
+            { value: 'missing_reason', label: 'No real because', tone: 'bad' },
+            { value: 'good', label: 'All Good', tone: 'good' },
           ],
           expected: 'good',
           feedback: {
@@ -191,9 +191,9 @@ export const level2: LevelDef = {
           rule: 'opinion_as_fact',
           line: 'In my head, student loan forgiveness is unfair, because everyone knows it just moves the bill to people who never went.',
           options: [
-            { value: 'missing_own', label: 'Said as a fact' },
-            { value: 'missing_reason', label: 'No real because' },
-            { value: 'good', label: 'Good' },
+            { value: 'missing_own', label: 'Said as a fact', tone: 'bad' },
+            { value: 'missing_reason', label: 'No real because', tone: 'bad' },
+            { value: 'good', label: 'All Good', tone: 'good' },
           ],
           expected: 'missing_reason',
           feedback: {
@@ -210,9 +210,9 @@ export const level2: LevelDef = {
           rule: 'opinion_as_fact',
           line: 'The federal minimum wage should be raised, because the diner near me lost three cooks last year to a warehouse paying four dollars more.',
           options: [
-            { value: 'missing_own', label: 'Said as a fact' },
-            { value: 'missing_reason', label: 'No real because' },
-            { value: 'good', label: 'Good' },
+            { value: 'missing_own', label: 'Said as a fact', tone: 'bad' },
+            { value: 'missing_reason', label: 'No real because', tone: 'bad' },
+            { value: 'good', label: 'All Good', tone: 'good' },
           ],
           expected: 'missing_own',
           feedback: {

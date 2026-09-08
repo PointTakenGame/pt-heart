@@ -133,7 +133,11 @@ function ButtonComposer({
       )}
       <div className="composer-btn-row">
         {state.options.map((o) => (
-          <button key={o.value} className="btn" onClick={() => onSubmit(o.value, [])}>
+          <button
+            key={o.value}
+            className={`btn${o.tone ? ` btn-${o.tone}` : ''}`}
+            onClick={() => onSubmit(o.value, [])}
+          >
             {o.label}
           </button>
         ))}

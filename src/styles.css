@@ -8,6 +8,7 @@
   --cream-dark: #ede0d4;
   --orange: #e8845a;
   --teal: #52c4a0;
+  --teal-light: #e5f6f1;
   --charcoal: #2d2d2d;
   --purple: #9b6bc4;
   --rule: #d4c4b4;
@@ -657,6 +658,12 @@ p  { margin: 0 0 0.75rem; }
 .btn:disabled { opacity: 0.35; cursor: default; }
 .btn-wide { width: 100%; }
 .btn-send { flex: 0 0 auto; align-self: flex-end; }
+/* Sort-quiz tones: bad reuses the card's own problem-column peach, good is a
+   light tint of the app's own teal (the print mint is reserved for the cards). */
+.btn-bad { background: var(--print-peach); border-color: var(--print-orange); }
+.btn-bad:hover { background: var(--print-tint); }
+.btn-good { background: var(--teal-light); border-color: var(--teal); }
+.btn-good:hover { background: var(--teal-light); filter: brightness(0.97); }
 
 .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .chip {
