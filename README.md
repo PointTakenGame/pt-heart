@@ -16,8 +16,9 @@ notes: "Its own git repo, not part of the Claude workspace monorepo above it (re
 A card game about disagreeing without wrecking the relationship, playable in a
 browser. Three training levels teach one foul each, a fourth puts you in the
 referee's chair, and the fifth is a full match against Slippery Sofia, the boss,
-with all three cards live. Above those five sit the Humility Showdown levels,
-which are frozen while that phase is restructured.
+with all three cards live. Above those five sit the three Humility Showdown
+levels: two more referee seats, then the Final Showdown against Sung-min. They
+were unfrozen on 2026-09-07 (commit 2db54ac) and the whole ladder is playable.
 
 This is the web build. The printed deck is the original, and Steve's Keynote
 master is the source of truth for card content; it lives outside this repo.

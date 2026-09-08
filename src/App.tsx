@@ -340,7 +340,15 @@ function Select({
             </button>
           ))}
         </div>
-        <button className="btn btn-wide" onClick={() => setPicking(false)}>
+        {/* Done commits the face, including the default one nobody tapped.
+            Without this, getAvatar() stays null and every Leave reopens the picker. */}
+        <button
+          className="btn btn-wide"
+          onClick={() => {
+            onAvatar(avatar);
+            setPicking(false);
+          }}
+        >
           Done
         </button>
       </div>
