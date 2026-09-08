@@ -119,9 +119,9 @@ export const RULE_GLOSS: Record<FoulType, string> = {
 export type TopicId = 'loans' | 'rto' | 'nuclear';
 
 export const TOPICS: { id: TopicId; label: string }[] = [
-  { id: 'loans', label: 'student loan forgiveness' },
-  { id: 'rto', label: 'return to office mandates' },
-  { id: 'nuclear', label: 'nuclear power' },
+  { id: 'loans', label: 'Student Loan Forgiveness' },
+  { id: 'rto', label: 'Return to Office Mandates' },
+  { id: 'nuclear', label: 'Nuclear Power' },
 ];
 
 export function topicLabel(id: TopicId): string {

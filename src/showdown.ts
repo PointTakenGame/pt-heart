@@ -382,15 +382,11 @@ export function useShowdown(): Match {
     };
 
     void (async () => {
-      // The room, before anybody speaks. Steve, 2026-08-24: the boss levels
-      // "should feel liek mortal kombat", and a fight happens in front of people.
-      // COACH.intro used to be dumped here. It runs as the pre-room stepper now
-      // (src/ui/Prefight.tsx), so the room opens on the crowd and the first ask.
-      push({ lane: 'crowd', text: crowdRow(0) });
-
-      // The opening. Sofia takes the other side of whichever topic is picked,
-      // which is how this level stays politically balanced without anybody
-      // authoring a position.
+      // The opening. Steve, 2026-09-08: topic buttons used to sit behind a crowd
+      // row and needed an extra Next click to appear; that row now fires after
+      // the pick instead. The old "she'll take whichever side you're on" line
+      // was also wrong — Sofia goes first and the side is assigned, not chosen —
+      // so the coach now states both sides instead of implying a free pick.
       //
       // A closed list of three rather than a typed topic (2026-09-06). Her
       // authored fallbacks are what a local playtest actually sees, and a line
@@ -404,7 +400,13 @@ export function useShowdown(): Match {
       const topicId = opening.value as TopicId;
       const topic = topicLabel(topicId);
       push({ lane: 'player', text: topic });
-      await coach('Good. She will take the other side of that, whichever side you are on.');
+      push({ lane: 'crowd', text: crowdRow(0) });
+      const playerFor = Math.random() < 0.5;
+      await coach(
+        playerFor
+          ? "Good. You're arguing for it. She's got the other side."
+          : "Good. You're arguing against it. She's got the other side.",
+      );
 
       // `lastPlayer` is what Sofia answers and summarizes. `lastSofia` is what the
       // player answers and summarizes. Round 1 opens on her, so `lastSofia` is

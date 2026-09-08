@@ -265,7 +265,12 @@ export function useFinal(): FinalMatch {
         await coach('That is not a topic yet. Name the thing you two disagree about.');
       }
       push({ lane: 'player', text: topic });
-      await coach('Good. He takes the other side of that, whichever side you are on.');
+      const playerFor = Math.random() < 0.5;
+      await coach(
+        playerFor
+          ? "Good. You're arguing for it. He's got the other side."
+          : "Good. You're arguing against it. He's got the other side.",
+      );
 
       setPhase('The argument');
       let lastPlayer = topic;
