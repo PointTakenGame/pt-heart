@@ -364,10 +364,41 @@ export const SOFIA_HEARD = [
   'Yes. And you did it on the round where I did not do it for you.',
 ];
 
-export const SOFIA_NOT_HEARD = [
-  'No. You gave me my words back and left the reason on the floor. That is not what I said.',
-  'Close on the words, nowhere near the point. That is not what I am arguing.',
-  'That is not what I said, and I think you could tell as you typed it.',
+/**
+ * Her answer when the summary did NOT land, one authored line per beat, citing
+ * the actual point that got left out rather than a generic complaint.
+ *
+ * Nathan's Q6 ruling: "the opponent answers 'did I miss anything?', authored per
+ * beat, no model needed" — these three each name the specific reason attached to
+ * the turn they follow (her round 1 opener, her round 2 precedent move, her
+ * round 3 judging line), not a stand-in for any missed summary. Indexed by
+ * `summaryCount`, same walk order as SOFIA_HEARD.
+ */
+export const SOFIA_NOT_HEARD: ((playerText: string, topic: TopicId) => string)[] = [
+  byTopic({
+    loans:
+      'No. You gave me a position, not the reason. I said somebody eats this cost no matter what — the borrower, the school, or someone who never enrolled — and you dropped who I said gets stuck holding it.',
+    rto:
+      'No. You gave me a position, not the reason. I said somebody pays either way — the company or the two hours a day somebody loses commuting — and you dropped which one I said gets left out of the pitch.',
+    nuclear:
+      'No. You gave me a position, not the reason. I said somebody pays either way — thirty years of carrying the plant, or whatever you burn instead — and you dropped which one I said the pitch always leaves out.',
+  }),
+  byTopic({
+    loans:
+      'No. That was not about this cohort and you played it back like it was. I said it is about what deciding it this way makes normal for every class after — that part is missing.',
+    rto:
+      'No. That was not about this policy and you played it back like it was. I said it is about what it makes the default for the next manager who inherits it — that part is missing.',
+    nuclear:
+      'No. That was not about this one reactor and you played it back like it was. I said it is about what standard the next twelve sites get built to — that part is missing.',
+  }),
+  byTopic({
+    loans:
+      'No. I said you are only arguing this because of how your own loans happened to land — that was the actual line, and you left out that it was aimed at you, not at the policy.',
+    rto:
+      'No. I said you are only arguing this because of how your own commute happens to work out — that was the actual line, and you left out that it was aimed at you, not at the policy.',
+    nuclear:
+      'No. I said you are only arguing this because of where you happen to live relative to one — that was the actual line, and you left out that it was aimed at you, not at the policy.',
+  }),
 ];
 
 /**

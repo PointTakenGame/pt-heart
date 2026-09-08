@@ -370,9 +370,22 @@ function renderShowdown(): void {
     quote(line, `Sofia, summary ${i + 1} of hers landed`);
     blank();
   });
-  SOFIA_NOT_HEARD.forEach((line, i) => {
-    quote(line, `Sofia, summary ${i + 1} of hers did not`);
+  push(
+    '`[unratified]` (`src/content/showdown.ts:377`) The missed-content lines below are ' +
+      'authored per beat, one per topic, and nobody has ruled on the wording. They name the ' +
+      'specific reason the player dropped on that turn, which is why there is one per beat ' +
+      'rather than a bank picked at random. Also unratified: a missed summary that is ' +
+      'structurally sound moves no tokens. Nathan Q6 and Q19 disagree on that; see ' +
+      'HEART-T260907-36.',
+  );
+  blank();
+  TOPICS.forEach(({ id, label }) => {
+    push(`Missed-content lines, topic: ${label}`);
     blank();
+    SOFIA_NOT_HEARD.forEach((fn, i) => {
+      quote(fn('', id), `Sofia, summary ${i + 1} of hers did not`);
+      blank();
+    });
   });
 
   push('### `SOFIA_THIN`: what she says to a non-answer');

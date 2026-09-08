@@ -58,18 +58,33 @@ const FINAL_NUMBER = REFEREE_NUMBER_BASE + REFEREE_LEVELS.length;
 // and all five are playable: three to learn the cards, the referee's chair, then
 // the match against the boss.
 //
-// What is still frozen is everything above rung 5, which is the Humility Showdown
-// phase and is being restructured. Nothing is deleted; the writing in those rungs
-// is kept and re-attributed when the rebuild happens. Set this to false to walk
-// the old ladder again.
+// Rungs 6 to 8 were frozen behind FROZEN_ABOVE_SOFIA while the Humility Showdown
+// phase was being restructured. The freeze came off on 2026-09-07, in the build
+// of items 5 to 7 of Steve's seven-item list, and it came off in one piece rather
+// than a rung at a time, because the three rungs are one lesson split three ways
+// and none of them stands alone.
+//
+// The Final Showdown asks the player to do three things in a row: summarize
+// Sung-min better than he summarized them, say what they learned, and say why he
+// might think differently. Rung 6 is a referee's seat on the second of those and
+// rung 7 is a referee's seat on the third, and both exist because those two moves
+// have a foul hiding inside them that looks exactly like the bonus. "I learned
+// that you don't understand this" opens like a learning sentence and is a verdict
+// at two tokens. "You think that because you value fairness" earns a token and
+// "you think that because you don't care" costs two, and they are the same
+// sentence pointed the other way. Shipping rung 8 without 6 and 7 would ask the
+// player to perform, cold, the two moves the game has never let them watch. So
+// the whole phase is open or none of it is.
+//
+// This is my call, not a ruling of Steve's: HEART-T260907-37 is his row to
+// overrule it. All three rungs were fully authored and wired the whole time they
+// were frozen; nothing here was written tonight except the gating.
 //
 // The reason the numbering kept drifting was a name, not a number. Rung 5 used to
 // be called "The Showdown", which collides with Humility Showdown, the name of the
 // phase that starts at rung 6. Steve: "we shouldn't call it Sofia Showdown because
 // that is what confused me, because the Humility Showdown is the second phase of
 // the game." Rung 5 is now just the boss's name.
-const FROZEN_ABOVE_SOFIA = true;
-const FROZEN_SUB = 'being rebuilt \u00b7 not playable yet';
 
 type Screen =
   | { name: 'front' }
@@ -351,8 +366,12 @@ function Select({
         }
       />
       <h1>The gym</h1>
+      {/* One line, and it stops at the rung you can currently see the point of.
+          The Humility Showdown is the second half of the ladder and the name
+          means nothing until you have been through the first half, so it is not
+          named here. The rungs themselves say what they are when they open. */}
       <p className="muted">
-        Five levels. Three to learn the cards, one in the referee&rsquo;s chair, then
+        Three levels to learn the cards, one in the referee&rsquo;s chair, then
         everything at once against the boss.
       </p>
 
@@ -458,8 +477,7 @@ function Select({
             handed the whistle after you have been on the wrong end of one. */}
         {REFEREE_LEVELS.map((l, i) => {
           const locked =
-            FROZEN_ABOVE_SOFIA ||
-            (i === 0 ? !isCleared(SHOWDOWN_ID) : !isCleared(REFEREE_LEVELS[i - 1].id));
+            i === 0 ? !isCleared(SHOWDOWN_ID) : !isCleared(REFEREE_LEVELS[i - 1].id);
           return (
             <li key={l.slug}>
               <button
@@ -471,13 +489,11 @@ function Select({
                 <span className="level-mid">
                   <span className="level-title">{l.title}</span>
                   <span className="level-sub">
-                    {FROZEN_ABOVE_SOFIA
-                      ? FROZEN_SUB
-                      : locked
-                        ? i === 0
-                          ? 'beat Sofia first'
-                          : `clear level ${REFEREE_NUMBER_BASE + i - 1} first`
-                        : `You referee · ${l.figure}`}
+                    {locked
+                      ? i === 0
+                        ? 'play Sofia first'
+                        : `clear level ${REFEREE_NUMBER_BASE + i - 1} first`
+                      : `You referee · ${l.figure}`}
                   </span>
                 </span>
                 {isCleared(l.id) && <span className="level-done">cleared</span>}
@@ -489,9 +505,7 @@ function Select({
             perform two moves they only ever refereed before. */}
         <li>
           {(() => {
-            const locked =
-              FROZEN_ABOVE_SOFIA ||
-              !isCleared(REFEREE_LEVELS[REFEREE_LEVELS.length - 1].id);
+            const locked = !isCleared(REFEREE_LEVELS[REFEREE_LEVELS.length - 1].id);
             return (
               <button
                 className={`level-card${locked ? ' is-locked' : ' level-card-boss'}`}
@@ -502,11 +516,9 @@ function Select({
                 <span className="level-mid">
                   <span className="level-title">The Final Showdown</span>
                   <span className="level-sub">
-                    {FROZEN_ABOVE_SOFIA
-                      ? FROZEN_SUB
-                      : locked
-                        ? `clear level ${FINAL_NUMBER - 1} first`
-                        : `Be generous · ${SUNGMIN}`}
+                    {locked
+                      ? `clear level ${FINAL_NUMBER - 1} first`
+                      : `Be generous · ${SUNGMIN}`}
                   </span>
                 </span>
                 {isCleared(FINAL_ID) && <span className="level-done">played</span>}

@@ -585,12 +585,10 @@ export function useShowdown(): Match {
             const carried = ruled?.carried ?? null;
             const heard = foul !== 'fake_listening' && carried !== false;
             if (turn.kind === 'summarize') {
-              const bank = heard ? SOFIA_HEARD : SOFIA_NOT_HEARD;
-              await say({
-                lane: 'opponent',
-                speaker: SOFIA,
-                text: bank[summaryCount % bank.length],
-              });
+              const line = heard
+                ? SOFIA_HEARD[summaryCount % SOFIA_HEARD.length]
+                : SOFIA_NOT_HEARD[summaryCount % SOFIA_NOT_HEARD.length](lastPlayer, topicId);
+              await say({ lane: 'opponent', speaker: SOFIA, text: line });
               summaryCount += 1;
             }
 
@@ -604,6 +602,18 @@ export function useShowdown(): Match {
               // with "Clean." or with a line of credit for a summary she is
               // still holding at arm's length. Nothing is charged either way;
               // the price list did not move, only what gets said about it.
+              //
+              // That nothing is the ruling, and it is mine and not Steve's, so
+              // it is written down: Nathan's Q6 says the coverage answer is
+              // feedback and feedback that charges money stops being feedback,
+              // and his Q19 says an uncharged wrong answer is not a move in a
+              // token game and the player will learn to skim. They contradict.
+              // I took Q6, because Steve retired MISS_COST on the same argument
+              // on 2026-09-07 (you are charged for what you say, not for what
+              // you fail to notice) and because the SHAPE of a summary is still
+              // priced above: no because and no check is Fake Listening at one
+              // token, and a summary that judges her is two. Skimming is already
+              // expensive. To overrule, charge one token here. HEART-T260907-36.
               await coach(COACH.onPlayerCleanNotCarried);
             } else if (ruled?.text) {
               await coach(ruled.text);
