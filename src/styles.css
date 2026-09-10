@@ -377,7 +377,7 @@ p  { margin: 0 0 0.75rem; }
 
 /* Two purses, seven icons a side, one row each with its owner's face in front of
    it. The printed game pays in these, so the screen pays in these; a bare number
-   does not give a player who is bleeding half a token at a time anything to
+   does not give a player who is losing a token at a time anything to
    watch. Spent slots stay in place and go pale rather than disappearing, so the
    pile reads as spent rather than as a shorter purse.
 

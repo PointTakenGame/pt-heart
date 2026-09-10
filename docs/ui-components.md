@@ -122,11 +122,24 @@ styles.css:833; card-anatomy.md §E]`
 
 - `Header.tsx`: title bar plus the two live token purses (opponent left, player
   right), with a flying-token animation between them on transfer. Mounted at
-  the top of the active room in `App.tsx`.
+  the top of the active room in `App.tsx`. Takes an optional `costs?: boolean`
+  prop (`Header.tsx:58,143`); when true it renders a `.cost-strip` of
+  `.cost-item`/`.cost-glyph`/`.cost-name` rows under the purses, listing what
+  each foul pays out. Wired in `App.tsx:702` as `costs={level.tokens ===
+  'live'}`, so the strip shows only on rungs where tokens actually move;
+  levels 1 to 3 run `tokens: 'off'` and get no strip (`Header.tsx:57`).
 - `RuleCards.tsx`: the persistent bottom rail of the three foul cards. Doubles
   as reference (tap to open the full printed face) and as the whistle itself
   (tap to call that foul). Mounted under the thread/drill in every playing
-  screen once at least one card is taught.
+  screen once at least one card is taught. Two teaching affordances ride on the
+  rail (`RuleCards.tsx:60-115`): a per-chip price badge, `.rail-cost`,
+  showing that card's cost in 🙏 glyphs, rendered only while the chip is
+  actually callable (`callable && ...`); and an optional `hint` prop rendered
+  as `.rail-hint` with a `.rail-hint-arrow` pointing down at the tray, shown
+  only in level 1, only before a call opens, and withdrawn for good the first
+  time a card is opened (`everOpened` state). Both a live chip (`.rail-card.is-
+  live`) and the let-it-stand row (`.rail-pass`) carry the shared `cta-pulse`
+  attention animation while callable (see the interaction specs below).
 - `Dialogue.tsx`: the fixed-frame NPC dialogue box. Typewriter text reveal,
   synthesized blip per character, mute toggle, voice picker, optional embedded
   rule-card or opponent "mug" panel. Used by `Prefight.tsx` and `BossIntro.tsx`,
@@ -136,11 +149,34 @@ styles.css:833; card-anatomy.md §E]`
   a foul can be called on it.
 - `Thread.tsx`: scrolling chat view used only for boss encounters (Sofia).
   Lane-based layout (coach centered, opponent left, player right, crowd
-  centered), with a three-tier age fade (`now`/`recent`/`old`) by position.
-- `Composer.tsx`: the message-input region. Renders one of several states
-  (`locked`, `continue`, `call`, `buttons`, `template`, free text) depending on
-  what the current step needs. Owns a "revision trace" capture (pause, blur,
-  chip insert, send snapshots).
+  centered), with a three-tier age fade by `data-age` attribute: `now` for the
+  last 3 messages, `recent` up to 6 back, `old` beyond (`Thread.tsx:117`).
+  Bottom-anchored via `margin-top: auto` on `.thread > :first-child`
+  (`styles.css:466`), deliberately not `justify-content: flex-end`, which
+  would clip the overflowing top of the scroll container and make the
+  earliest lines unreachable (`styles.css:460-465`). The thread has to be
+  re-landed on its bottom whenever the composer changes height; `Composer.tsx`
+  calls its `onResize` prop from a layout effect on every state change
+  (`Composer.tsx:44-47`) for exactly this reason.
+- `Composer.tsx`: the message-input region. `ComposerState` (`types.ts:39-69`)
+  has eight kinds: `locked` (no box), `continue` (one wide button), `call` (no
+  box, a hint line only, since the rule cards themselves are the call buttons),
+  `buttons`, `template` (sentence frame with blanks in the box), `confirm` (two
+  verdict buttons plus an always-open note box, for a bystander ruling on
+  whether a suggested foul actually landed), `prefilled`, and `free` (the last
+  two both render through the same `TextComposer` fallback). Pre-fill is the
+  governing design constraint on the free-text states. Owns a "revision trace"
+  capture (pause, blur, chip insert, send snapshots; four triggers, 900ms after
+  typing stops, per `Composer.tsx:1-8`).
+- `OnTable.tsx`: pins the line currently
+  being ruled on between the header and the thread/drill, so the specimen
+  cannot scroll out of view while three coach lines and the composer stack up
+  on top of it. Exports `OnTable` (props `text`, optional `hint`; classes
+  `.on-table`, `.on-table-tag`, `.on-table-text`, `.on-table-hint`) and a
+  `tableLine()` helper that finds the newest specimen/take line in a message
+  list. Rendered only while a ruling is open (`OnTable.tsx:1-14`), wired into
+  the boss branch of `Room` and into `Match`, `FinalRun`, `RefereeRun`, and
+  `LiveRoom` in `App.tsx`.
 - `Prefight.tsx`: the pre-room "corner" stepper. Introduces the coach once ever,
   then steps through setup lines and card reveals before a level or the
   showdown begins.
@@ -166,7 +202,14 @@ call sites in App.tsx]`
 3. **Level select**: three levels (`content/index.ts` `LEVELS`), each teaching
    one foul card, gated so a level unlocks after the previous clears
    (`storage.ts` `cleared` map, keyed by level slug, never by index, so
-   reordering levels does not orphan a save).
+   reordering levels does not orphan a save). A cleared row gets
+   `.level-card.is-cleared` (border only, `styles.css:2192`) plus a
+   `.level-state` block on the right holding `.level-done` (which card it
+   taught) and a `.level-replay` pill back in. Deliberately minimal: no score,
+   attempt count, or percentage is shown, since a rung can be retried until
+   correct and any number would either be a foregone conclusion or a
+   punishment for learning out loud (`styles.css:2170-2186`, Nathan ruling
+   Q20).
 4. **Prefight** (per level or before the showdown): `Prefight.tsx`, one coach
    panel at a time, "meet the coach" shown once ever (`storage.ts` `metCoach`
    flag), then setup lines and card reveals, advanced by a Next button and a
@@ -254,18 +297,41 @@ When a call is open, non-live cards are visually dimmed and disabled
 `styles.css` `.rail-card.is-live`). A full-width "let it stand" row appears
 above the rail while a call is open (`pass.label`, wired in
 `content/showdown.ts:215`: "Press a foul card to call it, or say it is not a
-foul."). The engine judges the call in `showdown.ts:390-420` and `:465-495`:
-correct card on a fouled line pays out per `foulCost()` (a Showdown-only function;
-the level 1 to 3 drill engine in `engine.ts` uses flat one-token transfers); a call on a clean line is a false call
-and costs the caller 1 token (`content/showdown.ts:220-221`); missing a foul
-entirely (letting the line pass) costs the player half a token even though
-nothing was pressed (`content/showdown.ts:228-229`, an explicit 2026-08-24
-ruling: "a player who lets everything stand has to see the ledger move").
+foul."). The showdown match runner judges the call in `src/showdown.ts:479-495`:
+correct card on a fouled line pays out per `foulCost()` (`src/content/showdown.ts:75-77`,
+a Showdown-only function; the level 1 to 3 drill engine in `engine.ts` uses flat
+one-token transfers for a wrong drill answer, see `chargeMiss()` at
+`engine.ts:483-489`); a call on a clean line is a false call and costs the caller
+`FALSE_CALL_COST` = 1 token (`src/showdown.ts:502`, constant defined at
+`src/content/showdown.ts:83`). Missing a foul entirely (letting the line pass)
+costs nothing: a miss moves no tokens, because "you are charged for what you
+say, not for what you fail to notice" (`src/showdown.ts:483-489`,
+`src/content/showdown.ts:62-69` `[ruled: HEART-T260907-23]`). There are no
+fractional tokens anywhere: `TOKEN_STEP = 1` (`src/content/showdown.ts:88-96`)
+and `formatTokens()` rounds to a whole number, so nothing renders a half
+glyph.
 Cheap phrase-rule detectors in `detectors.ts` (assertion markers, ownership
 prefixes, trait words) provide a local pre-check the composer can use before
 anything is sent to the model; per `detectors.ts:1-7` these are not
 authoritative, "the coach's authored feedback... [is] what the player
 actually reads."
+
+**Attention pulse (`cta-pulse`).** A shared `@keyframes cta-pulse` in
+`styles.css:2033-2036` animates a box-shadow ring (colour set per element via
+the `--cta-ring` custom property) over 2.4s ease-in-out, alternating, forever
+while the element stays in that state; it never changes size or position, only
+the ring, so it cannot retrigger the composer/thread resize loop
+(`styles.css:2020-2029`). Two live uses: `.rail-card.is-live`, ring colour is
+that card's own `--card` colour, so the pulse also names which foul it is
+(`styles.css:2038-2041`); and `.rail-pass` (the let-it-stand row), same
+animation offset by `animation-delay: -1.2s` (half a period) so the tray reads
+as breathing rather than strobing as one block (`styles.css:2043-2052`). Both
+stop the instant the state that earns them ends (a call is no longer open).
+`prefers-reduced-motion: reduce` drops the animation but keeps the ring at
+full strength rather than removing the cue outright (`styles.css:2054-2060`).
+This is the code's implementation of Steve's standing rule to draw attention
+with de-contrasting plus a gentle flicker, or a call-to-action colour unique
+on the screen.
 
 **Token award (the flight animation).** `Header.tsx`'s `fly()` function moves a
 single 🙏 glyph between the two purse elements using the Web Animations API

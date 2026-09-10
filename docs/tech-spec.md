@@ -67,13 +67,27 @@ Top level of `game/`: `api/`, `dist/` (build output, ignore), `node_modules/`
 (ignore), `pdf-game/`, `scripts/`, `src/`.
 
 - `src/` is the entire client app: `App.tsx` (screens and routing), `types.ts`
-  (shared type model), `engine.ts` (levels 1-3 runner), `showdown.ts` (level 4
-  match runner), `detectors.ts` (offline phrase-rule foul detection),
-  `pacing.ts` (message-reveal timing), `coach.ts` (client-side model-call
-  wrapper with fallbacks), `storage.ts` (localStorage persistence),
-  `avatars.ts` (avatar picker data and the fair-shuffle constraint),
-  `main.tsx` (React entry point, no StrictMode), `styles.css`, `content/`
-  (authored level and card data), `ui/` (presentational components).
+  (shared type model), `engine.ts` (gym levels 1-3 runner), `showdown.ts` (the
+  boss match runner), `referee.ts` (the referee-format runner, two AI figures
+  argue and the human only calls fouls), `room.ts` (the live-play runner, one
+  human plus a generated stranger, no server), `final.ts` (the Final Showdown
+  runner), `detectors.ts` (offline phrase-rule foul detection), `pacing.ts`
+  (message-reveal timing), `coach.ts` (client-side model-call wrapper with
+  fallbacks), `storage.ts` (localStorage persistence), `corpus.ts` (donates
+  answered items to Supabase, section 9), `avatars.ts` (avatar picker data and
+  the fair-shuffle constraint), `main.tsx` (React entry point, no StrictMode),
+  `styles.css`, `content/` (authored level and card data: `cards.ts`,
+  `final.ts`, `ids.ts` (permanent level ids, section 9), `index.ts`,
+  `level1.ts`, `level2.ts`, `level3.ts`, `referee.ts`, `room.ts`,
+  `showdown.ts`), `ui/` (presentational components: `BossIntro.tsx`,
+  `Composer.tsx`, `Dialogue.tsx`, `Drill.tsx`, `Header.tsx` (a `costs` prop
+  shows what each foul costs beneath the purses), `Mast.tsx`, `OnTable.tsx`
+  (pins the line under judgement above the composer so the question sits next
+  to the thing it is about), `Prefight.tsx`, `RuleCards.tsx` (a `hint` prop),
+  `Thread.tsx`, `blip.ts`). `GAP: referee.ts, room.ts, and final.ts have no
+  architectural section here. Sections 4 and 5 document engine.ts and
+  showdown.ts to the depth these three still need: state shape, scoring, and
+  beat flow. Somebody has to write that pass.`
 - `api/coach.ts` is the one server-side file: a Vercel Edge Function that
   proxies model calls to Anthropic so the API key never reaches the browser.
 - `scripts/export-script.ts` imports the content modules directly and renders
@@ -120,8 +134,12 @@ separately in `content/showdown.ts` (section 5 below).
 
 ## 4. The match state machine
 
-There are two independent runners, not one state machine, and they are
-structurally different by design.
+`GAP: there are five runner modules (engine.ts, showdown.ts, referee.ts,
+room.ts, final.ts, per section 2), and only two of them are documented below.
+referee.ts, room.ts and final.ts appear here only as their header comments in
+section 2. Somebody has to write them up to the depth engine.ts and showdown.ts
+get below.` The two runners this section documents in full are not one state
+machine, and they are structurally different by design.
 
 **`useGym(level: LevelDef): Gym`, in `engine.ts`.** Drives training levels 1-3
 **as they ship today.** `game/docs/roadmap.md` §7 rules a referee-format
@@ -145,15 +163,22 @@ a state machine nobody can read." `[unratified, src/showdown.ts header
 comment]` Screen transitions in `App.tsx` are a plain three-stage local state
 on top of this: `prefight` -> `intro` -> `match`.
 
-**Top-level screens (`App.tsx`).** A `Screen` union: `{name:'agreement'}`,
-`{name:'select'}`, `{name:'level', level: LevelDef}`, `{name:'showdown'}`.
-`Agreement` is the Beat 0 consent screen shown once. `Select` is the avatar
-picker plus the level ladder plus a boss/"Showdown" tile, gated by
-`cleared`/`allCleared` from `storage.ts`. A `Level` screen runs `Prefight`
-(the stepper introducing the level and, on first visit only, the coach) then
-`Room`, which switches on an `inBoss` flag between `Drill` (the training
-stepper UI, one panel with a Next button) and `Thread`+`Composer` (the
-scrolling chat/boss UI). `Showdown` composes `Prefight` -> a `BossIntro`
+**Top-level screens (`App.tsx`).** A `Screen` union of eight variants:
+`{name:'front'}`, `{name:'select'}`, `{name:'level', level: LevelDef}`,
+`{name:'showdown'}`, `{name:'referee', level: RefereeLevel}`,
+`{name:'final'}`, `{name:'door', seat: Seat}`, `{name:'live', seat: Seat,
+topic: string}`. `GAP: the union above is verified against App.tsx, but the
+paragraph below describes only the older screens. What referee, final, door and
+live each render needs writing.` There is no consent or agreement gate;
+`App.tsx`'s own comment records the ruling that removed it ("there used to be a
+homepage for this entire humility showdown game... The gate is retired... You
+can retire that.", Steve) `[unratified, src/App.tsx:97-108]`. `front` opens the
+app for every visitor, every time. `Select` is the avatar picker plus the level
+ladder, gated by `cleared`/`allCleared` from `storage.ts`. A `Level` screen
+runs `Prefight` (the stepper introducing the level and, on first visit only,
+the coach) then `Room`, which switches on an `inBoss` flag between `Drill`
+(the training stepper UI, one panel with a Next button) and `Thread`+`Composer`
+(the scrolling chat/boss UI). `Showdown` composes `Prefight` -> a `BossIntro`
 countdown -> `Match`, which renders `Header` (token purses), `Thread`,
 `Composer`, and `RuleCards` (the three foul cards, always live and tappable as
 the whistle) together.
@@ -182,8 +207,12 @@ calls (per `heart-soul.md`'s locked rule, human callout is reserved for level
   full-match-sofia.md:36, matches src/showdown.ts implementation]`
 - **Tokens are live and transfer, never burn.** `START_TOKENS = 7` per side
   (`content/showdown.ts`), always summing to 14. `foulCost()`: Judging = 2,
-  Opinions as Facts = 1, Fake Listening = 1. `MISS_COST = 0.5`, charged only in
-  the showdown, for a foul the player fails to call on Sofia.
+  Opinions as Facts = 1, Fake Listening = 1 (`content/showdown.ts:75`).
+  `FALSE_CALL_COST = 1`, what a whistle at nothing costs the player
+  (`content/showdown.ts:83`). Every price is a whole token; `TOKEN_STEP = 1`
+  (`content/showdown.ts:95`) is the only place a fractional price could
+  enter. There is no `MISS_COST`: letting a real foul go past moves nothing at
+  all (`content/showdown.ts:62`) `[ruled: HEART-T260907-23]`.
 - **Sofia's fouls are authored and fixed, not generated per playthrough.**
   `content/showdown.ts`'s `TURNS` schedule assigns each of Sofia's six turns a
   fixed foul or `'clean'`: round 1 summarize clean, round 1 speak Opinions as
@@ -260,8 +289,9 @@ changes"]`.
 around one `fetch('/api/coach', ...)` call with a matching authored fallback:
 `restate()` (the perfect/flawed repeat-back demonstration in level 3),
 `judgeEdit()` (grading a player's deliberately-flawed rewrite), `judgeTurn()`
-(ruling on the player's own turn in the showdown), `sofiaLine()` (generating
-Sofia's in-character line for a scripted foul or clean turn in the showdown).
+(ruling on the player's own turn in the showdown), `opponentLine()` (generating
+the mirroring opponent's in-character line for a scripted foul or clean turn:
+Sofia in the boss match, Sung-min in the Final Showdown).
 Every one of these degrades to authored, hand-written content on timeout,
 non-2xx response, or malformed JSON; there is no code path where a coach call
 failing blocks the player. This matches `api/coach.ts`'s own design note that a
@@ -280,8 +310,8 @@ object; `reset()` clears it; `exportJson()` serializes it for the two
 undocumented-by-design export paths in `main.tsx` (Ctrl/Cmd+Shift+E to
 clipboard, or `window.__export()` from a browser inspector, both deliberately
 invisible to a player since "the save file is the whole research corpus").
-There are no accounts. There IS server-side persistence, and has been since
-2026-09-01: `src/corpus.ts` donates every answered item to a Supabase table.
+There are no accounts. There IS server-side persistence: `src/corpus.ts`
+donates every answered item to a Supabase table.
 `recordItem()` calls `donate(record, file.playerId)` after it saves locally, so
 all five runners are covered at a single site.
 
@@ -434,24 +464,14 @@ Per the online-edition roadmap (`docs/design/online-edition-roadmap.md`), which
 describes intended architecture only, cross-checked against what section 4-11
 above confirm is actually in `game/`:
 
-- **The Final Showdown, unbuilt.** The source cited here is a superseded
-  five-level scheme (`docs/design/online-edition-roadmap.md:157-158, 426-432`)
-  reserving level 4 for "Full Showdown, all three fouls, full token economy"
-  (matches what `showdown.ts` implements) and a separate level 5 for "Final
-  Showdown: Super-Summary, What I Learned, Why We Might Still Disagree,"
-  requiring a "Final Showdown judge" role it says plainly "does not exist, and
-  Level 5 structurally requires it." `[unratified]` **Both the level count and
-  the judge role are stale.** `game/docs/roadmap.md` §6 (current, corrected
-  2026-08-31) rules the Final Showdown across three levels, 5-7, not one, and
-  rules that no judge role exists or will: 5 and 6 are referee-format (the
-  human referees a coach-vs-AI-opponent exchange), 7 is played for real like
-  Level 4. **Still not present in `game/` in any form**: no levels 5-7, no
-  judge role of any kind, no Super-Summary code path. This is
-  intended-but-unbuilt, not a discrepancy in what already ships.
-- **A "coach" as a distinct third role in the training levels' teaching
-  exercises**, per the roadmap's original framing, is described as needing to
-  be built; it has since shipped (`src/coach.ts`, `api/coach.ts`), which the
-  roadmap text itself flags inline ("it has since shipped").
+Two things the design docs list as unbuilt are in fact shipped, so they are not
+on this list: the referee and Final Showdown runners (`src/referee.ts`,
+`src/final.ts`, both wired into `App.tsx`'s `Screen` union and reachable from
+level select, sections 2 and 4), and the coach as a distinct third role
+(`src/coach.ts`, `api/coach.ts`). How the three referee and final rungs map onto
+the design doc's original level numbering, and whether a "judge" role exists at
+all, is the section-4 `GAP:` above.
+
 - **Supabase-backed accounts, shared login with Brain, server-authoritative
   writes.** The infrastructure-plan doc (`2026-08-23_infrastructure-plan.md`)
   specifies a full plan: a separate `point-taken-heart-app` Next.js repo, its
@@ -470,10 +490,10 @@ above confirm is actually in `game/`:
   is no streaming response handling anywhere in `coach.ts` or `api/coach.ts`.
 - **A 30-second turn clock**, named in the roadmap as designed-but-deferred for
   live play, not accidentally missing; it does not exist in `showdown.ts` or
-  `engine.ts` today, consistent with the roadmap's own framing. **The formal
-  `AWAITING_CONTEST` phase this bullet used to pair it with is no longer
-  intended-but-unbuilt: it is retired outright** `[ruled]`, per a 2026-08-31
-  Steve/Nathan call recorded in `game/docs/roadmap.md` §8. AI foul flags route
+  `engine.ts` today, consistent with the roadmap's own framing. **There is no
+  formal `AWAITING_CONTEST` phase and none is intended: it is retired**
+  `[ruled]`, per the Steve/Nathan call recorded in
+  `game/docs/roadmap.md` §8. AI foul flags route
   only to the wronged party; the accused never sees one and never gets a vote,
   so there is no second opinion to contest and no phase to build.
 - **The Family Pack (beats 7-8, four additional foul types)** is explicitly
