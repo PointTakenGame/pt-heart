@@ -96,13 +96,11 @@ are constraints on code that already ships.
 
 Reached from the level-select screen, below the ladder.
 
-**Gate.** Roadmap §7: live play unlocks when Levels 1 to 3 plus the Full Showdown
-are cleared. `isCleared` already answers this from `localStorage`. Roadmap also
-says, correctly, that `localStorage`-trust is a real hole the moment human-vs-human
-exists, and to fix it before item 11. It is not a hole for the two shapes in §2,
-because there is no second human to defraud. Ship the gate as a `localStorage`
-read and do not build enforcement infrastructure for a threat that does not exist
-yet.
+**Gate.** `[ruled]` Live play has no gate (`HEART-T260905-02`). Both doors are
+reachable from level select regardless of ladder progress. A player who has not
+cleared the Full Showdown (`isCleared(SHOWDOWN_ID)`) sees a warning on the Door
+screen asking whether the person they are playing with already knows the rules,
+and is let through either way (`App.tsx`, the `Door` component).
 
 **Two buttons, no more:** *Play a round* and *Referee a round*. Anything else on
 this screen is a phase-two problem.
@@ -185,6 +183,12 @@ nominates on the AI's. Referee mode: the human nominates on both, and the AI who
 was spoken to rules, via `affirmCall`. In both modes a nomination is a
 nomination; the wronged party rules.
 
+GAP: in referee mode the ruling party is always an AI, and `HEART-T260831-22`
+(blocked on Steve) is the open question of whether a call against an AI that
+declines nearly every time is a real ruling or an exploitable rubber stamp.
+This section is not the place to answer that; it is here so the mechanic above
+is not read as settled when it is not.
+
 **Fouls the AI commits.** Roadmap §7 item 9 is explicit that a live model will
 not dependably commit exactly one specified foul while staying in character,
 which is why every shipped level uses an authored schedule. Live play cannot
@@ -249,8 +253,10 @@ already exists in `api/coach.ts`.
    finish on authored fallbacks and never leave the composer locked.
 2. **machine-checkable.** Both purses sum to fourteen after every turn of a
    completed match, in both shapes.
-3. **machine-checkable.** The door is unreachable until Levels 1 to 3 and the
-   Full Showdown are cleared, and reachable immediately after.
+3. **machine-checkable.** `[ruled]` The door has no clearance gate
+   (`HEART-T260905-02`): both doors are reachable from level select regardless
+   of ladder progress. A player who has not cleared the Full Showdown sees a
+   warning on the Door screen and is let through anyway (§3.1).
 4. **machine-checkable.** No two seats in a room ever hold the same emoji.
 5. **judgment-rubric.** Reviewer: Steve. A round played on a topic he picks
    himself should feel like the printed game and not like a gym drill: the coach

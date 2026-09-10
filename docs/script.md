@@ -148,17 +148,17 @@ Source: `game/src/content/cards.ts:85-255`, cross-checked against
 `deck-content-v7.md:483-671` (page 3, the physical cards). Both are `[ruled]`
 canonical content; where they diverge, it is noted.
 
-**Judging.** Cost: 2 tokens (`cards.ts:90`), "DOUBLE PENALTY" (`cards.ts:110`,
+**Judging.** Cost: 2 tokens (`cards.ts:114`), "DOUBLE PENALTY" (`cards.ts:134`,
 deck header `deck-content-v7.md:600`). Definition, Referee reads aloud:
 
 > A verdict on who the person is, or a claim about what they secretly want,
-> instead of an answer to what they said. (`cards.ts:91`)
+> instead of an answer to what they said. (`cards.ts:115`)
 
 Smoke-alarm terms to listen for (`cards.ts`, printed face; deck
 `deck-content-v7.md:645-649`): "You're saying that because...", "You only care
 about...", "You don't really believe that", "You're an [X]-ist / -phobe", "You're
 so [adjective]". Incorrect vs. correct pair, Referee's example script
-(`cards.ts:128-135`, deck `deck-content-v7.md:658-664`):
+(`cards.ts:153-158`, deck `deck-content-v7.md:658-664`):
 
 > INCORRECT: "That's typical conservative / liberal thinking." / "You just don't
 > care about the poor."
@@ -168,10 +168,10 @@ so [adjective]". Incorrect vs. correct pair, Referee's example script
 Trains: "Critique the argument, not the person." (`cards.ts`, deck
 `deck-content-v7.md:668`)
 
-**Opinions as Facts.** Cost: 1 token (`cards.ts:145`). Definition:
+**Opinions as Facts.** Cost: 1 token (`cards.ts:170`). Definition:
 
 > A contested opinion delivered as settled truth, with nobody named as the one who
-> holds it. (`cards.ts:146`)
+> holds it. (`cards.ts:171`)
 
 Two-step fix, Referee's script (`deck-content-v7.md:566-568`, `591-593`; the
 deck's own dash is quoted faithfully and violates this document's no-em-dash
@@ -182,23 +182,23 @@ style):
 `[unratified]`: the deck itself is internally inconsistent between an en dash and
 an em dash in near-identical instances of this same phrase
 (`deck-content-v7.md:591`, `609`), not something this document introduces.
-Incorrect vs. correct (`cards.ts:189-196`), paired by index: "That policy would
+Incorrect vs. correct (`cards.ts:215-220`), paired by index: "That policy would
 fail..." is fixed to "I feel like that policy would fail, because in the past...",
 and "Obviously that's deeply offensive" is fixed to "In my head, that felt
 offensive, because my experience...". Trains: "Be a role model for comfortable
 uncertainty."
 
-**Fake Listening.** Cost: 1 token per missing major point (`cards.ts:206`,
+**Fake Listening.** Cost: 1 token per missing major point (`cards.ts:232`,
 penaltyNote at `cards.ts` printed face). Definition:
 
 > Reloading your rebuttal while they talk, then playing back a version of it that
-> leaves out the part you cannot answer. (`cards.ts:207`)
+> leaves out the part you cannot answer. (`cards.ts:233`)
 
 Two required steps, Referee's script (`deck-content-v7.md:508-509`):
 
 > (1) "What I heard is [...]" → (2) "Did I miss anything?"
 
-Incorrect vs. correct (`cards.ts:251-252`): "I hear you, but [my opinion]" is
+Incorrect vs. correct (`cards.ts:277-278`): "I hear you, but [my opinion]" is
 fixed to "What I heard is [X]. Did I miss anything?" Trains: "Set a high bar for
 respectful listening."
 
@@ -207,7 +207,7 @@ fouls and none of them agree: the page-1 summary row and page-1 foul-call band
 both list Fake Listening, Judging, Opinions as Facts (`deck-content-v7.md:63-69`,
 `178-207`); the page-3 physical card layout is Fake Listening (top-left), Opinions
 as Facts (top-right), Judging (bottom-left) (`deck-content-v7.md:478-480`); and the
-code's `CARD_ORDER` is Judging, Opinions as Facts, Fake Listening (`cards.ts:259`).
+code's `CARD_ORDER` is Judging, Opinions as Facts, Fake Listening (`cards.ts:285`).
 Also `[unratified]`, self-flagged by the deck's own author: the page-1 foul-call
 band renders all three foul titles with the 😒 emoji instead of each foul's own
 emoji, and the third card there is titled "Opinion as Facts" (singular), against
@@ -290,11 +290,12 @@ Final Showdown bonuses are not counted separately to break one; the game ends le
 and the Referee says so. `rules.md` section 1 is the home of that ruling. No
 tiebreak rule appears anywhere in the v7 deck or the design docs read for this task,
 so the ruling is its only source. The web edition already ends this way
-(`game/src/showdown.ts:517-522`) and has the line for it:
+(`game/src/showdown.ts:651`, `p > s ? 'win' : p < s ? 'loss' : 'draw'`) and has
+the line for it:
 
 > Dead even. Which, in this game, isn't a bad night.
 
-`[unratified]` (`game/src/content/showdown.ts:249`). Print has no closing line of
+`[unratified]` (`game/src/content/showdown.ts:469`). Print has no closing line of
 its own for a draw; the Referee reads the count and the count is the result.
 
 ## 7. Coaching lines (gym)
@@ -302,10 +303,15 @@ its own for a draw; the Referee reads the count and the count is the result.
 Everything in this section is gym content: solo play against an AI opponent,
 never part of the live three-player game. `game/src/coach.ts` is the model-call
 plumbing, not a source of copy; it defines `COACH_TIMEOUT_MS = 6000`
-(`coach.ts:33`) and four functions: `restate` (`coach.ts:51`), `judgeEdit`
-(`coach.ts:62`), `judgeTurn` (`coach.ts:89`), `sofiaLine` (`coach.ts:112`), each
-with a hand-authored fallback string so a broken key never looks like a broken
-game `[ruled]`.
+(`coach.ts:33`) and seven functions, each with a hand-authored fallback string
+so a broken key never looks like a broken game `[ruled]`: `restate`
+(`coach.ts:51`), `judgeEdit` (`coach.ts:62`), `judgeTurn` (`coach.ts:95`),
+`opponentLine` (`coach.ts:127`), `figureLine` (`coach.ts:165`), `affirmCall`
+(`coach.ts:207`), `affirmStep` (`coach.ts:247`). `[unratified]`: `opponentLine`
+covers both mirroring opponents; its JSDoc reads "The mirroring opponent's line:
+Sofia in Level 4, Sung-min in Level 7." `GAP: figureLine, affirmCall and
+affirmStep have no section in this document; somebody has to write the lines
+they govern into it.`
 
 The coach's name and voice are defined in `game/src/avatars.ts`, not `coach.ts`:
 
@@ -316,18 +322,22 @@ The coach's name and voice are defined in `game/src/avatars.ts`, not `coach.ts`:
 Per-level coaching lines (gym), each level teaches one foul against a named boss:
 
 - Level 1, "The word 'You'", teaches Judging, boss Verdict Victor
-  (`content/level1.ts:31-41`). Coach line before the fight: "He has one move. He
-  tells you what you're thinking, and what kind of person that makes you."
-  (`level1.ts:69`)
+  (`content/level1.ts:33-41`). Coach line before the fight: "He has one move, and
+  he plays it flat, like he's reading it off a chart: he comes at you instead of
+  at your argument. That's the one thing I care about in here." (`level1.ts:77`)
 - Level 2, "In my head, because", teaches Opinions as Facts, boss Obvious Olivia
-  (`content/level2.ts:25-31`). Boss line demonstrating the deliberate left/right
+  (`content/level2.ts:32-40`). Boss line demonstrating the deliberate left/right
   symmetry: "Same shape, other side of the aisle. She does it to everyone."
-  (`level2.ts:252`, verbatim: the `onCall` string on the boss beat.)
+  (`level2.ts:281`, verbatim: the `onCall` string on the boss beat.)
 - Level 3, "Did I miss anything?", teaches Fake Listening, boss Nodding Noemi
-  (`content/level3.ts:21-28`). Coach's take, used as the model-restate exercise:
-  "Crypto exchanges should have to hold customer funds separately, because I had
-  money frozen for nine weeks in a collapse and nobody could tell me where it
-  was." (`level3.ts:94`)
+  (`content/level3.ts:40-49`). GAP: what is the coach's authored line for the
+  "did I miss anything" beat, and where does it live? `level3.ts`'s own header
+  comment says this level is answered per beat, authored, no model, and no redo;
+  its closest beat is the `confirm` step `l3-summarized` (`level3.ts:188-199`),
+  but that is the opponent's own line, not a coach take, and its topic is
+  minimum wage, not crypto. No crypto or nine-weeks-frozen coach line exists
+  anywhere in `src/` (confirmed by exhaustive search), and nothing stands in its
+  place here until someone can say what belongs there. (Nathan)
 
 `content/index.ts:10` wires only `[level1, level2, level3]` into the exported
 `LEVELS` ladder. See Section 8 for the fourth level, which exists as content but
@@ -349,62 +359,45 @@ It is reachable: the Select screen renders it as its own boss tile
 `onShowdown` routes to the wired `<Showdown>` screen (`App.tsx:47`, `:51-52`). The
 unlock gate is the unratified part, not the wiring.
 
-Coach's pre-match briefing (`content/showdown.ts:210-212`):
+Coach's pre-match briefing (`content/showdown.ts:418-424`):
 
-> This is the whole thing. Three rounds, both of you on the clock, all three cards
-> live. Seven tokens each. A foul doesn't burn a token, it hands one over. Judging
-> costs two. The other two cost one each. Let one of hers go past you and half a
-> token crosses anyway. Empty and you're done, whatever the round says. She's
-> Slippery Sofia. She doesn't shout, she doesn't insult you, and she will foul you
-> twice before you notice once. You whistle her. I whistle you.
+> This is the whole thing. Three rounds, all three cards live. Seven tokens each.
+> A foul doesn't burn a token, it hands one over. Judging costs two. The other two
+> cost one each. Empty and you're done, whatever the round says. She's Slippery
+> Sofia. She doesn't shout, she doesn't insult you, and she will foul you twice
+> before you notice once. You whistle her. I whistle you.
 
-Opening prompt (`showdown.ts:203-206`): "What are you two actually disagreeing
-about? One line is plenty," with topic chips "student loan forgiveness," "return
-to office mandates," "nuclear power" (`showdown.ts:54-58`). Political balance here
-is structural: Sofia has no position of her own, only the opposite of whatever the
-player argues (`showdown.ts:9-13`).
+There is no clock in this line, and none anywhere else: the code carries an
+explicit "no clock, here or anywhere" design comment (`content/showdown.ts:420`),
+so the absence is deliberate. The briefing quotes no price for a missed foul
+either, which matches the rule: a miss moves nothing `[ruled:
+HEART-T260907-23]`.
 
-**Round 1** (`content/showdown.ts:90-128`). Sofia opens clean:
+Opening prompt (`content/showdown.ts:413-416`): "Pick the one you two are
+actually disagreeing about. I have all three ready," with a closed, three-option
+picker rather than free text: Student Loan Forgiveness, Return to Office
+Mandates, Nuclear Power (`content/showdown.ts:108-124`, `TOPICS`). This replaced
+a free-text topic entry on 2026-09-06, per the code's own comment: "A free-text
+topic meant every authored line had to work for every possible subject."
+Political balance here is structural: Sofia has no position of her own, only the
+opposite of whatever the player argues.
 
-> Here's where I land. I think the cost of this ends up on people who had no say
-> in it, because the bill always finds the people with the least room to argue.
-> That's my read, and I could be wrong about how big it is.
-
-Player summarizes; player speaks; Sofia fouls Opinions as Facts:
-
-> Here's the thing though. That approach obviously doesn't work. Everyone knows
-> what happens when you try it, and we have been through this before.
-
-**Round 2** (`showdown.ts:131-164`), entirely clean. Player speaks first. Sofia
-summarizes cleanly:
-
-> Let me play that back to you. It bugs you that the burden sits where it does,
-> because you think the people carrying it didn't create it. Have I got that
-> right?
-
-Sofia then argues her own reasoning, cleanly:
-
-> Let me put my actual reasoning on the table. I think the cost falls on people
-> who had no say in creating it, and I would rather fix the thing that keeps
-> generating the cost than keep moving it around after the fact. That's where I
-> land, and I could be wrong about the size of it.
-
-Player summarizes.
-
-**Round 3** (`showdown.ts:167-199`), the coach flags an escalation before it
-happens. Sofia fouls Fake Listening:
-
-> Right, right. I hear you, you're frustrated about the whole thing. Anyway.
-
-Sofia fouls Judging:
-
-> Look, you're only arguing this because it happens to work out well for you.
-> People in your position always land exactly here.
+**Round 1 through Round 3** (`content/showdown.ts:175-320`). GAP: what should
+this document quote as Sofia's Round 1 to 3 lines? Every one of her lines in the
+match is three topic-branched variants (loans / rto / nuclear) generated through
+a `byTopic()` helper rather than one fixed line, so no single quoted transcript
+exists in source. Picking one of the
+three topic branches and presenting it as canonical is a call nobody has made, so
+no transcript stands here. (Nathan or Steve: does the worked example need a
+single canonical topic chosen, or should it show one line per topic?)
 
 Player summarizes one last time; a foul against the player does not excuse them
-from summarizing (`showdown.ts:243-244`, `redoSummary`).
+from summarizing. There is no redo: `src/showdown.ts:505-517` carries the
+comment "no redo anywhere now... burying a two-token foul inside a summary does
+not convert it into a one-token one," and the price is enforced by
+`content/showdown.ts:74-76`'s `foulCost`.
 
-**Endings** (`showdown.ts:247-258`):
+**Endings** (`content/showdown.ts:467-469`):
 
 > Win: You took it. Not because you were right about the policy; I have no idea
 > who was right about the policy. You took it because you stayed on the argument
@@ -429,20 +422,32 @@ meant to be regenerated from source, not hand-maintained.
 - Boss walk-out screen (`ui/BossIntro.tsx:87`, `116`, `73`): `Fight {fightNumber}`;
   countdown text is the number, or `FIGHT` at zero; mute toggle aria-label
   `"turn the sound on"` / `"turn the sound off"`.
-- In-match token header (`ui/Header.tsx:25`, `57`, `156`): token glyph is the
+- In-match token header (`ui/Header.tsx:26`, `172`, `179`): token glyph is the
   literal 🙏 character; side labels are the literal strings `"them"` and `"you"`.
 - Pre-fight stepper (`ui/Prefight.tsx:86-88`, `98`, `120`): renders `COACH_NAME`
   and `COACH_LINE` on the first panel; fixed transition line "That's his attack.
   This card is your defense. It stays on the wall all night."; default button
   label `"Next"` when a level has not set its own `enterLabel`.
-- Drill dialogue lane (`ui/Drill.tsx:152`): the player's display name in the
+- Drill dialogue lane (`ui/Drill.tsx:153`): the player's display name in the
   transcript is the literal string `"You"`.
-- Showdown composer frames (`showdown.ts:69-83`): speak frame is "The way I see
-  it," [input: "your take"], "because," [input: "your reason"], "."; summarize
-  frame is "What I heard was," [input: "her point, in your words"], ", because,"
-  [input: "her reason"], ". Did I miss anything?"
-- Pass option label (`showdown.ts:388`): `"I might not agree, but it's not a
+- Showdown composer frames (`showdown.ts:71-84`): speak frame is "The way I see
+  it," [input: "your take"], "because", [input: "your reason"], "."; summarize
+  frame is "What I heard was" [input: "her point, in your words"], ", because"
+  [input: "her reason"], ". Did I miss anything?" (No comma follows "was" or
+  "because" in the shipped text.)
+- Pass option label (`showdown.ts:468`): `"I might not agree, but it's not a
   foul"`.
+- "On the table" strip hint (`ui/OnTable.tsx`, passed from `App.tsx:711` and four
+  other match-state renders): `"Foul, or let it stand? Answer below."`
+  `[unratified]`.
+- Level-1 rail hint (`railHint`, `App.tsx:668-673`, rendered by
+  `ui/RuleCards.tsx`): `"Tap a card to read what it means."` `[unratified]`. Per
+  the code's own comment this is deliberately level-1-only and stops appearing
+  the first time a card is opened (Nathan ruling Q22: "nobody found out that a
+  card opens"). This duplicates the pre-fight line "Tap the card to blow it up."
+  (`ui/Dialogue.tsx:84`, `CARD_TAP_LINE`), which fires several panels earlier,
+  before the card tray exists on screen. Flagged, not resolved: which of the two
+  should be cut, or whether both are meant to stand, is Nathan's call.
 
 ## 10. Neutrality audit
 
@@ -464,14 +469,13 @@ contradicts the topic policy stated elsewhere in this same codebase: "Milder end
 of real public policy. Not immigration, not abortion." (`content/showdown.ts:53`),
 since both asylum and deportation are immigration topics.
 
-**Level 1 (gym) self-reports its own imbalance and asks Steve to rule on it.**
-Its own header comment states the level runs 4 to 0 against a forgiveness
-position in the Judging column and 3 to 1 against it in the argument column,
-after Steve's 2026-08-25 dictated replacement text for item 4 removed what had
-been the level's counterweight. Open question tagged HEART-T260823-33: "Whether
-that is enough is Steve's call." (`content/level1.ts:8-27`) This is not my
-finding; it is the file's own self-audit, surfaced here per this task's
-instruction to report every neutrality lopsidedness found.
+**Level 1 (gym) self-reports its own imbalance and asks Nathan to rule on it.**
+Its own header comment states the Judging column runs 4 to 1 against a
+forgiveness position, and the argument column runs 3 to 1 against it. Open
+question tagged HEART-T260823-33: "Whether 4:1 is enough is still Nathan's
+call." (`content/level1.ts:9-27`) That is the file's own self-audit, surfaced
+here because this document reports every neutrality lopsidedness in the
+content.
 
 **Level 2 and Level 3 (gym) claim balance and the claim checks out.** Level 2's
 own ledger states two items lean left, two lean right, and the boss beat

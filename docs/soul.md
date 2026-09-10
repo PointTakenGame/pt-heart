@@ -112,11 +112,11 @@ rhetoric. It is not fouling, and catching fouls. The only route to winning is be
 the person across from you, so the competitive instinct is not suppressed, it is aimed at the one
 safe target. Consequences to preserve:
 
-- **A foul moves a token, it never burns one** `[unratified]` (`game/src/engine.ts:116`,
+- **A foul moves a token, it never burns one** `[ruled]` (Steve, 2026-08-15, HEART-T260815-08;
   `game/src/showdown.ts:11`). A token is compensation for something done to you, not a point you
   earned. That is why the wronged party receives it.
-- **You do not get a token for playing clean** `[ruled]` (Steve, 2026-08-25, quoted at
-  `game/src/engine.ts:332`). Not fouling is the floor, not an achievement.
+- **You do not get a token for playing clean** `[ruled]` (Steve, 2026-08-25, HEART-T260825-25 item
+  12; `game/src/engine.ts:513`). Not fouling is the floor, not an achievement.
 - **Raw foul count is ruled out as a score** `[ruled]`: it penalizes the player watched more closely
   rather than the one playing worse, and rewards calling fouls tactically.
 - **Scoring position movement is ruled out** `[ruled]`. Tested, and players softened positions they
@@ -177,7 +177,7 @@ mandatory summary makes Fake Listening observable; a soft-required "because", or
 prefix, does the same for Opinions as Facts. To make a new behavior detectable, add a required move,
 not a classifier. Costs as printed on the card faces: Judging is a double penalty at 2 tokens, the
 other two are 1 each, and Fake Listening's is per missing major point rather than flat `[ruled]`
-(`game/src/content/cards.ts:90`, `:110`, `:145`, `:167`, `:206`, `:226`, `:227`).
+(`game/src/content/cards.ts:114`, `:170`, `:232`, `:253`).
 
 ## 8. Design values that decide close calls
 
@@ -193,7 +193,7 @@ other two are 1 each, and Fake Listening's is per missing major point rather tha
    the card too, and the print master gets fixed first `[ruled]`
    (`game/src/content/cards.ts:8`, `:33-34`).
 5. **Answer immediately, not at the end of the round**, or the feedback is not attached to anything
-   `[ruled]` (ruling of 2026-08-24, `game/src/content/showdown.ts:223`).
+   `[ruled]` (ruling of 2026-08-24, `game/src/content/showdown.ts:435`).
 6. **Politeness is not compliance.** "With respect, I think it's clear that..." performs humility
    without enacting it, and a repair that drops the trigger word but keeps the courtesy wrapper has
    repaired nothing.
@@ -216,9 +216,9 @@ other two are 1 each, and Fake Listening's is per missing major point rather tha
 13. **Every politically-perceptible example gets an equally vivid counterpart, or an explicit
     acknowledgment that it is unbalanced.** Non-negotiable, and live constantly here. See section 9.
 14. **Name saved state by slug, never by number** `[ruled]` (ruling B3, 2026-08-23,
-    `game/src/types.ts:169`); renumbering the ladder must not orphan a player's saves. Setup and
+    `game/src/types.ts:245`); renumbering the ladder must not orphan a player's saves. Setup and
     card teaching run as a stepper with a Next button, not a stack of coach lines (Steve,
-    2026-08-25) `[ruled]` (`game/src/types.ts:158`).
+    2026-08-25) `[ruled]` (`game/src/types.ts:227`).
 15. **When teaching and pace conflict inside one beat, cut the teaching, not the pace**
     `[vibecoded]`. A bored player stops reading, and a coach line nobody reads teaches nothing.
 
@@ -234,7 +234,7 @@ the problem. Worked pair, for a Judging foul:
 
 Same structure, same sting, opposite direction. The printed Judging card is built this way, naming
 "That's typical conservative / liberal thinking" as one paired item rather than picking a side
-`[ruled]` (`game/src/content/cards.ts:129`).
+`[ruled]` (`game/src/content/cards.ts:153`).
 
 Where a real pair is impossible, flag it with a one-line comment saying the example is unbalanced
 and why. Do not drop the imbalance silently, and do not invent a false equivalence to satisfy the
@@ -284,8 +284,9 @@ the current code, which runs rounds 1 to 3 and then scores.
 reasoning that ejecting the player who fouled most removes the person with the most left to learn;
 Steve considered it and rejected it on the 2026-08-31 call, reaffirming the original 2026-08-10
 decision (`rules.md` sections 1, 8, 9) that already weighed and refused softening the zero. This
-stands exactly as printed on page 1 of the deck, quoted in `script.md` sections 2 and 6, and
-implemented at `game/src/content/showdown.ts:250`.
+stands exactly as printed on page 1 of the deck, quoted in `script.md` sections 2 and 6, and the
+gym-rung exception to it is recorded at `game/src/content/showdown.ts:472` and
+`game/src/showdown.ts:360`.
 
 The scope clause is Steve's, 2026-09-07: "player at zero is out, but that's not true in the gym
 levels. That's true in the live play." So the rule belongs to the three-seat live round, the part of

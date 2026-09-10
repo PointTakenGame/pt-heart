@@ -426,10 +426,22 @@ diverges in several concrete ways:
   `docs/reference/print/v6/humility-showdown-rules-summary.md`, for its
   interactive teaching fields, one version behind this document's v7
   source and outside this document's source list.
-- **Half-token scoring.** `showdown.ts`'s `formatTokens()` implements a
-  web-only half-token penalty (a missed foul costs half a token, per a
-  2026-08-24 ruling cited in code). Printed tokens are always whole
-  pray-hands; there is no half-token concept in print.
+- **No half-token scoring, in print or web.** `formatTokens()` in
+  `src/content/showdown.ts:98` rounds to a whole token and `TOKEN_STEP` is 1
+  (`src/content/showdown.ts:82`); a missed foul moves nothing at all, and there
+  is no `MISS_COST` (`src/content/showdown.ts:62-72`, ruling
+  HEART-T260907-23). Printed tokens are likewise always whole pray-hands.
+  Print and web agree here, and so does every line of copy the player reads.
+- **Fake Listening's per-point penalty is print-only.** The printed card
+  charges 🙏 once per missing major point (section 5; `penalty: 'PENALTY'`
+  plus `penaltyNote: 'For each missing major point'` in
+  `src/content/cards.ts:253`). The web build charges a flat one token
+  regardless of how many points are missed: `CARDS.fake_listening.cost` is
+  `1` (`src/content/cards.ts:232`) and `foulCost()` returns `1` for every
+  foul except Judging (`src/content/showdown.ts:75-77`). This is a live,
+  unresolved disagreement between the print master and the app, flagged
+  in-code as entangled with HEART-T260905-27; it is not a bug this document
+  resolves in either direction.
 - **Reduced, milder topic set.** `showdown.ts`'s `TOPICS` lists three
   topics (student loan forgiveness, return to office mandates, nuclear
   power), commented "milder end of real public policy. Not immigration,

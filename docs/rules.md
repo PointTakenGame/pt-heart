@@ -35,7 +35,7 @@ The object is not to win the argument. Nobody is ever ruled correct about the to
 
 - **Win condition:** most 🙏 tokens at the end wins. `[ruled]`
 - **Instant loss:** a disputant who reaches zero tokens loses on the spot, mid round. Printed on page 1 as "If Player A or B hits zero, Instant loss 🏳️". Kept unsoftened on purpose `[ruled]`, a 2026-08-10 decision that withdrew a proposal to make the first zero a forced break instead.
-- **A tie:** equal tokens at the end is a draw. `[ruled, Nathan]` There is no tiebreak, and Final Showdown bonuses are not counted separately to break one. The print deck does not address a tie; the online edition already resolves it this way (`game/src/showdown.ts:517-522`), so the code and the rule now agree rather than the code standing alone.
+- **A tie:** equal tokens at the end is a draw. `[ruled, Nathan]` There is no tiebreak, and Final Showdown bonuses are not counted separately to break one. The print deck does not address a tie; the online edition already resolves it this way (`game/src/showdown.ts:648-652`), so the code and the rule now agree rather than the code standing alone.
 - **A full game** is three listen-and-summarize rounds, then one Final Showdown round. Roles swap between games: page 1 ends "Next game: Swap Roles!" `[ruled]` The swap rotates the Referee's seat as well as the two disputants', and one game makes a session. `roadmap.md` section 5 and `cards.md` section 6 are the homes of those two rulings.
 
 ---
@@ -46,7 +46,7 @@ The object is not to win the argument. Nobody is ever ruled correct about the to
 
 **Tokens.** Seven 🙏 per disputant, fourteen on the table. `[ruled]` Page 1's setup band prints "x7" against each of A and B; page 3 carries a cutout panel of two token columns, seven 🙏 each. Note that `docs/reference/print/v7/card-anatomy.md` section B.3 says six per column; that is a known error in that file (`HEART-T260827-03`) and the correct count is seven.
 
-Tokens never leave the table. A foul moves a token from the offender to the other disputant; it is never destroyed and never paid to the house or to the Referee `[ruled]`, so the two purses always sum to fourteen, which is how the code enforces it (`game/src/engine.ts:118-126`). The Referee holds no tokens and scores nothing at all. `[ruled, Nathan]`
+Tokens never leave the table. A foul moves a token from the offender to the other disputant; it is never destroyed and never paid to the house or to the Referee `[ruled]`, so the two purses always sum to fourteen, which is how the code enforces it (`game/src/engine.ts:195-204`). The Referee holds no tokens and scores nothing at all. `[ruled, Nathan]`
 
 **Cards.** Three, and only three: Fake Listening, Judging, Opinions as Facts. `[ruled]` They print on page 3 and are read aloud before play starts, per page 1's "Read foul cards (pg 3)".
 
@@ -118,7 +118,7 @@ Page 1's one-line definitions, verbatim: Fake Listening is "Summarizing Player f
 
 **How a foul is called.** Page 1, verbatim: "**Referee** calls **FOUL CARDS** while players speak. The **Naughty Player A/B** gives 🙏's to the other". The mechanism is physical and public: the Referee plays the card, names the foul, and the offender hands tokens across. `[ruled]`
 
-**Order of operations.** The card lands before the tokens move. Steve, 2026-08-25 `[ruled]`, implemented as a 950 ms beat online (`game/src/engine.ts:47`).
+**Order of operations.** The card lands before the tokens move. Steve, 2026-08-25 `[ruled]`, implemented as a 950 ms beat online (`game/src/engine.ts:70`, `CARD_BEFORE_PAY_MS`).
 
 **Who else may call.** Foul calling is the Referee's job. A disputant's own whistle is an expert affordance, off by default, because a disputant's job while the other speaks is to listen well enough to summarize, not to monitor. Locked 2026-07-11: "the human is never expected to monitor, only permitted to." `[ruled]`
 
@@ -138,13 +138,13 @@ A round contains both directions. Do not read the flip as a separate round; the 
 2. **Player B summarizes it.** Two required halves, printed: "What I heard is [x]... ... did I miss anything?" Forty-five seconds. `[ruled]`
 3. **Player A answers the question.** They say what was missed, or that nothing was. This is the ground truth for Fake Listening: the person who was summarized rules on whether they were heard. `[ruled]` **There is no timer on this beat, and for a live human Referee confirming a spoken summary, no cap on the number of corrections** `[ruled, Nathan]`. Player B summarizes again until Player A confirms they were heard, and the game does not move on before that confirmation. **The deduction does not stack:** the miss is charged once, on the first failed summary, and the retries that follow cost nothing however many it takes.
 
-   **This does not carry over to the online solo edition's summary coverage check unchanged.** A 2026-08-31
-   Steve/Nathan call ruled the online check specifically no-redo: a miss is charged once and play moves on
-   immediately, with no retry prompt at all, because retyping a summary against a bot is tedious in a way a live
-   verbal retry is not. `roadmap.md` §7 carries this reversal and its own cross-reference to the shipped
-   three-attempt ceiling, which neither this ruling nor that one match. Whether the same no-redo rule should also
-   apply to a live-human game refereed by a person is not decided; treat the "no cap" language above as governing
-   print and live-human-Referee play only until someone rules on that question explicitly.
+   **This does not carry over to the online solo edition's summary coverage check.** The online check is
+   specifically no-redo `[ruled]`: a miss is charged once and play moves on immediately, with no retry prompt at
+   all, because retyping a summary against a bot is tedious in a way a live verbal retry is not. The shipped code
+   matches: one pass, no redo, anywhere in the online match (`game/src/content/showdown.ts:460-461`). There is no
+   three-attempt ceiling in the code. `GAP: whether the same no-redo rule should apply to a live-human game
+   refereed by a person is undecided. Until someone rules, the "no cap" language above governs print and
+   live-human-Referee play only.`
 4. **Switch Roles.** Printed as its own step between the two sub-flows.
 5. **Player B gives their view**, same opener, thirty seconds. `[ruled]`
 6. **Player A summarizes it**, same two halves, forty-five seconds. `[ruled]`
@@ -175,6 +175,8 @@ Player A runs all three steps. Then, printed as its own band, "Switch roles & re
 ### The referee's rubric
 
 Page 2's instruction, verbatim: "Referee scoring: Decide when Player A receives (or gives) 🙏's". Three outcomes per step: "... follows the rules", which moves nothing and is printed "(expected, no 🙏's)"; "... earns a humility bonus!", where the other player pays the speaker; "... is Naughty", where the speaker pays the other player. Page 2 prints neither size. **A humility bonus moves one token** `[ruled, Nathan]`. **The three cards and their prices are live in the Final Showdown exactly as they are in the rounds** `[ruled, Nathan]`: "naughty" is not a fourth category of mistake, it is page 2's word for one of the three rules being broken here, and the card is still played when it happens. So a naughty step is charged once, at the price of the card that was broken, two for a Judging and one for the other two. It is not a separate penalty stacked on top of the foul, and a "#humility-fail" that is a Judging costs two in total, not two plus a bonus-sized extra.
+
+**Flagged, not resolved: the shipped code contradicts this.** `NAUGHTY` in `game/src/content/final.ts:57-58` is a flat one token, charged the same whether the naughty step reads as a Judging or as one of the cheap fouls; the code's own comment at the same location says this is deliberate, "the card is explicit that the Final Showdown is a different scoring mode... this file follows the table rather than the foul card," not an oversight. That is the opposite of the `[ruled, Nathan]` claim above that Judging costs two here too. One of the two is wrong; which one is Steve's call, not this document's.
 
 The deck's worked examples, verbatim, all on the student loan topic:
 
@@ -209,12 +211,14 @@ The Referee's seat is why this game has an obvious place for software: it is a j
 - Seven per disputant, fourteen on the table. `[ruled]`
 - A foul moves tokens from the offender to the other disputant. Never burned, never banked. `[ruled]`
 - Judging moves two, Opinions as Facts one, Fake Listening one per missing major point, so a badly incomplete summary can cost more than a Judging. `[ruled]` **The summarized player decides what counts as a major point, and at most three are charged on any one summary** `[ruled, Nathan]`, so the worst a single weak turn can cost is three and no summary can empty a purse by itself.
+
+  **Flagged, not resolved: the online match does not implement the per-point multiplier or the three-charge cap.** `foulCost('fake_listening')` in `game/src/content/showdown.ts:75` returns a flat one, always, and every call site that charges it (`game/src/showdown.ts:483,598`) passes that single flat value once per summarizing turn. There is no count of missing points anywhere in the summary-scoring code and nothing that could charge more than once per turn, let alone cap at three. Either the online match owes a build item to catch up to this ruling, or the ruling was always print-only and this document should say so. Which one is Steve's call, not this document's.
 - Zero tokens is an instant loss, immediately, whatever the round. `[ruled]`
 - Playing clean earns nothing. Steve, 2026-08-25: points are compensation for fouls, not a reward for letting a line stand. `[ruled]` The one exception is the Final Showdown's humility bonuses.
 - There is no repair move: a player cannot win a token back by apologizing or fixing a foul. Deliberate, ruled 2026-08-10, when a Repair Sequence was proposed and pushed to a deferred expansion. `[ruled]`
-- Most tokens at the end wins `[ruled]`, and equal tokens is a draw `[ruled, Nathan]`, in print as well as online (`game/src/showdown.ts:517-522`). Section 1 carries it.
+- Most tokens at the end wins `[ruled]`, and equal tokens is a draw `[ruled, Nathan]`, in print as well as online (`game/src/showdown.ts:648-652`). Section 1 carries it.
 
-**Every price is a whole token.** There are no fractional tokens in either edition `[ruled]`. Online, letting one of the AI's fouls go past used to cost the player half a token; Steve retired that price on Nathan's argument that you are charged for what you say, not for what you fail to notice. A miss now moves nothing, so a player who calls nothing watches a still scoreboard, and that stillness is the feedback. `TOKEN_STEP` in `game/src/content/showdown.ts` is the one place a fractional price could come back.
+**Every price is a whole token.** There are no fractional tokens in either edition `[ruled]`. Letting one of the AI's fouls go past costs the player nothing at all: you are charged for what you say, not for what you fail to notice `[ruled: HEART-T260907-23]`. A player who calls nothing watches a still scoreboard, and that stillness is the feedback. `TOKEN_STEP` in `game/src/content/showdown.ts` is the one place a fractional price could enter.
 
 ---
 
@@ -239,9 +243,21 @@ The print flow and the live-human flow are identical. `[ruled]` The differences 
    sits before L1. Boss names are explicitly placeholders and the docs and the code disagree on them, so quote none
    of them anywhere player facing. **None of this vocabulary is player facing in print:** the v7 deck contains zero
    level, phase, boss, tier, stage, or chapter words. Never source a level count from the deck.
-3. **The player, not a referee, throws the whistle at the AI.** The human calls fouls on the AI and the coach calls fouls on the human. Missing one of the AI's fouls costs nothing `[ruled]`; whistling a clean line costs a full token `[unratified]` (`FALSE_CALL_COST`, `game/src/showdown.ts:497`). Both exist only because there is no third human. Section 8 carries the retired miss price.
+
+   **Flagged, not resolved: the shipped code has eight rungs, not seven, and all eight are built and live.**
+   `game/src/content/ids.ts`'s `LEVEL_ID` numbers `gymJudging(1)`, `gymOpinion(2)`, `gymSummary(3)`,
+   `showdown(4)`, `refereeSeat(5)`, `refereeLearned(6)`, `refereeDisagree(7)`, `final(8)`, plus a ninth,
+   `liveRoom(9)`, outside the ladder. Note that `LEVEL_ID` is allocation order and not ladder order; the
+   ladder is the level-select list in `game/src/App.tsx`, where the Third Chair plays fourth and the Sofia
+   match fifth. All eight rungs are playable, gated only by ordinary sequential clearing, and no freeze
+   gate exists anywhere in `src/`. `game/src/App.tsx` (lines 55 to 82) is explicit that opening rungs 6 to
+   8 is the App.tsx author's own call and not a Steve ruling: "This is my call, not a ruling of Steve's:
+   HEART-T260907-37 is his row to overrule it." So there are two unresolved things here, not one: whether
+   the ladder is seven rungs or eight, and separately, whether rungs 6 to 8 belong live to players at all.
+   Both are Steve's call, not this document's.
+3. **The player, not a referee, throws the whistle at the AI.** The human calls fouls on the AI and the coach calls fouls on the human. Missing one of the AI's fouls costs nothing `[ruled]`; whistling a clean line costs a full token `[unratified]` (`FALSE_CALL_COST`, `game/src/content/showdown.ts:83`, charged at `game/src/showdown.ts:502`). Both exist only because there is no third human. Section 8 carries the whole-token rule.
 4. **Wrong answers cost tokens during teaching.** In L1 to L3 a wrong or too-thin answer costs one token, once per item however many tries it takes, and both purses run from seven from L1 on `[unratified]` (`game/src/engine.ts`). Print has no quiz and no equivalent.
-5. **Attempt ceilings, and a code conflict.** The shipped code allows three attempts on an answering step and then moves on `[unratified]` (`game/src/engine.ts:486`, `game/src/showdown.ts:433`). **That ceiling is wrong under the ruling in section 5: there is no cap on corrections, and nothing advances until the summarized player confirms they were heard.** Print has no attempt limit either. Two things have to change in the code before it matches the rule: the ceiling has to come off, and the opponent's confirmation has to gate the advance, which it does not today. A coverage check does now exist, in the online match against the AI opponent, and item 11 below describes it; the missing piece is the gate, not the judgement. Recorded, not changed here; `roadmap.md` section 7 carries the build item.
+5. **No retry loop, and a gate that still does not exist.** There is no three-attempt ceiling anywhere in the shipped code today. The teaching-ladder quiz items (L1 to L3) allow unlimited attempts on a wrong answer, charging the one-token miss price once and then re-asking until the player gets it right, with no cap on tries `[unratified]` (`game/src/engine.ts:480-489`, the `attempts` counter). The main match and the Final Showdown do the opposite: a summarize or edit turn gets exactly one pass, priced once, no retry offered at all `[unratified]` (`game/src/showdown.ts:507-524`, mirrored in `game/src/final.ts`), per Steve's 2026-08-31 ruling that retired the redo mechanic entirely (`game/src/content/showdown.ts:460-461`). **Neither of these is the print/live-human rule in section 5: there the corrections are also uncapped, but the round does not move on at all until the summarized player confirms they were heard.** The gap that leaves is the one already flagged: nothing in the online match gates advancing the turn on that confirmation, it only changes what gets charged. A coverage check does now exist, in the online match against the AI opponent, and item 11 below describes it; the missing piece is still the gate, not the judgement. Recorded, not changed here; `roadmap.md` section 7 carries the build item.
 6. **Sentence frames are shown, not remembered.** The speak box shows "The way I see it," [your take] "because" [your reason]; the summary box shows "What I heard was" [her point, in your words] "because" [her reason] ". Did I miss anything?" Steve's 2026-08-24 ruling that the hint belongs inside the box `[ruled]` (`game/src/showdown.ts:69-83`). This makes "because" mandatory in an online summary, which the printed Fake Listening card does not require. A divergence, unresolved.
 7. **No timers.** The thirty and forty-five second clocks are not implemented anywhere in the shipped code; online turns are untimed today. The answer beat in section 5 has no timer in either edition, by ruling rather than by omission.
 8. **Post-match review, and a self-correcting whistle.** Ruled 2026-08-10: the match plays back with every foul annotated inline, showing the flag, the words that tripped it, the human's ruling, and the compliant form. Every call carries an agree or disagree tag and the tags tune the detector. `[ruled]` Print has no memory.
@@ -272,7 +288,7 @@ Every item here is a question a human must answer. None has been invented above.
 
 GAP-3: (Steve) The contested-call procedure is ruled in section 4, and the wronged player has the final call. What is still open is the print object. The v7 deck prints no procedure and no card for the accused to play, so a physical game has nothing to hand them when they contest. Does a reprint add a contesting card, or does contesting stay verbal?
 
-GAP-9: (Nathan) Which of the three cards can be called on which kind of turn. The fouls are not symmetric. Fake Listening is a fault in a summary, so it cannot be committed on a speaking turn at all, while Judging and Opinions as Facts can be committed on either kind. The online edition already enforces exactly that, greying Fake Listening out on speaking turns (`game/src/showdown.ts:376-388`), and it also refuses to let the cheap card absorb the expensive one: a summary that judges the other person is charged as Judging at two, not as Fake Listening at one (`game/src/showdown.ts:113-127`). Print says none of this. Is the online split the print rule too, and does a Judging inside a summary cost two there as well?
+GAP-9: (Nathan) Which of the three cards can be called on which kind of turn. The fouls are not symmetric. Fake Listening is a fault in a summary, so it cannot be committed on a speaking turn at all, while Judging and Opinions as Facts can be committed on either kind. The online edition already enforces exactly that, greying Fake Listening out on speaking turns (`game/src/showdown.ts:456-463`), and it also refuses to let the cheap card absorb the expensive one: a summary that judges the other person is charged as Judging at two, not as Fake Listening at one (`game/src/showdown.ts:113-127`). Print says none of this. Is the online split the print rule too, and does a Judging inside a summary cost two there as well?
 
 GAP-10: (Steve) When does Opinions as Facts fire on a bare declarative with no smoke alarm phrase, for example "that policy will raise costs" said flatly? The card's own incorrect example is exactly that shape, but the shipped detector deliberately does not catch it, conceding it is the larger half of the foul as the card defines it. A human Referee needs a stated threshold. Note that this sits against the ruling recorded under GAP-12 below, that no threshold is written and the people at the table decide; if that answer covers this case too, GAP-10 closes with it.
 

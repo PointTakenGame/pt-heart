@@ -7,10 +7,10 @@ kind: spec
 status: live
 ticket:
 sub_index:
-what_it_is: "The canonical, present-tense specification set for the heart edition (Point Taken: Humility Showdown): soul, roadmap, rules, script, tech spec, UI components, and the printed deck. Normative; history lives in the agent folder, not here."
+what_it_is: "The canonical, present-tense specification set for the heart edition (Point Taken: Humility Showdown): soul, roadmap, rules, script, tech spec, UI components, live play, and the printed deck. Normative; history lives in the agent folder, not here."
 regen_command: none
-verified: 2026-08-28
-notes: "Lives inside the game repo so contractors with GitHub access can read it without workspace access. Created 2026-08-26 under BIZ-T260826-06; the seven spec files it indexes were drafted 2026-08-28 and are unreviewed by Steve. The older dated design, roadmap, and spec docs it was written from stay in the agent folder above this repo and are not pushed here."
+verified: 2026-09-10
+notes: "Lives inside the game repo so contractors with GitHub access can read it without workspace access. Created 2026-08-26 under BIZ-T260826-06. The eight spec files it indexes are reconciled against shipped code but are still unreviewed by Steve. The older dated design, roadmap, and spec docs it was written from stay in the agent folder above this repo and are not pushed here."
 ---
 
 # Point Taken: Humility Showdown (heart edition): canonical documentation
@@ -41,6 +41,7 @@ the game *is*, not what happened to it.
 | `tech-spec.md` | Architecture, data model, file layout | Coding agents |
 | `ui-components.md` | Component inventory with states | Rannie, Audrey |
 | `cards.md` | The printed deck: content, counts, categories, and how it maps to the web build | Everyone |
+| `live-play.md` | The live-play phase: real people at a table, and the third seat | Steve, Nathan |
 
 ### The one exception to everything above
 

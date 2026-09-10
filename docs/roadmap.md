@@ -98,8 +98,8 @@ so a double invoke emits every line twice.
 - `types.ts` (182): `FoulType`, `Lane`, `Message`, seven `ComposerState` variants, `ItemRecord` with keystroke-level
   `Revision` history, an eight-member `Step` union, `Beat`, `PrefightStep`, `LevelDef`.
 - `engine.ts` (530) `useGym`, the drill runner walking authored steps. `showdown.ts` (549) `useShowdown`, one async
-  function that awaits the player, Level 4's runner. `referee.ts` `useReferee`, Levels 5 and 6. `final.ts`
-  `useFinal`, Level 7. `room.ts` `useRoom`, live play in both seats. Five runners, three patterns: authored drill,
+  function that awaits the player, Level 5's runner. `referee.ts` `useReferee`, Levels 4, 6, and 7. `final.ts`
+  `useFinal`, Level 8. `room.ts` `useRoom`, live play in both seats. Five runners, three patterns: authored drill,
   human-as-disputant, human-as-referee. Live play adds no fourth pattern; it is the same two play patterns with the
   authored level removed and a typed topic in its place.
 - `detectors.ts` (234) phrase rules: Judging and Opinions as Facts are callable with no model call at all, Fake
@@ -118,6 +118,12 @@ so a double invoke emits every line twice.
 `referee`, `final`, plus live play's `door` and `live`. `select` is two steps, choose-your-fighter then the ladder,
 never both at once `[ruled]`.
 
+**Ladder position and save id are different numbers and must not be confused.** `LEVEL_ID` in
+`src/content/ids.ts` allocates ids in the order rungs were written, not the order they are played: the Full
+Showdown against Sofia carries id 4 and the Third Chair carries id 5, the reverse of their ladder positions
+(5 and 4). Renumbering the ladder never touches `ids.ts`, and `ids.ts` must never be "fixed" to match the ladder:
+doing so resets every playtester's save.
+
 **Live play is built in both single-browser seats** (2026-08-31), against the spec at `docs/live-play.md`
 (`HEART-T260831-17`). The human either argues while an AI stranger takes the other side, or holds the whistle while
 two AI strangers argue. Neither shape needs pairing, transport, or session state, which is why they exist before
@@ -128,10 +134,13 @@ referee mode (`-19`), the foul rate (`-20`), and the clock, which is knowingly u
 the human's foul call on an AI stranger is the ruling, so it is unappealable, and there is no fix that does not
 break §5.
 
-**All seven ladder levels are built and playable** (2026-08-31). `content/index.ts`'s `LEVELS` array still holds
-only the three authored drill levels; the other four are separate screens keyed off their own slugs, because they
-are separate runners rather than more `LevelDef` data. The ladder numbers 4 through 7 are literals in `App.tsx`.
-Levels 1-3 remain the pre-redesign authored-drill shape (see §7).
+**All eight ladder levels are built and playable** `[unratified]` (`src/App.tsx:55-82`). `content/index.ts`'s
+`LEVELS` array still holds only the three authored drill levels; the other five are separate screens keyed off
+their own slugs, because they are separate runners rather than more `LevelDef` data. The ladder numbers 4 through 8
+are computed in `App.tsx` (`REF_SEAT_NUMBER`, `SOFIA_NUMBER`, `REFEREE_NUMBER_BASE`, `FINAL_NUMBER`), not literals.
+Rungs 6 to 8 (What I Learned, Why We Might Still Disagree, the Final Showdown) open together, because they are one
+lesson split three ways. `GAP: opening them is the agent's call and not Steve's. HEART-T260907-37 is his row to
+overrule it, so rung 6-8 exposure awaits his confirmation.` Levels 1-3 remain the pre-redesign authored-drill shape (see §7).
 
 **Progress saves by level slug, never by index** `[ruled]`. Reordering or inserting a level must not orphan a save.
 Key nothing off array position.
@@ -142,8 +151,9 @@ before it, and the Showdown assumes all three `[ruled]`.
 **Clearing requires turning up, not being right.** `markCleared` fires on a Showdown loss as well as a win
 `[unratified]`. There is no accuracy gate anywhere in the game.
 
-**Both token purses run from Level 1**, seven a side `[unratified]` (`types.ts`, `engine.ts`). Two docs say tokens
-are off in the gym. The code wins on what is true today; §11.
+**Levels 1 to 3 run with `tokens: 'off'`** `[unratified]` (`src/content/level1.ts:40`, `level2.ts:39`, `level3.ts:47`;
+Nathan, 2026-09-05, Q19). Both purses exist and are seven a side, but nothing in the gym's first three levels moves
+a token; §11.
 
 ## 4. Levels 1 to 3: already written, read them, do not invent them
 
@@ -160,7 +170,10 @@ boss does not deal his card in a room he is not in `[unratified]`. The chat room
 | 1 | `the-word-you` | Judging | Verdict Victor |
 | 2 | `in-my-head-because` | Opinions as Facts | Obvious Olivia |
 | 3 | `did-i-miss-anything` | Fake Listening | Nodding Noemi |
-| 4 | `full-showdown` | all three, for tokens | Slippery Sofia |
+| 5 | `full-showdown` | all three, for tokens | Slippery Sofia |
+
+Level 4, the Third Chair, sits between the drills and Sofia and is not authored-drill content; it does not
+appear in this table.
 
 **The cast was americanized** `[ruled]`. Older docs say Verdict Vikram, Obvious Ottoline, Nodding Nils, Slippery
 Sofía; those names are dead. The intended cast is white male, Black female, Latina, white female, in that order, and
@@ -187,7 +200,7 @@ in the build.
 calling `restate()`, `edit` steps calling `judgeEdit()` `[unratified]`. When the model is unreachable `judgeEdit`
 returns `pass === null` and play moves on rather than blocking. Keep that: it is why the game runs with no API key.
 
-**Level 4, the Full Showdown against Slippery Sofia, is built.** Twelve turns, three rounds, four turns a round, two
+**Level 5, the Full Showdown against Slippery Sofia, is built.** Twelve turns, three rounds, four turns a round, two
 each `[unratified]` (`content/showdown.ts`). Round 1 opens on Sofia, clean, so the shape of a turn is on the table
 before the player is asked for one; rounds 2 and 3 open on the player `[ruled]`. Her foul schedule is fixed and
 identical every match: **the model writes her wording, never her behaviour.** She has no position of her own, she
@@ -195,10 +208,12 @@ argues the opposite of whatever the player argued, which makes political balance
 Seed topics: student loan forgiveness, return to office mandates, nuclear power, the mild end of real public policy,
 not immigration, not abortion.
 
-Three Level 4 constants that look like bugs and are not:
+Three Level 5 constants that look like bugs and are not:
 
-- `MISS_COST = 0.5`, tokens printing as halves `[ruled]`. A player who lets everything stand has to watch the ledger
-  move. Halves are exact in binary floating point, so purses never drift and both sides still sum to fourteen.
+- A miss moves nothing `[ruled]`. Watching a foul go by is a failure of attention, not a foul of its own, so the
+  game charges the player for what they say and not for what they fail to notice; a player who calls nothing
+  watches a still scoreboard, and that stillness is itself the feedback. Every price in the code is a whole token.
+  `TOKEN_STEP` in `src/content/showdown.ts` is the only place a fractional price could ever come back, and it is 1.
 - `COACH.bankruptHer` is unreachable by design and kept anyway. Sofia's authored fouls total four against a
   seven-token purse, so her floor is three and she cannot be knocked out. **Do not "fix" this by giving her a fourth
   foul** `[ruled]`.
@@ -229,10 +244,10 @@ Three Level 4 constants that look like bugs and are not:
   corrected to drop. Code or docs implying a third AI figure predate that call and are wrong. In **live play**, the
   coach only nominates fouls; the
   wronged human alone rules, unqualified, exactly as the rest of this section already says. In the **gym**, two
-  patterns cover every level: referee-format levels (1-3, 5, 6, §6) put the human in the Referee seat watching the
-  coach play one side against an AI opponent playing the other, both typing, with the human's only job being to
-  call fouls; play-format levels (4, 7) put the human in as a disputant, trading flags with the coach exactly as
-  Level 4 already ships. Either way it is coach plus one opponent, never a third face.
+  patterns cover every level: referee-format levels (1-3, 4, 6, 7, §6) put the human in the Referee seat watching
+  the coach play one side against an AI opponent playing the other, both typing, with the human's only job being to
+  call fouls; play-format levels (5, 8) put the human in as a disputant, trading flags with the coach exactly as
+  Level 5 already ships. Either way it is coach plus one opponent, never a third face.
 - **Every stored flag records the prompt version that generated it.** The collected human rulings are the repo's
   most valuable asset and are worth far less if a prompt revision silently changes what the labels mean.
   Ground-truth precedence: wronged human's ruling, then speaker's tag, then spectator's.
@@ -256,37 +271,37 @@ Boss: **Stonewall Sung-min**, who commits no fouls at all, forcing the player to
 by catching anyone `[ruled]`. That name survived the cast pass. Built: `content/final.ts`, `final.ts`, and the
 `final` screen in `App.tsx`.
 
-**The ladder is seven levels, not six** `[ruled]`, per a 2026-08-31 Steve/Nathan call that Steve confirmed directly.
-Rule A (listen-and-summarize) is already taught by Levels 1 to 3 and is not retaught. The Final Showdown splits
-across three further levels rather than landing as one:
+**The ladder is eight levels** `[ruled]`, per a 2026-08-31 Steve/Nathan call that Steve confirmed directly, plus
+`HEART-T260907-37` (2026-09-07, `[unratified]`, `src/App.tsx:55-82`) opening rungs 6 to 8 for play. Rule A
+(listen-and-summarize) is already taught by Levels 1 to 3 and is not retaught. **Level 4, the Third Chair**, hands
+the human the referee's seat for the first time, watching the coach play Victor against Olivia and calling fouls
+exactly as in Levels 1 to 3, before the human ever fights Sofia directly. **Level 5** is the Full Showdown against
+Slippery Sofia (§4). The Final Showdown then splits across three further levels rather than landing as one:
 
-- **Level 5** teaches **What I Learned** (rule B): the human takes the **Referee** seat, watches the coach play one
+- **Level 6** teaches **What I Learned** (rule B): the human takes the **Referee** seat, watches the coach play one
   side of a disagreement and an AI opponent play the other, both typing, and calls fouls exactly as in Levels 1 to
-  3. This replaces the earlier "Level 5 is generosity, Level 6 is refereeing" split: refereeing is now the *format*
-  of the whole level, not a separate level that follows it.
-- **Level 6** teaches **Why We Might Still Disagree** (rule C), same referee-format as Level 5: human watches,
+  3. Refereeing is the *format* of the whole level, not a separate level that follows it.
+- **Level 7** teaches **Why We Might Still Disagree** (rule C), same referee-format as Level 6: human watches,
   human calls fouls, coach and opponent do the arguing.
-- **Level 7** is the combined final boss, **Stonewall Sung-min**, played for real: the human is a disputant again,
-  exactly as in Level 4, using the same shipped coach-flags-human / human-flags-coach pattern.
+- **Level 8** is the combined final boss, **Stonewall Sung-min**, played for real: the human is a disputant again,
+  exactly as in Level 5, using the same shipped coach-flags-human / human-flags-coach pattern.
 
-Nothing renumbers below Level 5: the Full Showdown stays at 4 and the hardcoded `'4'` stands. A later brief
-describing the Final Showdown's steps as "levels 4 to 6ish" now reads as an early sighting of a longer ladder than
-that brief guessed, not an off-by-one.
+Nothing below Level 4 renumbers: Levels 1 to 3 stay put, and the Third Chair is Level 4.
 
 **There is no separate AI "judge" persona anywhere in the game** `[ruled]`. The 2026-08-31 call retired that
 concept along with the term "moderator" (§5): the only two AI figures the player meets are the **coach** (teaches,
 and plays one side in referee-format levels) and the **opponent/boss** (plays the other side in referee-format
-levels, or plays against the player directly in Levels 4 and 7). In referee-format levels (1-3, 5, 6) the *human*
-holds the referee role that a fourth AI party would otherwise have to simulate. §7 item 12's old three-AI-figures
-framing is retired along with it.
+levels, or plays against the player directly in Levels 5 and 8). In referee-format levels (1-3, 4, 6, 7) the
+*human* holds the referee role that a fourth AI party would otherwise have to simulate. §7 item 12's old
+three-AI-figures framing is retired along with it.
 
-`[ruled]` **Who affirms the Super-Summary and Why-We-Might-Still-Disagree bonuses in solo Level 7 play**, with no
+`[ruled]` **Who affirms the Super-Summary and Why-We-Might-Still-Disagree bonuses in solo Level 8 play**, with no
 second human at the table: the same suggest-then-let-the-affected-party-decide architecture that governs every
 AI-suggested foul call (§5, §8) governs bonus-awarding too, even though a bonus moves points toward a player rather
 than penalizing a foul. The AI nominates/suggests the bonus; the potential offendee makes the final call, whether
-points are being transferred or credited. In solo Level 7 play there's no second human to be that offendee, so the
+points are being transferred or credited. In solo Level 8 play there's no second human to be that offendee, so the
 AI boss itself renders the ruling, an experience-based judgment, exactly as it already renders rulings on the
-human's own foul calls in Levels 4 and 7 today. Built as `affirmStep` in `coach.ts` and the `affirm_step` task in
+human's own foul calls in Levels 5 and 8 today. Built as `affirmStep` in `coach.ts` and the `affirm_step` task in
 `api/coach.ts`: he returns one of the printed card's three columns, and a model that cannot be reached falls to
 "rules", which moves nothing in either direction. A dead key must never award or charge on a guess.
 
@@ -297,14 +312,14 @@ Sequence and dependency only. No dates, at any confidence.
 **The Final Showdown is built** (2026-08-31, pt-heart `6d34aad`). Items 1 to 4 below are done and are kept only so
 their rulings stay readable:
 
-1. ~~Build the ladder UI to seven.~~ Done. There is no separate judge role (§6); the ladder is seven levels, with
-   the Final Showdown split across 5, 6, and 7.
+1. ~~Build the ladder UI to eight.~~ Done. There is no separate judge role (§6); the ladder is eight levels, with
+   Level 4 the Third Chair, and the Final Showdown split across 6, 7, and 8.
 2. ~~Author the three steps' content.~~ Done, `content/final.ts`. Political balance is structural rather than a
    ledger: Sung-min has no authored position and argues the opposite of whatever the player picks.
 3. ~~Build the positive-scoring path.~~ Done, `final.ts`. A bonus is a transfer like every penalty, one token from
    the boss's purse to the player's, so both sides still sum to fourteen.
 4. ~~Add the level to `content/index.ts`.~~ Not done and not wanted: `LEVELS` holds `LevelDef` drill data, and
-   Level 7 is a runner. It is keyed off its own slug, `final-showdown`.
+   Level 8 is a runner. It is keyed off its own slug, `final-showdown`.
 
 Left open by that build, deliberately: the printed card runs the Final Showdown after three full rounds and then
 says "switch roles and repeat". The shipped level runs four argument turns and does not build Sung-min's mirror
@@ -347,15 +362,15 @@ final boss room to referee-format." Do not guess; scope this with Steve or Natha
     to enforce it other than `localStorage`.
 11. Session infrastructure: pairing, transport, session state.
 12. **The AI figures, and how many the player meets. Two** `[ruled]`, per the 2026-08-31 call: the **coach**, who
-    teaches the cards and plays one side of the argument in referee-format levels (1-3, 5, 6); and the
+    teaches the cards and plays one side of the argument in referee-format levels (1-3, 4, 6, 7); and the
     **opponent/boss**, who plays the other side in those same levels and plays against the player directly in
-    Levels 4 and 7. Both can run on the same code and hold the same knowledge of the game, but **they must present
+    Levels 5 and 8. Both can run on the same code and hold the same knowledge of the game, but **they must present
     differently to the player**. One engine, two faces, never one voice visibly wearing two hats. There is no
     third "judge" figure: in referee-format levels the human holds the referee seat a fourth AI party would
-    otherwise have to simulate, and Levels 4/7 use the same shipped coach-flags-human / human-flags-coach pattern
+    otherwise have to simulate, and Levels 5/8 use the same shipped coach-flags-human / human-flags-coach pattern
     with no third party at all. Live play meets the coach and the other human and nothing else, which is why §5's
     no-separate-referee-character ruling is untouched. The coach's own role still flips: in referee-format levels
-    it argues one side; in Levels 4 and 7 it argues against the player directly; in live play it stops arguing
+    it argues one side; in Levels 5 and 8 it argues against the player directly; in live play it stops arguing
     entirely and only nominates. How much gym coach code survives is open.
 13. Spectator mode, after the two-human loop works, since there is nothing to spectate before then. The classroom is
     the strongest case.
@@ -364,17 +379,19 @@ final boss room to referee-format." Do not guess; scope this with Steve or Natha
 Level gating is `localStorage`-trust only today. Fine for solo play, a real hole the moment human-vs-human matches
 exist. Fix it before step 11, not during.
 
-**Live play unlocks when the player has cleared the first four gym levels** `[ruled]`: Levels 1 to 3 plus
-the Full Showdown. Levels 5, 6, and 7 are not part of the basic live-play gate. What "clear" means for Levels 1 to 3
-is ruled in §9, with the redesign caveat above. Full credentialing (a stricter bar Steve has floated, not yet
-specified) may require 5-7 as well; that is a separate, undesigned tier layered on top of the basic gate, not a
-change to the basic gate itself.
+**Live play unlocks when the player has cleared Levels 1 to 3 plus the Full Showdown** `[ruled]`. GAP: this ruling
+predates Level 4, the Third Chair; whether clearing it is also required for the live-play gate is undecided.
+Levels 6, 7, and 8 are not part of the basic live-play gate. What "clear" means for Levels 1 to 3 is ruled in §9,
+with the redesign caveat above. Full credentialing (a stricter bar Steve has floated, not yet specified) may
+require 6-8 as well; that is a separate, undesigned tier layered on top of the basic gate, not a change to the
+basic gate itself.
 
-**Seven levels in total**, ruled in §6 and not restated here. What that means for the work in this section: four of
-the seven ship or are gated for solo play (1-4), and Levels 5, 6, and 7 are slots on the ladder rather than
-buildable work until each is designed. The referee-format mechanic in the newest brief that once read as a single
-extra "Level 6" is now understood as the general shape of every teaching level, Levels 1-3 as well as 5 and 6, not
-a level unto itself. The printed deck cannot corroborate any of this, having no level vocabulary at all.
+**Eight levels in total**, ruled in §6 and not restated here. All eight ship or are gated for solo play (1-8)
+`[unratified]`, per the same 2026-09-07 unfreeze noted in §3: Levels 6, 7, and 8 were authored and wired the whole
+time they were frozen, so none of them is a design slot waiting to be built. The referee-format mechanic in the
+newest brief that once read as a single extra "Level 6" is now understood as the general shape of every teaching
+level, Levels 1-3 and 4, as well as 6 and 7, not a level unto itself. The printed deck cannot corroborate any of
+this, having no level vocabulary at all.
 
 **A clock runs in live play, and never in the gym** `[ruled, Nathan]`. The gym having no clock is confirmed rather
 than merely settled-for-now, and live play definitely uses one.
@@ -500,20 +517,20 @@ mechanic; then the teaching-sequence doc; then the level build table; then the o
 of them, on what is true today, sits the code.**
 
 1. **Level numbering.** The build table uses a superseded eight-level scheme with the Full Showdown at 5 and the
-   Final Showdown at 6. Build-table level N is current level N minus 1, for N from 2 to
-   6. The clearest casualty is tokens, which that table says go live "from level 5" and which therefore go live at
-      current Level 4. The current ladder is **seven levels** (§6), which does not change the offset above: the
-      Full Showdown is still 4 and the Final Showdown now spans 5, 6, and 7. `rules.md` has not been swept and
-      still says five or six depending on which passage you read.
+   Final Showdown at 6. Build-table level N is current level N minus 1 for N from 2 to 4 (levels 1 to 3, the
+   drills); from N 5 onward the offset drops to zero, because Level 4 of the current ladder is the Third Chair, a
+   rung the build table never counted. The clearest casualty is tokens, which that table says go live "from level
+   5" and which therefore go live at current **Level 5**, the Full Showdown itself. The current ladder is
+   **eight levels** (§6): the Third Chair is 4, the Full Showdown is 5, and the Final Showdown now spans 6, 7, and
+   8. `rules.md` has not been swept and still says five or six depending on which passage you read.
 2. **Boss names.** Vikram, Ottoline, Nils, Sofía in three docs; Victor, Olivia, Noemi, Sofia in the code. The code
    is right.
 3. **Tokens in the gym.** One doc says tokens are off in Levels 1 to 3, and another says no score, no token count,
-   no timer. The code runs both purses from Level 1 and passes them to the header on every gym level.
-4. **Half tokens: no longer a contradiction, and kept on this list so nobody reopens it.** Every price in the code
-   is a whole token, which is what the docs and the printed deck have always said. Halves existed for exactly one
-   price, the half token that letting a foul go past used to cost the player, and that price is gone: a miss moves
-   nothing, because you are charged for what you say and not for what you fail to notice. `TOKEN_STEP` in
-   `src/content/showdown.ts` is the single place a fractional price could ever come back, and it is 1.
+   no timer. The code agrees with the first: Levels 1 to 3 run `tokens: 'off'`. The two readings agree.
+4. **Half tokens, kept on this list so nobody reopens it.** Every price in the code is a whole token, which is what
+   the docs and the printed deck say. A miss moves nothing at all, because you are charged for what you say and not
+   for what you fail to notice, so no price is fractional. `TOKEN_STEP` in `src/content/showdown.ts` is the single
+   place a fractional price could enter, and it is 1.
 5. **Retries and gating.** One doc says no retry, no red flash, no blocked path, the player still clears. The code
    gates every answering step and loops back on a wrong or empty answer, attributed to a later ruling. Direct
    reversal. Gating wins for Levels 1-3's practice items. For the summary coverage check specifically, §7 now rules
@@ -530,8 +547,8 @@ of them, on what is true today, sits the code.**
 11. **The newest doc's own placeholder** describes gym as three levels each with a miniboss, which may reframe the
     Full Showdown as Level 3's miniboss rather than a capstone, and proposes a further level where the player
     referees two AI players. The miniboss reframing is still unintegrated. The referee-format idea is no longer a
-    single speculative level: it is the general shape ruled for **Levels 1-3, 5, and 6** (§6), and Levels 1-3 need
-    a redesign to actually build it (§7).
+    single speculative level: it is the general shape ruled for **Levels 1-3, 4, 6, and 7** (§6), and Levels 1-3
+    need a redesign to actually build it (§7).
 
 Where a newer source contradicts an older one the newer one probably wins, but **say so rather than silently
 choosing.** Every item above is a place where an implementer who quietly picked one reading would have shipped
