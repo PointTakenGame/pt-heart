@@ -420,7 +420,7 @@ export const COACH = {
     // No clock, here or anywhere: nothing in this build is timed, and promising a
     // clock in the corner is a promise the match does not keep.
     'This is the whole thing. Three rounds, all three cards live.',
-    'Seven tokens each. A foul doesn\'t burn a token, it hands one over. Judging costs two. The other two cost one each. Let one of hers go past you and half a token crosses anyway. Empty and you\'re done, whatever the round says.',
+    'Seven tokens each. A foul doesn\'t burn a token, it hands one over. Judging costs two. The other two cost one each. Empty and you\'re done, whatever the round says.',
     'She\'s Slippery Sofia. She doesn\'t shout, she doesn\'t insult you, and she will foul you twice before you notice once. You whistle her. I whistle you.',
   ],
   /** The hint under the rail while a call is open. The cards are the buttons. */

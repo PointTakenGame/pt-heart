@@ -3,9 +3,9 @@
 // it, icons a side, opponent on the left and player on the right.
 //
 // Icons rather than a number, because the printed game is icons and because the
-// thing worth feeling is the pile getting shorter. Halves are real (a missed call
-// costs half), so a half token renders as a clipped icon rather than rounding
-// away the only feedback a passive player gets.
+// thing worth feeling is the pile getting shorter. Every price is a whole token,
+// so every icon is whole: a player who calls nothing watches a still scoreboard,
+// and that stillness is the feedback.
 //
 // Reworked 2026-08-25 on Steve's notes, three of them:
 //   "verdict and player, they're emoji cards. Verdict's are higher for some
