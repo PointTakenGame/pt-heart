@@ -15,7 +15,7 @@ import { OnTable, tableLine } from './ui/OnTable.tsx';
 import { BossIntro } from './ui/BossIntro.tsx';
 import { Prefight } from './ui/Prefight.tsx';
 import { Mast } from './ui/Mast.tsx';
-import { Onboarding } from './ui/Onboarding.tsx';
+import { OnboardingModal } from './ui/Onboarding.tsx';
 import { PitchCopy } from './ui/Pitch.tsx';
 import { useShowdown } from './showdown.ts';
 import { useReferee } from './referee.ts';
@@ -40,7 +40,7 @@ import {
 import { CARDS, CARD_ORDER } from './content/cards.ts';
 import { LEVEL_ID } from './content/ids.ts';
 import { COACH_EMOJI, DEFAULT_AVATAR, shuffledAvatars } from './avatars.ts';
-import { getAvatar, isCleared, setAvatar } from './storage.ts';
+import { getAvatar, hasSeenOnboarding, isCleared, markSeenOnboarding, setAvatar } from './storage.ts';
 
 // The ladder's rung numbers, read off the ladder rather than typed in. They
 // were hardcoded in eight places and two of them were already wrong once. The
@@ -90,7 +90,6 @@ const FINAL_NUMBER = REFEREE_NUMBER_BASE + REFEREE_LEVELS.length;
 
 type Screen =
   | { name: 'front' }
-  | { name: 'onboarding' }
   | { name: 'select' }
   | { name: 'level'; level: LevelDef }
   | { name: 'showdown' }
@@ -117,10 +116,7 @@ export function App() {
     setAvatarState(emoji);
   };
 
-  if (screen.name === 'front') return <FrontPage onIn={() => setScreen({ name: 'onboarding' })} />;
-  if (screen.name === 'onboarding') {
-    return <Onboarding onDone={() => setScreen({ name: 'select' })} />;
-  }
+  if (screen.name === 'front') return <FrontPage onIn={() => setScreen({ name: 'select' })} />;
   if (screen.name === 'select') {
     return (
       <Select
@@ -212,67 +208,86 @@ export function App() {
 // the door. The two conduct clauses stay (Steve cut the other two on
 // 2026-08-23); they are this page's own copy, not the gate's.
 function FrontPage({ onIn }: { onIn: () => void }) {
+  // The popup opens once, ever, the first time anyone lands here — not a gate,
+  // since it never blocks the page underneath, just sits on top of it until
+  // it is skipped or finished. A returning player who has already seen it
+  // gets the plain front page straight away. Closing it either way (Skip or
+  // finishing the last panel) goes to the same place "I'm in" goes.
+  const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding());
+
+  const closeOnboarding = () => {
+    markSeenOnboarding();
+    setShowOnboarding(false);
+    onIn();
+  };
+
   return (
-    <div className="page page-front">
-      <Mast />
+    <div className="page page-front-wrap">
+      {/* Inert rather than merely dim: a page behind a modal is not a page you
+          can accidentally poke "I'm in" on through the backdrop. */}
+      <div className={`page page-front${showOnboarding ? ' is-behind-modal' : ''}`} aria-hidden={showOnboarding}>
+        <Mast />
 
-      <div className="front-body">
-        <PitchCopy />
+        <div className="front-body">
+          <PitchCopy />
 
-        <div className="front-fouls">
-          <p className="front-fouls-lede">
-            <span className="lede-humility">Humility</span>{' '}
-            <span className="lede-showdown">Showdown</span> will train your reflexes to avoid
-            the <span className="lede-showdown">three fouls</span> that raise anger during a
-            discussion:
-          </p>
-          <div className="mini-row">
-            {CARD_ORDER.map((rule) => (
-              <RuleCardMini key={rule} rule={rule} />
-            ))}
+          <div className="front-fouls">
+            <p className="front-fouls-lede">
+              <span className="lede-humility">Humility</span>{' '}
+              <span className="lede-showdown">Showdown</span> will train your reflexes to avoid
+              the <span className="lede-showdown">three fouls</span> that raise anger during a
+              discussion:
+            </p>
+            <div className="mini-row">
+              {CARD_ORDER.map((rule) => (
+                <RuleCardMini key={rule} rule={rule} />
+              ))}
+            </div>
           </div>
+
+          <p className="front-clause">
+            You are here to practice disagreeing better, not to win. What you are learning is
+            when your own sentences make the other person angry, because an angry person is a
+            person you will never persuade.
+          </p>
+
+          {/* The conduct agreement used to sit here, as a second clause: "You can
+              leave anytime. End a round at any point, no explanation owed. Nothing
+              is tracked against you for leaving."
+
+              It is gone from this page. Nathan's ruling Q4, which Steve adopted on
+              2026-09-07 ("do whatever Nathan wants"): the conduct agreement belongs
+              to signup, not to the front page. Signup does not exist yet, so the
+              text is parked in docs/roadmap.md against the signup work rather than
+              left here. Do not put it back on this page; put it in signup.
+
+              The clause above it stays. That one is the pitch, not conduct: it says
+              what the game is for. Q4 cut the agreement, not the thesis. */}
+
+          <button className="btn btn-wide btn-in" onClick={onIn}>
+            I&rsquo;m in
+          </button>
         </div>
 
-        <p className="front-clause">
-          You are here to practice disagreeing better, not to win. What you are learning is
-          when your own sentences make the other person angry, because an angry person is a
-          person you will never persuade.
+        <footer className="front-foot">
+          <div className="front-foot-left">Humility Showdown &middot; Copyright 2026 Experception LLC</div>
+          <div className="front-foot-right">Internal playtest. Do not post or distribute.</div>
+        </footer>
+
+        {/* The clause that used to sit above the button promised nothing was kept
+            against you. That clause moved to signup, and signup does not exist,
+            but since 2026-09-01 every answered item has been posted to the
+            research table. A promise that is gone and a practice that is live is
+            the wrong pair, so the disclosure stands on its own here until signup
+            carries it. Steve approved it 2026-09-07. Say it plainly and say what
+            is NOT kept, because that is the part people want to know. */}
+        <p className="front-foot-note">
+          What you type here is saved for research. No name, no email, no account:
+          just a random id for this browser.
         </p>
-
-        {/* The conduct agreement used to sit here, as a second clause: "You can
-            leave anytime. End a round at any point, no explanation owed. Nothing
-            is tracked against you for leaving."
-
-            It is gone from this page. Nathan's ruling Q4, which Steve adopted on
-            2026-09-07 ("do whatever Nathan wants"): the conduct agreement belongs
-            to signup, not to the front page. Signup does not exist yet, so the
-            text is parked in docs/roadmap.md against the signup work rather than
-            left here. Do not put it back on this page; put it in signup.
-
-            The clause above it stays. That one is the pitch, not conduct: it says
-            what the game is for. Q4 cut the agreement, not the thesis. */}
-
-        <button className="btn btn-wide btn-in" onClick={onIn}>
-          I&rsquo;m in
-        </button>
       </div>
 
-      <footer className="front-foot">
-        <div className="front-foot-left">Humility Showdown &middot; Copyright 2026 Experception LLC</div>
-        <div className="front-foot-right">Internal playtest. Do not post or distribute.</div>
-      </footer>
-
-      {/* The clause that used to sit above the button promised nothing was kept
-          against you. That clause moved to signup, and signup does not exist,
-          but since 2026-09-01 every answered item has been posted to the
-          research table. A promise that is gone and a practice that is live is
-          the wrong pair, so the disclosure stands on its own here until signup
-          carries it. Steve approved it 2026-09-07. Say it plainly and say what
-          is NOT kept, because that is the part people want to know. */}
-      <p className="front-foot-note">
-        What you type here is saved for research. No name, no email, no account:
-        just a random id for this browser.
-      </p>
+      {showOnboarding && <OnboardingModal onClose={closeOnboarding} />}
     </div>
   );
 }

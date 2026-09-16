@@ -1720,30 +1720,62 @@ p  { margin: 0 0 0.75rem; }
 .pf-dot.is-on { background: var(--orange); transform: scale(1.35); }
 .pf-count { text-align: center; font-size: 0.72rem; margin: 0.5rem 0 0; }
 
-/* ---------- onboarding: one idea per screen, before the entry choice ---------- */
+/* ---------- onboarding: a popup over the front page ---------- */
 
-/* Same shape as the corner above (.pf-stage/.pf-dots/.pf-foot): a fixed frame,
-   one concept centred in it, a Next button parked in the same spot every
-   screen. Its own classnames rather than the literal .pf-* selectors, the same
-   call Drill.tsx already made for .drill-stage: unrelated screens that happen
-   to share a shape should not share a selector, because a future change to one
-   should not have to remember it is secretly also changing the other. */
-.page-onboarding { overflow: hidden; }
-.page-onboarding .mast,
-.page-onboarding .ob-foot { margin-bottom: auto; }
+/* The front page's own wrapper, present only so the popup (a sibling, not a
+   child, of .page-front) can sit fixed to the viewport without being caught
+   by .is-behind-modal's own filter: a filtered ancestor creates a containing
+   block for position: fixed the same way a transform does, so the overlay has
+   to live outside the filtered element rather than inside it. */
+.page-front-wrap { position: relative; height: 100%; }
+.page-front.is-behind-modal {
+  filter: blur(2px);
+  opacity: 0.6;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ob-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(26, 26, 30, 0.55);
+}
+.ob-modal {
+  width: min(94vw, 34rem);
+  max-height: min(92vh, 42rem);
+  display: flex;
+  flex-direction: column;
+  background: var(--cream);
+  border: 2px solid var(--charcoal);
+  border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--charcoal);
+}
+.ob-modal-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem 0;
+}
 
 .ob-stage {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 1.25rem;
+  padding: 0.75rem 1.25rem;
   overflow-y: auto;
   min-height: 0;
   width: 100%;
 }
-.ob-stage > * { width: 100%; max-width: 34rem; }
+.ob-stage > * { width: 100%; }
 
 .ob-step-label {
   text-align: center;
@@ -1754,13 +1786,8 @@ p  { margin: 0 0 0.75rem; }
   margin: 0 0 0.5rem;
 }
 
-.ob-foot { flex: 0 0 auto; padding: 0.5rem 1.25rem 1.5rem; }
-.ob-dots {
-  display: flex;
-  justify-content: center;
-  gap: 0.35rem;
-  margin-bottom: 0.8rem;
-}
+.ob-modal-foot { flex: 0 0 auto; padding: 0.5rem 1.25rem 1.25rem; }
+.ob-dots { display: flex; gap: 0.35rem; }
 .ob-dot {
   width: 0.45rem;
   height: 0.45rem;
@@ -1771,8 +1798,18 @@ p  { margin: 0 0 0.75rem; }
 .ob-dot.is-on { background: var(--orange); transform: scale(1.35); }
 .ob-count { text-align: center; font-size: 0.72rem; margin: 0.5rem 0 0; }
 
-.ob-idea .front-tag,
-.ob-idea .front-quote { margin: 0 0 1rem; }
+.ob-overview { text-align: center; }
+.ob-overview .front-tag,
+.ob-overview .front-quote { text-align: left; margin: 0 0 1rem; }
+.ob-foul-list {
+  text-align: left;
+  max-width: 18rem;
+  margin: 0 auto;
+  padding-left: 1.4rem;
+  font-family: var(--font-cond);
+  letter-spacing: 0.02em;
+}
+.ob-foul-list li { margin-bottom: 0.3rem; }
 
 .ob-foul { text-align: center; }
 .ob-foul-head {
@@ -1793,10 +1830,22 @@ p  { margin: 0 0 0.75rem; }
 .ob-quiz-head { text-align: center; font-size: 1.1rem; margin: 0 0 0.9rem; }
 .ob-quiz-options { display: flex; flex-direction: column; gap: 0.55rem; }
 .ob-quiz-options .btn { text-align: left; }
+/* The base .btn:disabled rule fades to 35% opacity, which is right for an
+   inert decoy but washes the reveal out to a pastel nobody would call teal or
+   orange. The two toned states stay at full strength once they are showing an
+   answer rather than offering one. */
+.ob-quiz-options .btn-good:disabled,
+.ob-quiz-options .btn-bad:disabled { opacity: 1; }
 
-.ob-preview { text-align: center; }
+.ob-demo { text-align: center; }
 .ob-intro { color: #4a4a4a; margin: 0 0 0.9rem; }
-.ob-preview .drill-table { margin: 0 auto 0.75rem; }
+.ob-demo .drill-table { margin: 0 auto 0.75rem; }
+.ob-demo .dlg { margin-top: 0; }
+.ob-demo .composer { padding: 0.6rem 0 0; }
+
+@media (max-width: 30rem) {
+  .ob-modal { box-shadow: 4px 4px 0 var(--charcoal); }
+}
 
 /* Quiz feedback: a one-shot version of the same two ideas the rest of the game
    already uses for attention (cta-pulse's ring) and for the printed deck's
