@@ -1,8 +1,10 @@
 // The onboarding popup: a modal over the front page, not a screen of its own.
-// It opens once, ever, the first time someone lands on the front page
-// (storage.ts's seenOnboarding, the same one-time rule metCoach already
-// follows), and Skip or finishing both close it the same way, into the entry
-// screen's three-way choice from Part 2. The popup never routes anywhere else.
+// It opens every time someone lands on the front page. Skip (or Escape) closes
+// it back onto the plain front page, undimmed, exactly as if the popup had
+// never opened — "I'm in" is still how you leave from there. Finishing all
+// eleven steps instead skips the front page entirely and goes straight to the
+// entry screen's three-way choice from Part 2, since there's no point asking
+// someone to tap "I'm in" right after they just finished the whole tour.
 //
 // Eleven steps: the pitch and a roll call of the three fouls, then each foul's
 // own three-step mini-sequence (its card, a "pick the right one" quiz, a "pick
@@ -28,7 +30,11 @@ import { Composer } from './Composer.tsx';
 import { PitchCopy } from './Pitch.tsx';
 
 interface Props {
-  onClose: () => void;
+  /** Skip, or Escape (the same action): back to the front page, unchanged. */
+  onSkip: () => void;
+  /** Finishing all eleven steps: straight to the train/play/coach choice
+   *  screen, past the front page and its "I'm in" button. */
+  onComplete: () => void;
 }
 
 type Panel =
@@ -109,7 +115,7 @@ const LISTEN_TEMPLATE = findStep(level3, 'l3-say-2') as TemplateStep;
 const LISTEN_LEAD_IN =
   'Your turn to say one back. Take this: "I\'m not sold on working from home full time. I trained three juniors standing at a whiteboard, and I can\'t picture doing that over video." I\'ll give you the frame. Keep both halves in.';
 
-export function OnboardingModal({ onClose }: Props) {
+export function OnboardingModal({ onSkip, onComplete }: Props) {
   const [i, setI] = useState(0);
   const [stepComplete, setStepComplete] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -127,13 +133,11 @@ export function OnboardingModal({ onClose }: Props) {
     modalRef.current?.focus();
   }, []);
 
-  const close = () => onClose();
-
   // Escape closes the popup, the same as Skip. Same pattern Dialogue.tsx
   // already uses for its own overlay (the blown-up rule card).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape') onSkip();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -142,7 +146,7 @@ export function OnboardingModal({ onClose }: Props) {
 
   const next = () => {
     if (last) {
-      close();
+      onComplete();
       return;
     }
     setI(i + 1);
@@ -157,7 +161,7 @@ export function OnboardingModal({ onClose }: Props) {
               <span key={n} className={`ob-dot${n === i ? ' is-on' : ''}${n < i ? ' is-done' : ''}`} />
             ))}
           </div>
-          <button className="link" onClick={close}>
+          <button className="link" onClick={onSkip}>
             Skip
           </button>
         </div>

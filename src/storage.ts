@@ -32,10 +32,6 @@ export interface SaveFile {
   /** true once the coach has introduced himself. He does it once, not before
    *  every level (Steve, 2026-08-25). */
   metCoach?: boolean;
-  /** true once the onboarding popup has been closed (skipped or finished) on
-   *  the front page. It opens once ever, the same rule metCoach follows, not
-   *  once per visit. */
-  seenOnboarding?: boolean;
 }
 
 function blank(): SaveFile {
@@ -162,18 +158,6 @@ export function markMetCoach(): void {
   const file = load();
   if (!file.metCoach) {
     file.metCoach = true;
-    save(file);
-  }
-}
-
-export function hasSeenOnboarding(): boolean {
-  return Boolean(load().seenOnboarding);
-}
-
-export function markSeenOnboarding(): void {
-  const file = load();
-  if (!file.seenOnboarding) {
-    file.seenOnboarding = true;
     save(file);
   }
 }

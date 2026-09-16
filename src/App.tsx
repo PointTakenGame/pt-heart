@@ -40,7 +40,7 @@ import {
 import { CARDS, CARD_ORDER } from './content/cards.ts';
 import { LEVEL_ID } from './content/ids.ts';
 import { COACH_EMOJI, DEFAULT_AVATAR, shuffledAvatars } from './avatars.ts';
-import { getAvatar, hasSeenOnboarding, isCleared, markSeenOnboarding, setAvatar } from './storage.ts';
+import { getAvatar, isCleared, setAvatar } from './storage.ts';
 
 // The ladder's rung numbers, read off the ladder rather than typed in. They
 // were hardcoded in eight places and two of them were already wrong once. The
@@ -208,15 +208,17 @@ export function App() {
 // the door. The two conduct clauses stay (Steve cut the other two on
 // 2026-08-23); they are this page's own copy, not the gate's.
 function FrontPage({ onIn }: { onIn: () => void }) {
-  // The popup opens once, ever, the first time anyone lands here — not a gate,
-  // since it never blocks the page underneath, just sits on top of it until
-  // it is skipped or finished. A returning player who has already seen it
-  // gets the plain front page straight away. Closing it either way (Skip or
-  // finishing the last panel) goes to the same place "I'm in" goes.
-  const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding());
+  // The popup opens every time anyone lands here — not a gate, since it never
+  // blocks the page underneath, just sits on top of it until it is skipped or
+  // finished. Skip drops back onto this same page, undimmed, exactly as if it
+  // had never opened: "I'm in" is still how you leave from here. Finishing all
+  // eleven steps instead goes straight where "I'm in" goes, since there is no
+  // point asking someone to tap it right after the tour they just finished.
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
-  const closeOnboarding = () => {
-    markSeenOnboarding();
+  const skipOnboarding = () => setShowOnboarding(false);
+
+  const completeOnboarding = () => {
     setShowOnboarding(false);
     onIn();
   };
@@ -287,7 +289,9 @@ function FrontPage({ onIn }: { onIn: () => void }) {
         </p>
       </div>
 
-      {showOnboarding && <OnboardingModal onClose={closeOnboarding} />}
+      {showOnboarding && (
+        <OnboardingModal onSkip={skipOnboarding} onComplete={completeOnboarding} />
+      )}
     </div>
   );
 }
