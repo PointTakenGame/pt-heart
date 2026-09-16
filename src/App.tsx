@@ -15,6 +15,8 @@ import { OnTable, tableLine } from './ui/OnTable.tsx';
 import { BossIntro } from './ui/BossIntro.tsx';
 import { Prefight } from './ui/Prefight.tsx';
 import { Mast } from './ui/Mast.tsx';
+import { Onboarding } from './ui/Onboarding.tsx';
+import { PitchCopy } from './ui/Pitch.tsx';
 import { useShowdown } from './showdown.ts';
 import { useReferee } from './referee.ts';
 import { useFinal } from './final.ts';
@@ -88,6 +90,7 @@ const FINAL_NUMBER = REFEREE_NUMBER_BASE + REFEREE_LEVELS.length;
 
 type Screen =
   | { name: 'front' }
+  | { name: 'onboarding' }
   | { name: 'select' }
   | { name: 'level'; level: LevelDef }
   | { name: 'showdown' }
@@ -114,7 +117,10 @@ export function App() {
     setAvatarState(emoji);
   };
 
-  if (screen.name === 'front') return <FrontPage onIn={() => setScreen({ name: 'select' })} />;
+  if (screen.name === 'front') return <FrontPage onIn={() => setScreen({ name: 'onboarding' })} />;
+  if (screen.name === 'onboarding') {
+    return <Onboarding onDone={() => setScreen({ name: 'select' })} />;
+  }
   if (screen.name === 'select') {
     return (
       <Select
@@ -211,18 +217,7 @@ function FrontPage({ onIn }: { onIn: () => void }) {
       <Mast />
 
       <div className="front-body">
-        <p className="front-tag">
-          A training gym that uses simple, science-backed rules to take the fight out of a
-          disagreement.
-        </p>
-
-        <blockquote className="front-quote">
-          You have a disagreement with friends or family, and you want them to understand{' '}
-          <strong>your</strong> perspective. But they fail to <strong>listen</strong> to you as
-          soon as they feel (even a hint of) <strong>anger</strong>. Humility Showdown teaches
-          you how to contain their anger, allowing them to{' '}
-          <strong>actually listen to you</strong>.
-        </blockquote>
+        <PitchCopy />
 
         <div className="front-fouls">
           <p className="front-fouls-lede">
@@ -308,6 +303,12 @@ function Select({
   // Dealt once, when the screen mounts, so the grid does not reshuffle under the
   // player's finger every time they try a face on.
   const [tiles] = useState(shuffledAvatars);
+  // The top of this screen used to be "The gym"'s own heading, with the two
+  // live-play doors stranded at the foot below the whole ladder. Training and
+  // the two live doors are three different things to walk into, so they are a
+  // choice first and a ladder second; the ladder (and the fighter-change strip
+  // that sits with it) is one tap behind "The gym".
+  const [view, setView] = useState<'choice' | 'ladder'>('choice');
 
   if (picking) {
     return (
@@ -355,6 +356,58 @@ function Select({
     );
   }
 
+  if (view === 'choice') {
+    return (
+      <div className="page page-narrow">
+        {/* The way back to the front page. Without it the page is unreachable
+            the moment you walk into the gym, which is how it went missing. */}
+        <Mast
+          slim
+          right={
+            <button className="link" onClick={onHome}>
+              Front page
+            </button>
+          }
+        />
+        <div className="choice">
+          {/* Training is the on-ramp everyone should take before a live round,
+              so it is the one filled, dark, primary card; the two live doors
+              below are equal-weight outlines. Tapping it does not skip to a
+              level, it opens the ladder below, which is already wired to
+              onPick per row. */}
+          <button className="choice-primary" onClick={() => setView('ladder')}>
+            <span className="choice-title">The gym</span>
+            <span className="choice-sub">
+              Three levels to learn the cards, one in the referee&rsquo;s chair, then
+              everything at once against the boss.
+            </span>
+          </button>
+
+          <div>
+            <h2 className="live-head">Live play</h2>
+            <p className="muted">
+              A real disagreement, three seats, no lesson. Pick which one you are in.
+            </p>
+            {/* Live play has no gate. Steve's ruling of 2026-09-05
+                (HEART-T260905-02) overturned the roadmap line that unlocked it
+                behind the gym: anyone can walk straight into a real match. A
+                player who has not fought Sofia is warned on the way in and then
+                let through, and the warning lives on the Door screen because
+                that is already the step between this button and the room. */}
+            <div className="choice-row">
+              <button className="choice-outline" onClick={() => onLive('player')}>
+                Play a round
+              </button>
+              <button className="choice-outline" onClick={() => onLive('referee')}>
+                Referee a round
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // The ladder is a ladder. Steve's ruling of 2026-08-24: level 2 cannot be
   // opened before level 1 is cleared, because each level assumes the card the
   // one before it taught, and the showdown assumes all three.
@@ -363,13 +416,13 @@ function Select({
 
   return (
     <div className="page page-narrow">
-      {/* The way back to the front page. Without it the page is unreachable the
-          moment you walk into the gym, which is how it went missing. */}
+      {/* Back to the choice screen, not the front page: that link now lives
+          there, one level up from here. */}
       <Mast
         slim
         right={
-          <button className="link" onClick={onHome}>
-            Front page
+          <button className="link" onClick={() => setView('choice')}>
+            Back
           </button>
         }
       />
@@ -535,25 +588,6 @@ function Select({
           })()}
         </li>
       </ul>
-
-      {/* Live play has no gate. Steve's ruling of 2026-09-05 (HEART-T260905-02)
-          overturned the roadmap line that unlocked it behind the gym: anyone can
-          walk straight into a real match. A player who has not fought Sofia is
-          warned on the way in and then let through, and the warning
-          lives on the Door screen because that is already the step between this
-          button and the room. */}
-      <h2 className="live-head">Live play</h2>
-      <p className="muted">
-        A real disagreement, three seats, no lesson. Pick which one you are in.
-      </p>
-      <div className="live-doors">
-        <button className="btn btn-wide" onClick={() => onLive('player')}>
-          Play a round
-        </button>
-        <button className="btn btn-wide" onClick={() => onLive('referee')}>
-          Referee a round
-        </button>
-      </div>
     </div>
   );
 }

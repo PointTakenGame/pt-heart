@@ -346,6 +346,76 @@ p  { margin: 0 0 0.75rem; }
   color: var(--teal);
 }
 
+/* ---------- entry choice: the three-way split above the ladder ---------- */
+
+/* Routing is unchanged (onPick/LEVELS still run the ladder below, onLive still
+   opens the two live doors); this only decides what a player sees first.
+   Training is the on-ramp everyone should take before a live round, so its
+   card is dark, filled, and primary; the two live doors are equal-weight
+   outlines underneath it. The hard offset shadow is the same comic-panel "pop"
+   the fighter tiles use on hover (styles.css, .fighter:hover), just resting
+   rather than triggered, since this is the loudest thing on the screen and
+   should not need a hover to say so. */
+.choice { display: flex; flex-direction: column; gap: 1.4rem; margin-bottom: 0.5rem; }
+
+.choice-primary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 1.1rem 1.25rem;
+  text-align: left;
+  background: var(--charcoal);
+  color: var(--cream);
+  border: 2px solid var(--charcoal);
+  border-radius: var(--radius);
+  box-shadow: 5px 5px 0 var(--orange);
+  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 140ms;
+}
+.choice-primary:hover,
+.choice-primary:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 7px 7px 0 var(--orange);
+}
+.choice-title {
+  font-family: var(--font-cond);
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.choice-sub { color: var(--cream-dark); font-size: 0.88rem; line-height: 1.4; }
+
+.choice-row { display: flex; gap: 0.7rem; }
+.choice-outline {
+  flex: 1 1 0;
+  padding: 0.9rem 1rem;
+  text-align: center;
+  background: var(--white);
+  color: var(--charcoal);
+  border: 1px solid var(--charcoal);
+  border-radius: var(--radius);
+  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 140ms;
+}
+.choice-outline:hover,
+.choice-outline:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0 var(--charcoal);
+}
+
+@media (max-width: 30rem) {
+  .choice-row { flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choice-primary,
+  .choice-outline { transition: none; }
+  .choice-primary:hover,
+  .choice-primary:focus-visible,
+  .choice-outline:hover,
+  .choice-outline:focus-visible { transform: none; }
+}
+
 /* ---------- level chrome ---------- */
 
 /* Leave used to sit on a strip of its own here (.page-topbar), outside the
@@ -1649,6 +1719,107 @@ p  { margin: 0 0 0.75rem; }
 .pf-dot.is-done { background: var(--charcoal); opacity: 0.3; }
 .pf-dot.is-on { background: var(--orange); transform: scale(1.35); }
 .pf-count { text-align: center; font-size: 0.72rem; margin: 0.5rem 0 0; }
+
+/* ---------- onboarding: one idea per screen, before the entry choice ---------- */
+
+/* Same shape as the corner above (.pf-stage/.pf-dots/.pf-foot): a fixed frame,
+   one concept centred in it, a Next button parked in the same spot every
+   screen. Its own classnames rather than the literal .pf-* selectors, the same
+   call Drill.tsx already made for .drill-stage: unrelated screens that happen
+   to share a shape should not share a selector, because a future change to one
+   should not have to remember it is secretly also changing the other. */
+.page-onboarding { overflow: hidden; }
+.page-onboarding .mast,
+.page-onboarding .ob-foot { margin-bottom: auto; }
+
+.ob-stage {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  overflow-y: auto;
+  min-height: 0;
+  width: 100%;
+}
+.ob-stage > * { width: 100%; max-width: 34rem; }
+
+.ob-step-label {
+  text-align: center;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6d6355;
+  margin: 0 0 0.5rem;
+}
+
+.ob-foot { flex: 0 0 auto; padding: 0.5rem 1.25rem 1.5rem; }
+.ob-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-bottom: 0.8rem;
+}
+.ob-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--rule);
+}
+.ob-dot.is-done { background: var(--charcoal); opacity: 0.3; }
+.ob-dot.is-on { background: var(--orange); transform: scale(1.35); }
+.ob-count { text-align: center; font-size: 0.72rem; margin: 0.5rem 0 0; }
+
+.ob-idea .front-tag,
+.ob-idea .front-quote { margin: 0 0 1rem; }
+
+.ob-foul { text-align: center; }
+.ob-foul-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.ob-foul-emoji { font-size: 1.8rem; line-height: 1; }
+.ob-foul-name {
+  font-family: var(--font-cond);
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+}
+.ob-foul-def { margin: 0 0 1rem; color: #4a4a4a; }
+
+.ob-quiz-head { text-align: center; font-size: 1.1rem; margin: 0 0 0.9rem; }
+.ob-quiz-options { display: flex; flex-direction: column; gap: 0.55rem; }
+.ob-quiz-options .btn { text-align: left; }
+
+.ob-preview { text-align: center; }
+.ob-intro { color: #4a4a4a; margin: 0 0 0.9rem; }
+.ob-preview .drill-table { margin: 0 auto 0.75rem; }
+
+/* Quiz feedback: a one-shot version of the same two ideas the rest of the game
+   already uses for attention (cta-pulse's ring) and for the printed deck's
+   warning colour (.btn-bad). Correct rings once in teal and stops, wrong
+   shakes once in orange; both are one-shot rather than looping, because this
+   is an answer that already landed, not a control still waiting to be
+   pressed. */
+@keyframes ob-quiz-pop {
+  from { box-shadow: 0 0 0 0 rgba(82, 196, 160, 0.5); }
+  to { box-shadow: 0 0 0 5px rgba(82, 196, 160, 0); }
+}
+@keyframes ob-quiz-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.ob-pop { animation: ob-quiz-pop 700ms ease-out; }
+.ob-shake { animation: ob-quiz-shake 550ms ease-in-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ob-pop, .ob-shake { animation: none; }
+}
 
 /* ---------- the drill: training, one panel at a time ---------- */
 
