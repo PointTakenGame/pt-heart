@@ -8,7 +8,7 @@ status: live
 what_it_is: "The pt-heart repo: the web build of Point Taken: Humility Showdown, plus its canonical specs and print production materials."
 regen_command: none
 verified: 2026-08-26
-notes: "Its own git repo, not part of the Claude workspace monorepo above it (remote github.com/PointTakenGame/pt-heart, branch main). Deployed as an internal playtest prototype at pt-heart.vercel.app behind HTTP Basic Auth (middleware.ts, password in the Vercel SITE_PASSWORD env var). Holds two registered sub-resources of its own: docs/ (canonical specs) and, once populated, pdf-game/ (print production)."
+notes: "Its own git repo, not part of the Claude workspace monorepo above it (remote github.com/PointTakenGame/pt-heart, branch main). Deployed as a playtest prototype at pt-heart.vercel.app, open with no password (the HTTP Basic Auth gate in middleware.ts was removed 2026-09-21). Holds two registered sub-resources of its own: docs/ (canonical specs) and, once populated, pdf-game/ (print production)."
 ---
 
 # Humility Showdown

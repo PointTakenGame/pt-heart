@@ -20,7 +20,6 @@ sources:
   - point-taken-heart/game/src/main.tsx
   - point-taken-heart/game/src/ui/*.tsx
   - point-taken-heart/game/api/coach.ts
-  - point-taken-heart/game/middleware.ts
   - point-taken-heart/game/vite.config.ts
   - point-taken-heart/game/README.md
   - point-taken-heart/docs/design/2026-08-23_infrastructure-plan.md
@@ -97,8 +96,8 @@ Top level of `game/`: `api/`, `dist/` (build output, ignore), `node_modules/`
   Its own `README.md` states: "This folder is production, not specification.
   The normative deck definition lives in `docs/cards.md`." `[unratified,
   point-taken-heart/game/pdf-game/README.md]`
-- `middleware.ts` (repo root, outside `src/`) is Vercel Edge Middleware: HTTP
-  Basic Auth over the whole site, gated on `SITE_PASSWORD`.
+- There is no `middleware.ts`. The HTTP Basic Auth password gate that used to
+  sit at the repo root was removed on 2026-09-21, so the site is open.
 - `vite.config.ts` adds one dev-only plugin, `coachDevApi()`, which loads
   `ANTHROPIC_API_KEY` for local development so `npm run dev` can call the coach
   without a deployed Edge Function.
@@ -392,13 +391,9 @@ a degraded one, by design.
 `api/` contains exactly one file, `coach.ts` (section 10). There is no other
 server-side route in this repo and no auth API. The corpus write in section 9
 does not go through `api/`: the client posts to Supabase's PostgREST endpoint
-directly, which is why the database exists without a route here to show for it. `middleware.ts` is Edge
-Middleware (not under `api/`) that gates every request behind HTTP Basic Auth:
-`process.env.SITE_PASSWORD` compared against the request's Basic Auth header,
-fail-closed if the variable is unset ("This prototype is closed. No
-SITE_PASSWORD is configured on the deployment"). The middleware's route matcher
-excludes only Vercel's own internal `_vercel` paths, so `/api/coach` is also
-behind this gate.
+directly, which is why the database exists without a route here to show for it. Nothing gates
+these requests: the site-wide HTTP Basic Auth middleware was removed on
+2026-09-21, so `/api/coach` is reachable by anyone who has the URL.
 
 PDF generation: `pdf-game/` is an empty placeholder as of the last verified
 read of its `README.md` (2026-08-26); the normative print card content lives
@@ -444,9 +439,9 @@ pipeline outside this repo.`
   opponent always argues the side opposite whatever the player chose, so
   neutrality is a mechanical property of the match rather than a fixed
   scripted stance requiring case-by-case review.
-- **HTTP Basic Auth gates the entire deployed site**, including the API route,
-  fail-closed if unconfigured, because this is an internal prototype, not a
-  public release.
+- **The deployed site is open.** The HTTP Basic Auth password that gated it
+  (Steve, 2026-08-24) was removed on 2026-09-21. `/api/coach` is public too,
+  so anyone with the URL can spend model calls on the project's key.
 - **The API key never reaches the browser.** All model calls proxy through the
   Vercel Edge Function; the client only ever talks to same-origin `/api/coach`.
 - **No StrictMode.** `main.tsx`'s comment: "the beat runner is a sequence of
@@ -477,8 +472,8 @@ all, is the section-4 `GAP:` above.
   specifies a full plan: a separate `point-taken-heart-app` Next.js repo, its
   own Supabase project, a shared auth-only project across Brain and Heart, and
   Resend email. **None of this exists in `game/`.** The current build has no
-  Next.js, no Supabase client dependency, and no auth of any kind beyond the
-  site-wide Basic Auth password. It does persist server-side, but only the
+  Next.js, no Supabase client dependency, and no auth of any kind (the
+  site-wide Basic Auth password was removed 2026-09-21). It does persist server-side, but only the
   corpus: `src/corpus.ts` inserts answered items into a Supabase table over
   PostgREST under insert-only RLS (section 9). That is one table and no
   identity. Accounts, shared login, and server-authoritative writes remain the
