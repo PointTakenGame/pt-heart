@@ -42,6 +42,7 @@ the game *is*, not what happened to it.
 | `ui-components.md` | Component inventory with states | Rannie, Audrey |
 | `cards.md` | The printed deck: content, counts, categories, and how it maps to the web build | Everyone |
 | `live-play.md` | The live-play phase: real people at a table, and the third seat | Steve, Nathan |
+| `coach.md` | What the coach is for, and the standard its judgement is held to | Coding agents, Steve |
 
 ### The one exception to everything above
 
